@@ -1,0 +1,125 @@
+---
+
+nginx_vhosts:
+  default:
+    ipv6: true
+    # Set default site to return 444 (Connection Closed Without Response)
+    # Set to True if you want to redirect http to https
+    ssl: false
+    letsencrypt: false
+
+  10-foo.molecule.lan:
+    # state: absent
+    # enabled: true
+    # template: foo.tpl.j2
+    domains:
+      - foo.molecule.lan
+    listen: 80
+
+    root:  /var/www/foo.molecule.lan
+
+    access_log: /var/log/nginx/bar.molecule.lan/access.log
+    error_log: /var/log/nginx/bar.molecule.lan/error.log
+
+    # creates an htpasswd file under
+    # /etc/nginx/htpasswd.d/foo.molecule.lan
+    htpasswd:
+      - username: myusername_1
+        password: mysecre
+      - username: myusername_2
+        password: mysecretpassword
+
+    # list of upstream servers
+    upstreams:
+      - name: paperless
+        servers:
+          - 127.0.0.1:8080   max_fails=3 fail_timeout=30s
+          - 127.0.1.1:8080   max_fails=3 fail_timeout=30s
+          - 127.0.2.1:8080   backup
+        # strategy: 'ip_hash'
+        keepalive: 32
+
+    locations:
+      - location: "^~ /"
+        options: |
+          add_header X-Backend "bar";
+
+          proxy_pass         http://paperless/;
+          proxy_set_header   Host              $host;
+          proxy_set_header   X-Real-IP         $remote_addr;
+          proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+          proxy_set_header   X-Forwarded-Proto $scheme;
+
+  10-bar.molecule.lan:
+    domains:
+      - bar.molecule.lan
+
+    # Specify which port you want to listen to with clear HTTP, or leave undefined for 80
+    listen: 9000
+
+  20-foo.molecule.lan:
+    domains:
+      - bar.molecule.lan
+
+    # Specify which port you want to listen to with clear HTTP, or leave undefined for 80
+    listen: 9080
+    # Specify which port you want to listen to with HTTPS, or leave undefined for 443
+    listen_ssl: 9081
+
+    letsencrypt: false
+    # enable ssl
+    ssl: true
+    ssl_certificate: /etc/ssl/certs/ssl-cert-snakeoil.pem
+    ssl_certificate_key: /etc/ssl/private/ssl-cert-snakeoil.key
+
+  20-bar.molecule.lan:
+    # state: absent
+    # enabled: false
+    domains:
+      - bar.molecule.lan
+
+    listen: 443 http2
+
+    letsencrypt: true
+    letsencrypt_email: ""
+
+    # enable ssl
+    ssl: true
+    ssl_certificate:     /etc/letsencrypt/live/bar.molecule.lan/fullchain.pem
+    ssl_certificate_key: /etc/letsencrypt/live/bar.molecule.lan/privkey.pem
+
+nginx_vhosts_old:
+  - server_name: "bar.molecule.lan"
+    listen: 80
+    state: present
+    root:  /var/www/bar.molecule.lan
+    access_log: /var/log/nginx/bar.molecule.lan/access.log
+    error_log:  /var/log/nginx/bar.molecule.lan/error.log
+
+    # Define this block for a single HTTP user/password, or leave undefined for unauthenticated vhosts
+    htpasswd:
+      - username: myusername_1
+        password: mysecretpassword
+      - username: myusername_2
+        password: mysecretpassword
+
+    extra_parameters: |
+      location ^~ / {
+        add_header X-Backend "bar";
+
+        proxy_pass         http://paperless/;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+      }
+      # include modules.d/99-letsencrypt-acme-challenge.conf;
+
+  - server_name: "foo.molecule.lan"
+    listen: 80
+    state: present
+    root:  /var/www/foo.molecule.lan
+    access_log: /var/log/nginx/foo.molecule.lan/access.log
+    error_log:  /var/log/nginx/foo.molecule.lan/error.log
+
+...

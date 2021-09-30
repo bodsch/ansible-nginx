@@ -1,0 +1,14 @@
+---
+
+- name: install nginx
+  package:
+    name: "{{ nginx_packages }}"
+    state: present
+
+- name: install certbot from repository
+  package:
+    name: "{{ nginx_certbot_packages }}"
+    state: present
+  # when: not nginx_certbot_auto
+
+...

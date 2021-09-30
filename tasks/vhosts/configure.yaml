@@ -1,0 +1,60 @@
+---
+
+- name: create HTTP vhost configurations
+  template:
+    src: "{{ item.value.template | default( 'vhosts/' ~ nginx_vhost_templates.http ) }}"
+    dest: "/etc/nginx/sites-available/{{ item.value.filename | default( item.key ~ '.conf' ) }}"
+    force: true
+    owner: root
+    group: root
+    mode: 0644
+  when:
+    - item.value.state | default('present') != 'absent'
+    - not item.value.ssl | default('false')
+    - not item.value.letsencrypt | default(true)
+  loop:
+    "{{ nginx_vhosts | dict2items }}"
+  loop_control:
+    label: "{{ item.value.filename | default( item.key ~ '.conf') }}"
+  # notify: reload nginx
+
+- name: create HTTPs vhost configurations without ACME certificates
+  template:
+    src: "{{ item.value.template | default( 'vhosts/' ~ nginx_vhost_templates.https ) }}"
+    dest: "/etc/nginx/sites-available/{{ item.value.filename | default( item.key ~ '.conf' ) }}"
+    force: true
+    owner: root
+    group: root
+    mode: 0644
+  when:
+    # - not item.key == "default"
+    - item.value.state | default('present') != 'absent'
+    - item.value.ssl | default('false')
+    # - item.value.ssl_certificate_exists | default('true')
+    - not item.value.letsencrypt | default('true')
+  loop:
+    "{{ nginx_vhosts | dict2items }}"
+  loop_control:
+    label: "{{ item.value.filename | default( item.key ~ '.conf') }}"
+  # notify: reload nginx
+
+# ---------------------------------------------------------------------------------------
+
+- name: enable site config without enabled letsencrypt certificate
+  file:
+    src: /etc/nginx/sites-available/{{ item.key }}.conf
+    dest: /etc/nginx/sites-enabled/{{ item.key }}.conf
+    state: link
+  loop:
+    "{{ nginx_vhosts | dict2items }}"
+  loop_control:
+    label: "{{ item.value.filename | default( item.key ~ '.conf') }}"
+  when:
+    - item.value.enabled | default('true')
+    - not item.value.ssl_certificate_exists is defined or
+      not item.value.ssl_certificate_exists or
+      not item.value.letsencrypt | default('true')
+    - not ansible_check_mode
+  # notify: Reload Nginx
+
+...

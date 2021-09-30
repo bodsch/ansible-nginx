@@ -1,0 +1,81 @@
+---
+
+- block:
+    - name: "find primary group for user '{{ nginx_user }}'"
+      getent:
+        database: group
+        key: "{{ nginx_user }}"
+        split: ':'
+
+    - name: "set nginx_group '{{ getent_group | list | first }}'"
+      set_fact:
+        nginx_group: "{{ getent_group | list | first }}"
+      when:
+        - getent_group is defined
+  when:
+    - not nginx_group is defined or nginx_group | length > 0
+
+- name: create nginx sites directories
+  file:
+    path: "/etc/nginx/{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+  loop:
+    - sites-available
+    - sites-enabled
+    - htpasswd.d
+
+- name: remove default site
+  file:
+    name: /etc/nginx/sites-enabled/default
+    state: absent
+  when:
+    - nginx_remove_default_site is defined
+    - nginx_remove_default_site
+
+- name: create acme challenge directory
+  file:
+    path: "{{ nginx_acme.challenge_directory }}"
+    state: directory
+    owner: "{{ nginx_user }}"
+    group: "{{ nginx_group }}"
+    mode: 0755
+  when:
+    - nginx_acme is defined
+    - nginx_acme.enabled
+    - nginx_acme.challenge_directory is defined
+    - nginx_acme.challenge_directory | length > 0
+
+# - name: create acme challenge directory
+#   file:
+#     path: /srv/www/letsencrypt/.well-known/acme-challenge
+#     owner: "{{ __nginx_user }}"
+#     group: "{{ __nginx_user }}"
+#     mode: 0755
+#     state: directory
+
+- name: create nginx main configuration
+  template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/nginx.conf
+    owner: root
+    group: "{{ nginx_group }}"
+    mode: 0644
+    backup: true
+    # validate: nginx -t
+#  notify:
+#    - reload nginx
+
+- name: copy static nginx conf.d
+  copy:
+    src: conf.d/
+    dest: /etc/nginx/conf.d/
+    owner: root
+    group: root
+    mode: 0644
+  #notify:
+  #  - reload nginx
+  #tags: nginx
+...

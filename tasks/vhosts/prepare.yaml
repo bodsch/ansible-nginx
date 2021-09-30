@@ -1,0 +1,93 @@
+---
+
+# - name: d
+#   debug:
+#     msg:
+#       - "{{ item.0.key }}"
+#       - "{{ item.1.username }}"
+#   with_subelements:
+#     - "{{ nginx_vhosts | dict2items }}"
+#     - value.htpasswd
+#     - skip_missing: true
+
+# create htpasswd
+- name: create authentications
+  # no_log: true
+  htpasswd:
+    path: "/etc/nginx/htpasswd.d/{{ item.0.key }}"
+    name: "{{ item.1.username }}"
+    password: "{{ item.1.password }}"
+    owner: "{{ nginx_user }}"
+    group: "{{ nginx_group }}"
+    mode: 0640
+  with_subelements:
+    - "{{ nginx_vhosts | dict2items }}"
+    - value.htpasswd
+    - skip_missing: true
+  loop_control:
+    label: "/etc/nginx/htpasswd.d/{{ item.0.key }}"
+  when:
+    - item.1 is defined
+    - item.1.username is defined
+    - item.1.password is defined
+
+- name: ensure vhosts root path exists
+  file:
+    path: "{{ item.value.root | default('/var/www') }}"
+    state: directory
+    owner: "{{ nginx_user }}"
+    mode: 0750
+  when:
+    - item.value.state | default('present') != 'absent'
+  loop:
+    "{{ nginx_vhosts | dict2items }}"
+  loop_control:
+    label: "{{ item.value.root | default('/var/www') }}"
+
+- name: ensure vhosts log path exists
+  file:
+    path: "{{ item.value.access_log | default('/var/log/nginx/default.log' ) | dirname }}"
+    state: directory
+    mode: 0750
+  when:
+    - item.value.state | default('present') != 'absent'
+    - item.value.access_log is defined
+  loop:
+    "{{ nginx_vhosts | dict2items }}"
+  loop_control:
+    label: "{{ item.value.access_log | default('/var/log/nginx/default.log' ) | dirname }}"
+
+- name: checking existing domains certificates
+  stat:
+    path: '{{ item.value.ssl_certificate_key }}'
+    get_checksum: false
+    get_md5: false
+    get_mime: false
+    get_attributes: false
+  loop:
+    "{{ nginx_vhosts | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+  when:
+    - item.value.state | default('present') != 'absent'
+    - item.value.ssl_certificate_key is defined
+    - item.value.ssl_certificate_key | length > 0
+  register: check_domain_cert
+
+- name: append certificates state to vhost configurations
+  set_fact:
+    nginx_vhosts: "{{ nginx_vhosts | check_certificates(check_domain_cert) }}"
+
+- name: create acme-challenge  directories
+  file:
+    path: "/var/www/{{ item.key }}/.well-known/acme-challenge"
+    state: directory
+    owner: "{{ nginx_user }}"
+    group: "{{ nginx_group }}"
+    mode: 0777
+  loop:
+    "{{ nginx_vhosts | dict2items }}"
+  loop_control:
+    label: "/var/www/{{ item.key }}/.well-known/acme-challenge"
+
+...

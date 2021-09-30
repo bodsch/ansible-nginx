@@ -1,0 +1,15 @@
+---
+
+nginx_dependencies:
+  - ssl-cert
+  # - python-passlib  # python2 ?!
+  - python3-passlib
+
+nginx_packages:
+  - nginx
+
+nginx_user: www-data
+
+nginx_mime_file_path: /etc/nginx/mime.types
+
+...

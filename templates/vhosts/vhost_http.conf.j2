@@ -1,0 +1,55 @@
+# {{ ansible_managed }}
+
+{% if item.key == "default" %}
+server {
+  listen        {{ item.value.listen | default(80) }} default_server;
+{% if item.value.ipv6 is defined and item.value.ipv6 | default('true') | bool %}
+  listen    [::]:{{ item.value.listen | default(80) }}; {% endif %}
+  server_name _;
+  return        444;
+
+  access_log /var/log/nginx/{{ item.key }}_access.log;
+  error_log  /var/log/nginx/{{ item.key }}_error.log error;
+}
+
+{% else %}
+{% if item.value.upstreams is defined and item.value.upstreams | count > 0 %}
+# upstream config
+{% set upstreams = item.value.upstreams %}
+{% for upstream in upstreams %}
+upstream {{ upstream.name }} {
+{% if upstream.strategy is defined %}
+  {{ upstream.strategy }};
+{% endif %}
+{% for server in upstream.servers %}
+  server {{ server }}{% if upstream.options is defined and upstream.options | length > 0 %} {{ upstream.options.rjust(30) }}{% endif %};
+{% endfor %}
+{% if upstream.keepalive is defined %}
+  keepalive {{ upstream.keepalive }};
+{% endif %}
+}
+{% endfor %}
+{% endif %}
+
+server {
+  listen         {{ item.value.listen | default(80) }};
+{% if item.value.ipv6 is defined and item.value.ipv6 | default('true') | bool %}
+  listen    [::]:{{ item.value.listen | default(80) }}; {% endif %}
+  server_name    {{ item.value.domains | join(' ') }};
+
+  access_log {{ item.value.access_log | default('/var/log/nginx/' ~ item.key ~ '_access.log') }};
+  error_log  {{ item.value.error_log  | default('/var/log/nginx/' ~ item.key ~ '_error.log error') }};
+
+  location /.well-known {
+    alias /var/www/{{ item.key }}/.well-known;
+  }
+
+{% if item.value.locations is defined and item.value.locations | count > 0 %}
+{% for l in item.value.locations %}
+  location {{ l.location }} {
+    {{ l.options | indent(4) }}
+  }
+{% endfor %}
+{% endif %}
+}
+{% endif %}

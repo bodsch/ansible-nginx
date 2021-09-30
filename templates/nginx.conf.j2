@@ -1,0 +1,53 @@
+# {{ ansible_managed }}
+
+user  {{ nginx_user }};
+error_log  {{ nginx_global.error_log }};
+worker_processes  {{ nginx_global.worker_processes }};
+
+{% if nginx_global.include_modules %}
+include /etc/nginx/modules-enabled/*.conf;
+{% endif %}
+
+{% if nginx_global.extra_config %}
+{{ nginx_global.extra_config }}
+{% endif %}
+
+events {
+  worker_connections  {{ nginx_events.worker_connections }};
+  multi_accept "{{ nginx_events.multi_accept | bool | ternary('on', 'off')  }}";
+}
+
+http {
+  include       {{ nginx_http.mime_file_path }};
+  default_type  application/octet-stream;
+
+  server_names_hash_bucket_size {{ nginx_http.server_names_hash_bucket_size }};
+
+  client_max_body_size {{ nginx_http.client_max_body_size }};
+
+  log_format  main  {{ nginx_http.log_format | indent(21) }};
+
+  access_log  {{ nginx_http.access_log }};
+
+  sendfile        {{ nginx_http.sendfile | bool | ternary('on', 'off') }};
+  tcp_nopush      {{ nginx_http.tcp_nopush | bool | ternary('on', 'off') }};
+  tcp_nodelay     {{ nginx_http.tcp_nodelay | bool | ternary('on', 'off') }};
+
+  keepalive_timeout  {{ nginx_http.keepalive.timeout }};
+  keepalive_requests {{ nginx_http.keepalive.requests }};
+
+  server_tokens {{ nginx_http.server_tokens | bool | ternary('on', 'off') }};
+{% if nginx_http.proxy.cache_path %}
+  proxy_cache_path {{ nginx_http.proxy.cache_path }};
+{% endif %}
+
+{% if nginx_http.extra_options %}
+  {{ nginx_http.extra_options | indent(2, False) }}
+{% endif %}
+
+{% if nginx_includes is defined and nginx_includes | count > 0 %}
+{% for include in nginx_includes %}
+  include {{ include }};
+{% endfor %}
+{% endif %}
+}

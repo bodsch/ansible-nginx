@@ -1,0 +1,46 @@
+---
+
+# - name: get active sites
+#   command: ls -1 /etc/nginx/sites-enabled/
+#   changed_when: "active.stdout_lines != nginx_vhosts.keys() | sort()"
+#   check_mode: false
+#   register: active
+
+- name: sites for ACME protocol
+  debug:
+    msg: "{{ item.key }}"
+  when:
+    # - item.value.state | default('present') != 'absent'
+    # - item.value.ssl_certificate_exists | default('true')
+    - item.value.ssl_certificate is defined
+    - item.value.ssl | default('false')
+    - item.value.letsencrypt | default('false')
+  loop:
+    "{{ nginx_vhosts | dict2items }}"
+  loop_control:
+    label: "{{ item.value.filename | default( item.key ~ '.conf') }}"
+
+- name: create sites with ACME certificates
+  template:
+    src: "{{ item.value.template | default( 'vhosts/' ~ nginx_vhost_templates.https ) }}"
+    dest: "/etc/nginx/sites-available/{{ item.value.filename | default( item.key ~ '.conf' ) }}"
+    force: true
+    owner: root
+    group: root
+    mode: 0644
+  when:
+    # - not item.key == "default"
+    - item.value.state | default('present') != 'absent'
+    # - item.value.ssl | default('false')
+    # - item.value.ssl_certificate_exists | default('true')
+    - item.value.ssl_certificate is defined
+    - item.value.ssl | default('false')
+    - item.value.letsencrypt | default('false')
+  loop:
+    "{{ nginx_vhosts | dict2items }}"
+  loop_control:
+    label: "{{ item.value.filename | default( item.key ~ '.conf') }}"
+  vars:
+    __skip_letsencrypt: true  # use snakeoil cert on first run
+
+...

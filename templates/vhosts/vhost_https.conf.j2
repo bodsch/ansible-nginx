@@ -1,0 +1,97 @@
+# {{ ansible_managed }}
+
+{% if item.key == "default" %}
+server {
+  listen        {{ item.value.listen | default(80) }} default_server;
+{% if item.value.ipv6 is defined and item.value.ipv6 | default('true') | bool %}
+  listen    [::]:{{ item.value.listen | default(80) }}; {% endif %}
+  server_name _;
+  return        444;
+
+  access_log /var/log/nginx/{{ item.key }}_access.log;
+  error_log  /var/log/nginx/{{ item.key }}_error.log error;
+}
+
+server {
+   listen        {{ item.value.listen_ssl | default(443) }} ssl http2 default_server;
+   listen   [::]:{{ item.value.listen_ssl | default(443) }} ssl http2 default_server;
+   server_name _;
+   return        444;
+
+   access_log /var/log/nginx/{{ item.key }}_access.log;
+   error_log /var/log/nginx/{{ item.key }}_error.log error;
+
+   include conf.d/ssl.conf;
+   ssl_certificate     /etc/ssl/certs/ssl-cert-snakeoil.pem;
+   ssl_certificate_key /etc/ssl/private/ssl-cert-snakeoil.key;
+}
+
+{% else %}
+{% if item.value.upstreams is defined and item.value.upstreams | count > 0 %}
+# upstream config
+{% set upstreams = item.value.upstreams %}
+{% for upstream in upstreams %}
+upstream {{ upstream.name }} {
+{% if upstream.strategy is defined %}
+  {{ upstream.strategy }};
+{% endif %}
+{% for server in upstream.servers %}
+  server {{ server }}{% if upstream.options is defined and upstream.options | length > 0 %} {{ upstream.options.rjust(30) }}{% endif %};
+{% endfor %}
+{% if upstream.keepalive is defined %}
+  keepalive {{ upstream.keepalive }};
+{% endif %}
+}
+{% endfor %}
+{% endif %}
+
+# {{ item }}
+server {
+  listen         {{ item.value.listen | default(80) }};
+{% if item.value.ipv6 is defined and item.value.ipv6 | default('true') | bool %}
+  listen    [::]:{{ item.value.listen | default(80) }}; {% endif %}
+  server_name    {{ item.value.domains | join(' ') }};
+
+  access_log {{ item.value.access_log | default('/var/log/nginx/' ~ item.key ~ '_access.log') }};
+  error_log  {{ item.value.error_log  | default('/var/log/nginx/' ~ item.key ~ '_error.log error') }};
+
+  location /.well-known/acme-challenge {
+    alias /var/www/{{ item.key }}/.well-known/acme-challenge;
+  }
+
+  location / {
+    return         301 https://$server_name$request_uri;
+  }
+}
+
+server {
+  listen         {{ item.value.listen | default(443) }} ssl http2;
+{% if item.value.ipv6 is defined and item.value.ipv6 | default('true') | bool %}
+  listen    [::]:{{ item.value.listen | default(443) }} ssl http2; {% endif %}
+  server_name    {{ item.value.domains | join(' ') }};
+
+  access_log {{ item.value.access_log | default('/var/log/nginx/' ~ item.key ~ '_access.log') }};
+  error_log  {{ item.value.error_log  | default('/var/log/nginx/' ~ item.key ~ '_error.log error') }};
+
+  location /.well-known {
+    alias /var/www/{{ item.key }}/.well-known;
+  }
+
+  include conf.d/ssl.conf;
+{% if not __skip_letsencrypt | default(false) and item.value.letsencrypt is defined and item.value.letsencrypt %}
+  ssl_certificate /etc/letsencrypt/live/{{ item.key }}/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/{{ item.key }}/privkey.pem;
+{% else %}
+  ssl_certificate {{ item.value.ssl_certificate | default('/etc/ssl/certs/ssl-cert-snakeoil.pem') }};
+  ssl_certificate_key {{ item.value.ssl_certificate_key | default ('/etc/ssl/private/ssl-cert-snakeoil.key') }};
+{% endif %}
+
+{% if item.value.locations is defined and item.value.locations | count > 0 %}
+{% for l in item.value.locations %}
+  location {{ l.location }} {
+    {{ l.options | indent(4) }}
+  }
+{% endfor %}
+{% endif %}
+}
+{% endif %}
