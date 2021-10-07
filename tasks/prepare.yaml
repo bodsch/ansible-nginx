@@ -19,6 +19,12 @@
       skip: true
 
 - block:
+    - name: block installation of python2
+      copy:
+        src: apt/preferences.d/python2.pref
+        dest: /etc/apt/preferences.d/python2.pref
+        mode: 0644
+
     - name: make sure python3-apt is installed (only debian based)
       package:
         name:
@@ -33,6 +39,13 @@
     - ansible_os_family | lower == 'debian'
 
 
+# - name: make sure ansible local facts directory exists
+#   file:
+#     dest: /etc/ansible/facts.d
+#     state: directory
+#     owner: root
+#     group: root
+#     mode: 0755
 
 - name: update package cache
   package:
@@ -43,54 +56,10 @@
     name: "{{ nginx_dependencies }}"
     state: present
 
-# # redhat based
-# #
-# - block:
-#     - name: import EPEL GPG key
-#       rpm_key:
-#         key: https://archive.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-{{ ansible_distribution_major_version }}
-#         state: present
-#
-#     - name: install EPEL repository
-#       yum_repository:
-#         name: epel
-#         state: present
-#         description: Extra Packages for Enterprise Linux {{ ansible_distribution_major_version }} - $basearch
-#         baseurl: http://download.fedoraproject.org/pub/epel/{{ ansible_distribution_major_version }}/$basearch
-#         gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-{{ ansible_distribution_major_version }}
-#         metalink: https://mirrors.fedoraproject.org/metalink?repo=epel-{{ ansible_distribution_major_version }}&arch=$basearch&infra=$infra&content=$contentdir
-#         failovermethod: priority
-#         gpgcheck: 1
-#         enabled: 1
-#   when:
-#     - ansible_os_family | lower == 'redhat'
-#
-# # debian
-# - block:
-#     - name: add backports repository
-#       apt_repository:
-#         repo: deb http://ftp.de.debian.org/debian {{ ansible_distribution_release }}-backports main
-#         state: present
-#   when:
-#     - ansible_distribution | lower == 'debian'
-#
-#
-#
-#
-#
-#
-#
-#
-# - name: make sure ansible local facts directory exists
-#   file:
-#     dest: /etc/ansible/facts.d
-#     state: directory
-#     owner: root
-#     group: root
-#     mode: 0755
-#
-# - name: update package cache
-#   package:
-#     update_cache: true
+- name: create reload hook
+  template:
+    src: bin/hooks/reload_service.sh.j2
+    dest: /usr/local/bin/reload_service.sh
+    mode: 0755
 
 ...

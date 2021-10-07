@@ -4,9 +4,10 @@ nginx_packages:
   - nginx
 
 nginx_user: nginx
+nginx_group: nginx
 
 nginx_certbot_packages:
-  - certbot
+  # - python3-certbot
   - python3-certbot-nginx
 
 nginx_dependencies: []

@@ -1,5 +1,39 @@
 ---
 
+# - name: letsencrypt certificate
+#   debug:
+#     msg: "{{ nginx_vhosts | letsencrypt }}"
+
+# - name: -> create HTTP vhost configurations
+#   debug:
+#     msg: "{{ item.key }}"
+#   when:
+#     - item | create_vhost('http')
+#   loop:
+#     "{{ nginx_vhosts | dict2items }}"
+#   loop_control:
+#     label: "{{ item.key }}"
+#
+# - name: -> create HTTPs vhost configurations without ACME
+#   debug:
+#     msg: "{{ item.key }}"
+#   when:
+#     - item | create_vhost('https')
+#   loop:
+#     "{{ nginx_vhosts | dict2items }}"
+#   loop_control:
+#     label: "{{ item.key }}"
+#
+# - name: -> create HTTPs vhost configurations with ACME
+#   debug:
+#     msg: "{{ item.key }}"
+#   when:
+#     - item | create_vhost('acme')
+#   loop:
+#     "{{ nginx_vhosts | dict2items }}"
+#   loop_control:
+#     label: "{{ item.key }}"
+
 - include_tasks: prepare.yaml
 
 - include_tasks: install.yaml

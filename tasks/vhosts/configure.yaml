@@ -9,9 +9,7 @@
     group: root
     mode: 0644
   when:
-    - item.value.state | default('present') != 'absent'
-    - not item.value.ssl | default('false')
-    - not item.value.letsencrypt | default(true)
+    - item | create_vhost('http')
   loop:
     "{{ nginx_vhosts | dict2items }}"
   loop_control:
@@ -27,11 +25,7 @@
     group: root
     mode: 0644
   when:
-    # - not item.key == "default"
-    - item.value.state | default('present') != 'absent'
-    - item.value.ssl | default('false')
-    # - item.value.ssl_certificate_exists | default('true')
-    - not item.value.letsencrypt | default('true')
+    - item | create_vhost('https')
   loop:
     "{{ nginx_vhosts | dict2items }}"
   loop_control:
@@ -40,20 +34,32 @@
 
 # ---------------------------------------------------------------------------------------
 
+- name: -> enable site config without enabled letsencrypt certificate
+  debug:
+    msg: "{{ item.key }}"
+  when:
+    - item | create_vhost('https')
+    - item | active_vhost(
+        certificate_exists=item.value.ssl_certificate_exists | default('false') | bool )
+  loop:
+    "{{ nginx_vhosts | dict2items }}"
+  loop_control:
+    label: "{{ item.value.filename | default( item.key ~ '.conf') }}"
+
+
 - name: enable site config without enabled letsencrypt certificate
   file:
-    src: /etc/nginx/sites-available/{{ item.key }}.conf
-    dest: /etc/nginx/sites-enabled/{{ item.key }}.conf
+    src: /etc/nginx/sites-available/{{ item.value.filename | default( item.key ~ '.conf') }}
+    dest: /etc/nginx/sites-enabled/{{ item.value.filename | default( item.key ~ '.conf') }}
     state: link
   loop:
     "{{ nginx_vhosts | dict2items }}"
   loop_control:
     label: "{{ item.value.filename | default( item.key ~ '.conf') }}"
   when:
-    - item.value.enabled | default('true')
-    - not item.value.ssl_certificate_exists is defined or
-      not item.value.ssl_certificate_exists or
-      not item.value.letsencrypt | default('true')
+    - item | create_vhost('https')
+    - item | active_vhost(
+        certificate_exists=item.value.ssl_certificate_exists | default('false') | bool )
     - not ansible_check_mode
   # notify: Reload Nginx
 

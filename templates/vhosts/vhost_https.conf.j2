@@ -46,6 +46,10 @@ upstream {{ upstream.name }} {
 {% endif %}
 
 # {{ item }}
+# {{ item.key }}
+#   - letsencrypt: {{ item.value.letsencrypt | default(false) }}
+#   - ssl_certificate_exists: {{ item.value.ssl_certificate_exists | default(false) }}
+
 server {
   listen         {{ item.value.listen | default(80) }};
 {% if item.value.ipv6 is defined and item.value.ipv6 | default('true') | bool %}
@@ -78,12 +82,14 @@ server {
   }
 
   include conf.d/ssl.conf;
-{% if not __skip_letsencrypt | default(false) and item.value.letsencrypt is defined and item.value.letsencrypt %}
-  ssl_certificate /etc/letsencrypt/live/{{ item.key }}/fullchain.pem;
+{% if item.value.ssl_certificate_exists | default(false) and
+      item.value.letsencrypt is defined and
+      item.value.letsencrypt %}
+  ssl_certificate     /etc/letsencrypt/live/{{ item.key }}/fullchain.pem;
   ssl_certificate_key /etc/letsencrypt/live/{{ item.key }}/privkey.pem;
 {% else %}
-  ssl_certificate {{ item.value.ssl_certificate | default('/etc/ssl/certs/ssl-cert-snakeoil.pem') }};
-  ssl_certificate_key {{ item.value.ssl_certificate_key | default ('/etc/ssl/private/ssl-cert-snakeoil.key') }};
+  ssl_certificate     {{ item.value.ssl_certificate     | default('/etc/ssl/certs/ssl-cert-snakeoil.pem') }};
+  ssl_certificate_key {{ item.value.ssl_certificate_key | default('/etc/ssl/private/ssl-cert-snakeoil.key') }};
 {% endif %}
 
 {% if item.value.locations is defined and item.value.locations | count > 0 %}

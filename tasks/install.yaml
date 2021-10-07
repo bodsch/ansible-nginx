@@ -5,7 +5,57 @@
     name: "{{ nginx_packages }}"
     state: present
 
-- name: install certbot from repository
+# - name: install acmetool
+#   block:
+#     - name: detect installed acmetool version
+#       stat:
+#         path: "/usr/local/bin/acmetool_{{ acmetool_version }}"
+#       register: stat_acmetool_binary
+#
+#     - block:
+#
+#         - name: download acmetool binary to local folder
+#           become: false
+#           delegate_to: 127.0.0.1
+#           get_url:
+#             # https://github.com/hlandau/acmetool/releases/download/v0.0.67/acmetool-v0.0.67-linux_amd64.tar.gz
+#             url: "{{ acmetool_release_download_url }}/download/v{{ acmetool_version }}/acmetool-v{{ acmetool_version }}-linux_amd64.tar.gz"
+#             dest: "/tmp/acmetool-{{ acmetool_version }}.tar.gz"
+#           register: _download_archive
+#           until: _download_archive is succeeded
+#           retries: 5
+#           delay: 2
+#           check_mode: false
+#
+#         - name: extract acmetool archive
+#           become: false
+#           delegate_to: 127.0.0.1
+#           unarchive:
+#             src: "/tmp/acmetool-{{ acmetool_version }}.tar.gz"
+#             dest: "/tmp/"
+#             copy: false
+#
+#         - name: propagate acmetool
+#           copy:
+#             src: "/tmp/acmetool-v{{ acmetool_version }}-linux_amd64/bin/acmetool"
+#             dest: "/usr/local/bin/acmetool_{{ acmetool_version }}"
+#             mode: 0755
+#             owner: root
+#             group: root
+#       when:
+#         - not stat_acmetool_binary.stat.exists
+#
+#     - name: create link from acmetool_{{ acmetool_version }}
+#       file:
+#         src: "/usr/local/bin/acmetool_{{ acmetool_version }}"
+#         dest: "/bin/acmetool"
+#         state: link
+#         force: true
+#   when:
+#     - acmetool ist defined
+#     - acmetool | bool
+
+- name: install certbot
   package:
     name: "{{ nginx_certbot_packages }}"
     state: present

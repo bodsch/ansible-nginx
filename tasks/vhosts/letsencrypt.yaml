@@ -1,24 +1,29 @@
 ---
 
-# - name: get active sites
-#   command: ls -1 /etc/nginx/sites-enabled/
-#   changed_when: "active.stdout_lines != nginx_vhosts.keys() | sort()"
-#   check_mode: false
-#   register: active
+# - name: assert
+#   assert:
+#     that:
+#       - item.value.letsencrypt_email
+#     msg:
+#       "missing email asdress for acme certificates"
+#   when:
+#     - item.value.state | default('present') != 'absent'
+#     - item.value.letsencrypt | default('false')
+#   loop:
+#     "{{ nginx_vhosts | dict2items }}"
+#   loop_control:
+#     label: "{{ item.key }}"
 
-- name: sites for ACME protocol
-  debug:
-    msg: "{{ item.key }}"
-  when:
-    # - item.value.state | default('present') != 'absent'
-    # - item.value.ssl_certificate_exists | default('true')
-    - item.value.ssl_certificate is defined
-    - item.value.ssl | default('false')
-    - item.value.letsencrypt | default('false')
-  loop:
-    "{{ nginx_vhosts | dict2items }}"
-  loop_control:
-    label: "{{ item.value.filename | default( item.key ~ '.conf') }}"
+
+# - name: sites for ACME protocol
+#   debug:
+#     msg: "{{ item.key }}"
+#   when:
+#     - item | create_vhost('acme')
+#   loop:
+#     "{{ nginx_vhosts | dict2items }}"
+#   loop_control:
+#     label: "{{ item.value.filename | default( item.key ~ '.conf') }}"
 
 - name: create sites with ACME certificates
   template:
@@ -29,18 +34,102 @@
     group: root
     mode: 0644
   when:
-    # - not item.key == "default"
-    - item.value.state | default('present') != 'absent'
-    # - item.value.ssl | default('false')
-    # - item.value.ssl_certificate_exists | default('true')
-    - item.value.ssl_certificate is defined
-    - item.value.ssl | default('false')
-    - item.value.letsencrypt | default('false')
+    - item | create_vhost('acme')
   loop:
     "{{ nginx_vhosts | dict2items }}"
   loop_control:
     label: "{{ item.value.filename | default( item.key ~ '.conf') }}"
-  vars:
-    __skip_letsencrypt: true  # use snakeoil cert on first run
+
+- name: enable site config with enabled letsencrypt certificate
+  file:
+    src: /etc/nginx/sites-available/{{ item.value.filename | default( item.key ~ '.conf') }}
+    dest: /etc/nginx/sites-enabled/{{ item.value.filename | default( item.key ~ '.conf') }}
+    state: link
+  loop:
+    "{{ nginx_vhosts | dict2items }}"
+  loop_control:
+    label: "{{ item.value.filename | default( item.key ~ '.conf') }}"
+  when:
+    - item.value | active_vhost
+    - not ansible_check_mode
+
+# - name: letsencrypt certificate
+#   debug:
+#     msg: "{{ nginx_vhosts | letsencrypt }}"
+
+# - name: letsencrypt certificate
+#   debug:
+#     msg:
+#       - "{{ item.key }}"
+#       - "  {{ item.value.domains }}"
+#   loop:
+#     "{{ nginx_vhosts | letsencrypt | dict2items }}"
+
+- name: generate acme certs (first time)
+  command: |
+    certbot certonly
+      --non-interactive
+      --test-cert
+      --dry-run
+      --webroot
+      --webroot-path /var/www/{{ item.key }}
+      --domain {{ item.value.domains | join(' --domain ') }}
+      --agree-tos
+      --email {{ item.value.email | default('') }}
+      --cert-name {{ item.key }}
+  args:
+    creates: /etc/letsencrypt/live/{{ item.key }}/fullchain.pem
+    warn: false
+  ignore_errors: true
+  loop:
+    "{{ nginx_vhosts | letsencrypt | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+  register: created_certs
+
+- name: checking existing domains certificates
+  stat:
+    path: '{{ item.value.ssl_certificate_key }}'
+    get_checksum: false
+    get_md5: false
+    get_mime: false
+    get_attributes: false
+  loop:
+    "{{ nginx_vhosts | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+  when:
+    - item.value.state | default('present') != 'absent'
+    - item.value.ssl_certificate_key is defined
+    - item.value.ssl_certificate_key | length > 0
+  register: check_domain_cert
+
+- name: update certificates state to vhost configurations
+  set_fact:
+    nginx_vhosts: "{{ nginx_vhosts | check_certificates(check_domain_cert) }}"
+
+- name: update sites with ACME certificates
+  template:
+    src: "{{ item.value.template | default( 'vhosts/' ~ nginx_vhost_templates.https ) }}"
+    dest: "/etc/nginx/sites-available/{{ item.value.filename | default( item.key ~ '.conf' ) }}"
+    force: true
+    owner: root
+    group: root
+    mode: 0644
+  when:
+    - item | create_vhost('acme')
+  loop:
+    "{{ nginx_vhosts | dict2items }}"
+  loop_control:
+    label: "{{ item.value.filename | default( item.key ~ '.conf') }}"
+
+- name: create cron job for certbot renew
+  cron:
+    name: "certbot renew"
+    job: "certbot renew \
+      --post-hook \"/usr/local/bin/reload_service.sh\" >> /var/log/letsencrypt/letsencrypt-update.log 2>&1"
+    hour: "3"
+    minute: "30"
+    weekday: "1"
 
 ...

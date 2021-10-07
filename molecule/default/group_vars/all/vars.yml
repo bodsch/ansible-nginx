@@ -8,7 +8,10 @@ nginx_vhosts:
     ssl: false
     letsencrypt: false
 
-  10-foo.molecule.lan:
+  # HTTP
+  # enabled
+  # present
+  foo.molecule.lan_80:
     # state: absent
     # enabled: true
     # template: foo.tpl.j2
@@ -50,16 +53,25 @@ nginx_vhosts:
           proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
           proxy_set_header   X-Forwarded-Proto $scheme;
 
-  10-bar.molecule.lan:
+  # HTTP
+  # enabled
+  # present
+  bar.molecule.lan_9000:
     domains:
       - bar.molecule.lan
 
     # Specify which port you want to listen to with clear HTTP, or leave undefined for 80
     listen: 9000
 
-  20-foo.molecule.lan:
+  # HTTPS
+  # enabled
+  # present
+  # no letsencrypt
+  # > 15-foo.molecule.lan.conf
+  foo.molecule.lan_9080:
+    filename: 15-foo.molecule.lan.conf
     domains:
-      - bar.molecule.lan
+      - foo.molecule.lan
 
     # Specify which port you want to listen to with clear HTTP, or leave undefined for 80
     listen: 9080
@@ -72,21 +84,72 @@ nginx_vhosts:
     ssl_certificate: /etc/ssl/certs/ssl-cert-snakeoil.pem
     ssl_certificate_key: /etc/ssl/private/ssl-cert-snakeoil.key
 
-  20-bar.molecule.lan:
+  # HTTPS
+  # enabled
+  # present
+  # letsencrypt
+  bar.molecule.lan:
     # state: absent
     # enabled: false
     domains:
       - bar.molecule.lan
+      - ruf.molecule.lan
+      - slo.molecule.lan
+      - zup.molecule.lan
 
     listen: 443 http2
 
     letsencrypt: true
-    letsencrypt_email: ""
+    letsencrypt_email: "letsencrypt@test.com"
 
     # enable ssl
     ssl: true
     ssl_certificate:     /etc/letsencrypt/live/bar.molecule.lan/fullchain.pem
     ssl_certificate_key: /etc/letsencrypt/live/bar.molecule.lan/privkey.pem
+
+  # HTTPS
+  # enabled
+  # present
+  # no letsencrypt
+  # > 20-foo.molecule.lan
+  foo2.molecule.lan:
+    filename: 20-foo.molecule.lan.conf
+    domains:
+      - foo2.molecule.lan
+
+    # Specify which port you want to listen to with clear HTTP, or leave undefined for 80
+    listen: 9080
+    # Specify which port you want to listen to with HTTPS, or leave undefined for 443
+    listen_ssl: 9081
+
+    letsencrypt: false
+    # enable ssl
+    ssl: true
+    ssl_certificate: /etc/ssl/certs/ssl-cert-snakeoil.pem
+    ssl_certificate_key: /etc/ssl/private/ssl-cert-snakeoil.key
+
+  # HTTPS
+  # enabled
+  # present
+  # letsencrypt
+  # > 30-foofoo.molecule.lan
+  foofoo.molecule.lan:
+    filename: 30-foofoo.molecule.lan.conf
+    # state: absent
+    # enabled: false
+    domains:
+      - foo.molecule.lan
+
+    listen: 443 http2
+
+    letsencrypt: true
+    letsencrypt_email: "letsencrypt@test.com"
+
+    # enable ssl
+    ssl: true
+    ssl_certificate:     /etc/letsencrypt/live/bar.molecule.lan/fullchain.pem
+    ssl_certificate_key: /etc/letsencrypt/live/bar.molecule.lan/privkey.pem
+
 
 nginx_vhosts_old:
   - server_name: "bar.molecule.lan"
