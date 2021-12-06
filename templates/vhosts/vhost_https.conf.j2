@@ -4,8 +4,8 @@
 server {
   listen        {{ item.value.listen | default(80) }} default_server;
 {% if item.value.ipv6 is defined and item.value.ipv6 | default('true') | bool %}
-  listen    [::]:{{ item.value.listen | default(80) }}; {% endif %}
-  server_name _;
+  listen        [::]:{{ item.value.listen | default(80) }}; {% endif %}
+  server_name   _;
   return        444;
 
   access_log /var/log/nginx/{{ item.key }}_access.log;
@@ -13,17 +13,18 @@ server {
 }
 
 server {
-   listen        {{ item.value.listen_ssl | default(443) }} ssl http2 default_server;
-   listen   [::]:{{ item.value.listen_ssl | default(443) }} ssl http2 default_server;
-   server_name _;
-   return        444;
+  listen        {{ item.value.listen_ssl | default(443) }} ssl http2 default_server;
+{% if item.value.ipv6 is defined and item.value.ipv6 | default('true') | bool %}
+  listen        [::]:{{ item.value.listen_ssl | default(443) }} ssl http2 default_server; {% endif %}
+  server_name   _;
+  return        444;
 
-   access_log /var/log/nginx/{{ item.key }}_access.log;
-   error_log /var/log/nginx/{{ item.key }}_error.log error;
+  access_log /var/log/nginx/{{ item.key }}_access.log;
+  error_log  /var/log/nginx/{{ item.key }}_error.log error;
 
-   include conf.d/ssl.conf;
-   ssl_certificate     /etc/ssl/certs/ssl-cert-snakeoil.pem;
-   ssl_certificate_key /etc/ssl/private/ssl-cert-snakeoil.key;
+  include             conf.d/ssl.conf;
+  ssl_certificate     /etc/ssl/certs/ssl-cert-snakeoil.pem;
+  ssl_certificate_key /etc/ssl/private/ssl-cert-snakeoil.key;
 }
 
 {% else %}
@@ -45,15 +46,10 @@ upstream {{ upstream.name }} {
 {% endfor %}
 {% endif %}
 
-# {{ item }}
-# {{ item.key }}
-#   - letsencrypt: {{ item.value.letsencrypt | default(false) }}
-#   - ssl_certificate_exists: {{ item.value.ssl_certificate_exists | default(false) }}
-
 server {
   listen         {{ item.value.listen | default(80) }};
 {% if item.value.ipv6 is defined and item.value.ipv6 | default('true') | bool %}
-  listen    [::]:{{ item.value.listen | default(80) }}; {% endif %}
+  listen         [::]:{{ item.value.listen | default(80) }}; {% endif %}
   server_name    {{ item.value.domains | join(' ') }};
 
   access_log {{ item.value.access_log | default('/var/log/nginx/' ~ item.key ~ '_access.log') }};
@@ -68,10 +64,13 @@ server {
   }
 }
 
+# - lets_encrypt          : {{ item.value.letsencrypt }}
+# - ssl_certificate_exists: {{ item.value.ssl_certificate_exists }}
+
 server {
   listen         {{ item.value.listen | default(443) }} ssl http2;
 {% if item.value.ipv6 is defined and item.value.ipv6 | default('true') | bool %}
-  listen    [::]:{{ item.value.listen | default(443) }} ssl http2; {% endif %}
+  listen         [::]:{{ item.value.listen | default(443) }} ssl http2; {% endif %}
   server_name    {{ item.value.domains | join(' ') }};
 
   access_log {{ item.value.access_log | default('/var/log/nginx/' ~ item.key ~ '_access.log') }};
@@ -81,7 +80,7 @@ server {
     alias /var/www/{{ item.key }}/.well-known;
   }
 
-  include conf.d/ssl.conf;
+  include             conf.d/ssl.conf;
 {% if item.value.ssl_certificate_exists | default(false) and
       item.value.letsencrypt is defined and
       item.value.letsencrypt %}

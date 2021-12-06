@@ -33,29 +33,30 @@
 
 - name: ensure vhosts root path exists
   file:
-    path: "{{ item.value.root | default('/var/www') }}"
+    path: "{{ item }}"
     state: directory
     owner: "{{ nginx_user }}"
     mode: 0750
   when:
     - item.value.state | default('present') != 'absent'
   loop:
-    "{{ nginx_vhosts | dict2items }}"
+    "{{ nginx_vhosts | dict2items | vhost_directory('root') }}"
   loop_control:
-    label: "{{ item.value.root | default('/var/www') }}"
+    label: "{{ item }}"
 
 - name: ensure vhosts log path exists
   file:
-    path: "{{ item.value.access_log | default('/var/log/nginx/default.log' ) | dirname }}"
+    path: "{{ item | default('/var/log/nginx/default.log' ) | dirname }}"
     state: directory
+    owner: "{{ nginx_user }}"
+    group: "{{ nginx_group }}"
     mode: 0750
   when:
     - item.value.state | default('present') != 'absent'
-    - item.value.access_log is defined
   loop:
-    "{{ nginx_vhosts | dict2items }}"
+    "{{ nginx_vhosts | dict2items | vhost_directory('access_log') }}"
   loop_control:
-    label: "{{ item.value.access_log | default('/var/log/nginx/default.log' ) | dirname }}"
+    label: "{{ item | default('/var/log/nginx/default.log' ) | dirname }}"
 
 - name: checking existing domains certificates
   stat:
@@ -77,17 +78,5 @@
 - name: append certificates state to vhost configurations
   set_fact:
     nginx_vhosts: "{{ nginx_vhosts | check_certificates(check_domain_cert) }}"
-
-- name: create acme-challenge  directories
-  file:
-    path: "/var/www/{{ item.key }}/.well-known/acme-challenge"
-    state: directory
-    owner: "{{ nginx_user }}"
-    group: "{{ nginx_group }}"
-    mode: 0777
-  loop:
-    "{{ nginx_vhosts | dict2items }}"
-  loop_control:
-    label: "/var/www/{{ item.key }}/.well-known/acme-challenge"
 
 ...

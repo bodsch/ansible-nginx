@@ -1,0 +1,6 @@
+{% for log in nginx_logformat %}
+log_format
+    {{ log.name }} {% if log.escape is defined %}escape = {{ log.escape  }}{% endif %}
+
+{{ log.format |indent(8, first=True) }}
+{% endfor %}

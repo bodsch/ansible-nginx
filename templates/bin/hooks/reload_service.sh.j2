@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 SERVICE="nginx"
 
 INIT_SYSTEM="systemd"
@@ -24,14 +26,13 @@ reload_service() {
 
   if [ "${SERVICE}" = "nginx" ]
   then
+    nginx -t
     nginx -s reload
   fi
 }
 
 run() {
-
-  detect_init_system
-
+  # detect_init_system
   reload_service
 }
 

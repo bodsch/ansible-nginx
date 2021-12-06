@@ -6,7 +6,7 @@
 
 - include_tasks: vhosts/configure.yaml
 
-- include_tasks: vhosts/letsencrypt.yaml
+#- include_tasks: vhosts/letsencrypt.yaml
 
 ...
 

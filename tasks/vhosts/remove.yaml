@@ -13,7 +13,6 @@
     - not item.value.enabled | default('true')
     # - nginx_de_activate_sites
 
-
 - name: remove vhost configurations
   file:
     path: "/etc/nginx/sites-available/{{ item.value.filename | default( item.key ~ '.conf' ) }}"
@@ -24,5 +23,7 @@
     "{{ nginx_vhosts | dict2items }}"
   loop_control:
     label: "{{ item.value.filename | default( item.key ~ '.conf') }}"
+
+# TODO remove log directory, or logfile
 
 ...

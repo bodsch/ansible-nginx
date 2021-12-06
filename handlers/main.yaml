@@ -1,3 +1,16 @@
 ---
 
+- name: validate config
+  command: |
+    nginx -t
+
+- name: reload service
+  command: |
+    [ -e /run/nxinx.pid ] && nginx -s reload
+
+- name: restart service
+  service:
+    name: nginx
+    state: restarted
+
 ...

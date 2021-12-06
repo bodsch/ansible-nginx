@@ -1,8 +1,13 @@
 ---
 
 nginx_vhosts:
+
+  # HTTP
+  # IPv6: false
+  # ssl: false
+  # LE: false
   default:
-    ipv6: true
+    ipv6: false
     # Set default site to return 444 (Connection Closed Without Response)
     # Set to True if you want to redirect http to https
     ssl: false
@@ -11,7 +16,7 @@ nginx_vhosts:
   # HTTP
   # enabled
   # present
-  foo.molecule.lan_80:
+  10-foo.molecule.lan_80:
     # state: absent
     # enabled: true
     # template: foo.tpl.j2
@@ -37,10 +42,14 @@ nginx_vhosts:
       - name: paperless
         servers:
           - 127.0.0.1:8080   max_fails=3 fail_timeout=30s
-          - 127.0.1.1:8080   max_fails=3 fail_timeout=30s
-          - 127.0.2.1:8080   backup
         # strategy: 'ip_hash'
         keepalive: 32
+      - name: unifi
+        servers:
+          - 127.0.0.1:8090   max_fails=3 fail_timeout=30s
+        # strategy: 'ip_hash'
+        keepalive: 32
+
 
     locations:
       - location: "^~ /"
@@ -56,29 +65,35 @@ nginx_vhosts:
   # HTTP
   # enabled
   # present
-  bar.molecule.lan_9000:
+  10-bar.molecule.lan_9000:
     domains:
       - bar.molecule.lan
+
+    root:  /var/www/bar.molecule.lan
 
     # Specify which port you want to listen to with clear HTTP, or leave undefined for 80
     listen: 9000
 
   # HTTPS
   # enabled
-  # present
+  # absent
   # no letsencrypt
   # > 15-foo.molecule.lan.conf
-  foo.molecule.lan_9080:
+  15-foo.molecule.lan_9080:
     filename: 15-foo.molecule.lan.conf
     domains:
       - foo.molecule.lan
+
+    # state: absent
 
     # Specify which port you want to listen to with clear HTTP, or leave undefined for 80
     listen: 9080
     # Specify which port you want to listen to with HTTPS, or leave undefined for 443
     listen_ssl: 9081
 
-    letsencrypt: false
+    letsencrypt:
+      enabled: false
+
     # enable ssl
     ssl: true
     ssl_certificate: /etc/ssl/certs/ssl-cert-snakeoil.pem
@@ -88,7 +103,7 @@ nginx_vhosts:
   # enabled
   # present
   # letsencrypt
-  bar.molecule.lan:
+  20-bar.molecule.lan:
     # state: absent
     # enabled: false
     domains:
@@ -99,8 +114,9 @@ nginx_vhosts:
 
     listen: 443 http2
 
-    letsencrypt: true
-    letsencrypt_email: "letsencrypt@test.com"
+    letsencrypt:
+      enabled: true
+      email: "letsencrypt@test.com"
 
     # enable ssl
     ssl: true
@@ -112,7 +128,7 @@ nginx_vhosts:
   # present
   # no letsencrypt
   # > 20-foo.molecule.lan
-  foo2.molecule.lan:
+  20-foo.molecule.lan:
     filename: 20-foo.molecule.lan.conf
     domains:
       - foo2.molecule.lan
@@ -122,7 +138,8 @@ nginx_vhosts:
     # Specify which port you want to listen to with HTTPS, or leave undefined for 443
     listen_ssl: 9081
 
-    letsencrypt: false
+    letsencrypt:
+      enabled: false
     # enable ssl
     ssl: true
     ssl_certificate: /etc/ssl/certs/ssl-cert-snakeoil.pem
@@ -133,7 +150,7 @@ nginx_vhosts:
   # present
   # letsencrypt
   # > 30-foofoo.molecule.lan
-  foofoo.molecule.lan:
+  30-foofoo.molecule.lan:
     filename: 30-foofoo.molecule.lan.conf
     # state: absent
     # enabled: false
@@ -142,8 +159,9 @@ nginx_vhosts:
 
     listen: 443 http2
 
-    letsencrypt: true
-    letsencrypt_email: "letsencrypt@test.com"
+    letsencrypt:
+      enabled: true
+      email: "letsencrypt@test.com"
 
     # enable ssl
     ssl: true

@@ -10,13 +10,13 @@
     mode: 0644
   when:
     - item | create_vhost('http')
+    - item.value.state | default('present') != 'absent'
   loop:
     "{{ nginx_vhosts | dict2items }}"
   loop_control:
     label: "{{ item.value.filename | default( item.key ~ '.conf') }}"
-  # notify: reload nginx
 
-- name: create HTTPs vhost configurations without ACME certificates
+- name: create HTTPs vhost configurations
   template:
     src: "{{ item.value.template | default( 'vhosts/' ~ nginx_vhost_templates.https ) }}"
     dest: "/etc/nginx/sites-available/{{ item.value.filename | default( item.key ~ '.conf' ) }}"
@@ -26,26 +26,44 @@
     mode: 0644
   when:
     - item | create_vhost('https')
+    - item.value.state | default('present') != 'absent'
   loop:
     "{{ nginx_vhosts | dict2items }}"
   loop_control:
     label: "{{ item.value.filename | default( item.key ~ '.conf') }}"
-  # notify: reload nginx
 
 # ---------------------------------------------------------------------------------------
 
-- name: -> enable site config without enabled letsencrypt certificate
-  debug:
-    msg: "{{ item.key }}"
-  when:
-    - item | create_vhost('https')
-    - item | active_vhost(
-        certificate_exists=item.value.ssl_certificate_exists | default('false') | bool )
+- name: enable HTTP sites configs
+  file:
+    src: /etc/nginx/sites-available/{{ item.value.filename | default( item.key ~ '.conf') }}
+    dest: /etc/nginx/sites-enabled/{{ item.value.filename | default( item.key ~ '.conf') }}
+    state: link
   loop:
     "{{ nginx_vhosts | dict2items }}"
   loop_control:
     label: "{{ item.value.filename | default( item.key ~ '.conf') }}"
+  when:
+    - item | create_vhost('http')
+    - item.value.state | default('present') != 'absent'
+    - not ansible_check_mode
+  notify:
+    - validate config
+    - reload service
 
+# ---------------------------------------------------------------------------------------
+
+# - name: "DEBUG: enable site config without enabled letsencrypt certificate"
+#   debug:
+#     msg: "{{ item.key }}"
+#   when:
+#     - item.value.state | default('present') != 'absent'
+#     - item | create_vhost('https')
+#     - item | activate_vhost_by('https')
+#   loop:
+#     "{{ nginx_vhosts | dict2items }}"
+#   loop_control:
+#     label: "{{ item.value.filename | default( item.key ~ '.conf') }}"
 
 - name: enable site config without enabled letsencrypt certificate
   file:
@@ -57,10 +75,12 @@
   loop_control:
     label: "{{ item.value.filename | default( item.key ~ '.conf') }}"
   when:
+    - item.value.state | default('present') != 'absent'
     - item | create_vhost('https')
-    - item | active_vhost(
-        certificate_exists=item.value.ssl_certificate_exists | default('false') | bool )
+    - item | activate_vhost_by('https')
     - not ansible_check_mode
-  # notify: Reload Nginx
+  notify:
+    - validate config
+    - reload service
 
 ...

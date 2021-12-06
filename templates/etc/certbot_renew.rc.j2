@@ -1,0 +1,15 @@
+
+haproxy_ca="/etc/haproxy/cert/"
+lets_encrypt_ca="/etc/letsencrypt/live"
+
+exp_limit=20
+
+WELL_KNOWN_DIRECTORY="/srv/www/letsencrypt/.well-known/acme-challenge"
+
+CHECKSUM_DOMAINS_OVERWRITE=""
+
+CERT_NAME=
+
+CERTBOT_EMAIL={{ certbot_email }}
+
+CERTBOT_GLOBAL_OPTS="--webroot --agree-tos ${CERTBOT_EMAIL}"
