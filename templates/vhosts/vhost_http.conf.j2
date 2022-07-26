@@ -1,55 +1,40 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
 # {{ ansible_managed }}
+
+{% import 'jinja_macros.j2' as tpl with context %}
 
 {% if item.key == "default" %}
 server {
-  listen        {{ item.value.listen | default(80) }} default_server;
-{% if item.value.ipv6 is defined and item.value.ipv6 | default('true') | bool %}
-  listen    [::]:{{ item.value.listen | default(80) }}; {% endif %}
   server_name _;
+  listen        {{ item.value.listen | default(80) }} default_server;
+  {% if item.value.ipv6 is defined and
+        item.value.ipv6 | default('true') | bool %}
+  listen    [::]:{{ item.value.listen | default(80) }};
+  {% endif %}
   return        444;
 
-  access_log /var/log/nginx/{{ item.key }}_access.log;
-  error_log  /var/log/nginx/{{ item.key }}_error.log error;
+  {{ tpl.vhost_logfile(item.logfiles | default({}), item.key) | indent(0, first=False) }}
 }
 
 {% else %}
-{% if item.value.upstreams is defined and item.value.upstreams | count > 0 %}
-# upstream config
-{% set upstreams = item.value.upstreams %}
-{% for upstream in upstreams %}
-upstream {{ upstream.name }} {
-{% if upstream.strategy is defined %}
-  {{ upstream.strategy }};
-{% endif %}
-{% for server in upstream.servers %}
-  server {{ server }}{% if upstream.options is defined and upstream.options | length > 0 %} {{ upstream.options.rjust(30) }}{% endif %};
-{% endfor %}
-{% if upstream.keepalive is defined %}
-  keepalive {{ upstream.keepalive }};
-{% endif %}
-}
-{% endfor %}
-{% endif %}
+{# upstream configurations #}
+{{ tpl.vhost_upstreams(item.value | default({})) | indent(0, first=False) }}
 
 server {
+  server_name
+    {{ item.value.domains | join('\n') | indent(4, first=False) }};
   listen         {{ item.value.listen | default(80) }};
-{% if item.value.ipv6 is defined and item.value.ipv6 | default('true') | bool %}
-  listen    [::]:{{ item.value.listen | default(80) }}; {% endif %}
-  server_name    {{ item.value.domains | join(' ') }};
+  {% if item.value.ipv6 is defined and
+        item.value.ipv6 | default('true') | bool %}
+  listen    [::]:{{ item.value.listen | default(80) }};
+  {% endif %}
 
-  access_log {{ item.value.access_log | default('/var/log/nginx/' ~ item.key ~ '_access.log') }};
-  error_log  {{ item.value.error_log  | default('/var/log/nginx/' ~ item.key ~ '_error.log error') }};
+  {{ tpl.vhost_logfile(item.logfiles | default({}), item.key) | indent(0, first=False) }}
 
   location /.well-known {
     alias /var/www/{{ item.key }}/.well-known;
   }
 
-{% if item.value.locations is defined and item.value.locations | count > 0 %}
-{% for l in item.value.locations %}
-  location {{ l.location }} {
-    {{ l.options | indent(4) }}
-  }
-{% endfor %}
-{% endif %}
+  {{ tpl.vhost_locations(item.value | default({})) | indent(0, first=False) }}
 }
 {% endif %}

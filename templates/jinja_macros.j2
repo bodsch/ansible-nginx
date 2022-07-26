@@ -1,27 +1,67 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
 {#
 
 #}
 {% set print = self %}
 
-{% macro print_options(options) %}
-  {% set with_option = [
-          "host-name",
-          "domain-name-servers",
-          "domain-search",
-          "domain-name",
-          "broadcast-address",
-          "subnet-mask",
-          "routers"
-        ] %}
-  {% for key, value in options.items() %}
-    {%- set key = key.replace('_','-') %}
-    {%- set valid, v = value | has_valid_values %}
-    {% if key in with_option %}
-      {%- set key = "option " + key %}
+{% macro vhost_logfile(logfiles, domain) %}
+  {% if logfiles | default({}) | count > 0 %}
+    {% if logfiles.access.file | default('') | string | length > 0 %}
+  access_log {{ logfiles.access.file }} {{ logfiles.access.loglevel | default('') }};
     {% endif %}
-    {% if valid %}
-{{ key }} {{ v }};
+    {% if logfiles.error.file | default('') | string | length > 0 %}
+  error_log  {{ logfiles.error.file }} {{ logfiles.error.loglevel | default('error') }};
     {% endif %}
-  {% endfor -%}
+  {% else %}
+  access_log /var/log/nginx/{{ domain }}_access.log;
+  error_log  /var/log/nginx/{{ domain }}_error.log error;
+  {% endif %}
 {% endmacro %}
 
+{% macro vhost_certificates(data, domain) %}
+
+  include             conf.d/ssl.conf;
+
+  {% if data.ssl.state | default('present') %}
+    {% if data.letsencrypt is defined and
+          data.letsencrypt %}
+  ssl_certificate     /etc/letsencrypt/live/{{ domain }}/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/{{ domain }}/privkey.pem;
+    {% else %}
+  ssl_certificate     {{ data.ssl.certificate     | default('/etc/ssl/certs/ssl-cert-snakeoil.pem') }};
+  ssl_certificate_key {{ data.ssl.certificate_key | default('/etc/ssl/private/ssl-cert-snakeoil.key') }};
+    {% endif %}
+  {% endif %}
+{% endmacro %}
+
+{% macro vhost_upstreams(data) %}
+
+  {% if data.upstreams | default({}) | count > 0 %}
+# upstream config
+    {% set upstreams = data.upstreams %}
+    {% for upstream in upstreams %}
+upstream {{ upstream.name }} {
+      {% if upstream.strategy is defined %}
+  {{ upstream.strategy }};
+      {% endif %}
+      {% for server in upstream.servers %}
+  server {{ server }}{% if upstream.options is defined and upstream.options | length > 0 %} {{ upstream.options.rjust(30) }}{% endif %};
+      {% endfor %}
+      {% if upstream.keepalive is defined %}
+  keepalive {{ upstream.keepalive }};
+      {% endif %}
+}
+    {% endfor %}
+  {% endif %}
+{% endmacro %}
+
+{% macro vhost_locations(data) %}
+{% if data.locations |default([]) | count > 0 %}
+  {% for l in data.locations %}
+  location {{ l.location }} {
+    {{ l.options | indent(4) }}
+  }
+  {% endfor %}
+{% endif %}
+
+{% endmacro %}

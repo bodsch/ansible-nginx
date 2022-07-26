@@ -5,67 +5,45 @@
 
 {% if item.key == "default" %}
 server {
-  listen        {{ item.value.listen | default(80) }} default_server;
-  {% if item.value.ipv6 | default('true') | bool %}
-  listen        [::]:{{ item.value.listen | default(80) }}; {% endif %}
   server_name   _;
+  listen        {{ item.value.listen | default(80) }} default_server;
+  {% if item.value.ipv6 is defined and
+        item.value.ipv6 | default('true') | bool %}
+  listen        [::]:{{ item.value.listen | default(80) }};
+  {% endif %}
   return        444;
 
-  {% if item.logfiles | default({}) | count > 0 %}
-    {% if item.logfiles.access.file | default('') | string | length > 0 %}
-  access_log {{ item.logfiles.access.file }} {% if item.logfiles.access.loglevel is defined %}{{ item.logfiles.access.loglevel }}{% endif %};
-    {% endif %}
-    {% if item.logfiles.error.file | default('') | string | length > 0 %}
-  error_log  {{ item.logfiles.error.file }} {% if item.logfiles.error.loglevel is defined %}{{ item.logfiles.error.loglevel }}{% else %}error{% endif %};
-    {% endif %}
-  {% else %}
-  access_log /var/log/nginx/{{ item.key }}_access.log;
-  error_log  /var/log/nginx/{{ item.key }}_error.log error;
-  {% endif %}
+  {{ tpl.vhost_logfile(item.logfiles | default({}), item.key) | indent(0, first=False) }}
 }
 
 server {
-  listen        {{ item.value.listen_ssl | default(443) }} ssl http2 default_server;
-{% if item.value.ipv6 is defined and item.value.ipv6 | default('true') | bool %}
-  listen        [::]:{{ item.value.listen_ssl | default(443) }} ssl http2 default_server; {% endif %}
   server_name   _;
+  listen        {{ item.value.listen_ssl | default(443) }} ssl http2 default_server;
+  {% if item.value.ipv6 is defined and
+        item.value.ipv6 | default('true') | bool %}
+  listen        [::]:{{ item.value.listen_ssl | default(443) }} ssl http2 default_server;
+  {% endif %}
   return        444;
 
-  access_log /var/log/nginx/{{ item.key }}_access.log;
-  error_log  /var/log/nginx/{{ item.key }}_error.log error;
+  {{ tpl.vhost_logfile(item.logfiles | default({}), item.key) | indent(0, first=False) }}
 
-  include             conf.d/ssl.conf;
-  ssl_certificate     /etc/ssl/certs/ssl-cert-snakeoil.pem;
-  ssl_certificate_key /etc/ssl/private/ssl-cert-snakeoil.key;
+  {{ tpl.vhost_certificates(item.value | default({}), item.key) | indent(0, first=False) }}
 }
 
 {% else %}
-{% if item.value.upstreams is defined and item.value.upstreams | count > 0 %}
-# upstream config
-{% set upstreams = item.value.upstreams %}
-{% for upstream in upstreams %}
-upstream {{ upstream.name }} {
-{% if upstream.strategy is defined %}
-  {{ upstream.strategy }};
-{% endif %}
-{% for server in upstream.servers %}
-  server {{ server }}{% if upstream.options is defined and upstream.options | length > 0 %} {{ upstream.options.rjust(30) }}{% endif %};
-{% endfor %}
-{% if upstream.keepalive is defined %}
-  keepalive {{ upstream.keepalive }};
-{% endif %}
-}
-{% endfor %}
-{% endif %}
+{# upstream configurations #}
+{{ tpl.vhost_upstreams(item.value | default({})) | indent(0, first=False) }}
 
+{# HTTP block ... including acme-challenge for letsencrypt #}
 server {
+  server_name
+    {{ item.value.domains | join('\n') | indent(4, first=False) }};
   listen         {{ item.value.listen | default(80) }};
-{% if item.value.ipv6 is defined and item.value.ipv6 | default('true') | bool %}
+  {% if item.value.ipv6 is defined and
+        item.value.ipv6 | default('true') | bool %}
   listen         [::]:{{ item.value.listen | default(80) }}; {% endif %}
-  server_name    {{ item.value.domains | join(' ') }};
 
-  access_log {{ item.value.access_log | default('/var/log/nginx/' ~ item.key ~ '_access.log') }};
-  error_log  {{ item.value.error_log  | default('/var/log/nginx/' ~ item.key ~ '_error.log error') }};
+  {{ tpl.vhost_logfile(item.logfiles | default({}), item.key) | indent(0, first=False) }}
 
   location /.well-known/acme-challenge {
     alias /var/www/{{ item.key }}/.well-known/acme-challenge;
@@ -75,46 +53,24 @@ server {
     return         301 https://$server_name$request_uri;
   }
 }
-
-{% if item.value.ssl is defined %}
-# {{ item.value.ssl }}
-{% endif %}
-
-# - lets_encrypt          : {{ item.value.letsencrypt }}
-# - ssl_certificate_exists: {{ item.value.ssl.state | default('missing') | bool }}
-
+{# HTTPS block #}
 server {
+  server_name
+    {{ item.value.domains | join('\n') | indent(4, first=False) }};
   listen         {{ item.value.listen | default(443) }} ssl http2;
-{% if item.value.ipv6 is defined and item.value.ipv6 | default('true') | bool %}
-  listen         [::]:{{ item.value.listen | default(443) }} ssl http2; {% endif %}
-  server_name    {{ item.value.domains | join(' ') }};
+  {% if item.value.ipv6 is defined and
+        item.value.ipv6 | default('true') | bool %}
+  listen         [::]:{{ item.value.listen | default(443) }} ssl http2;
+  {% endif %}
 
-  access_log {{ item.value.access_log | default('/var/log/nginx/' ~ item.key ~ '_access.log') }};
-  error_log  {{ item.value.error_log  | default('/var/log/nginx/' ~ item.key ~ '_error.log error') }};
+  {{ tpl.vhost_logfile(item.logfiles | default({}), item.key) | indent(0, first=False) }}
 
   location /.well-known {
     alias /var/www/{{ item.key }}/.well-known;
   }
 
-  include             conf.d/ssl.conf;
+  {{ tpl.vhost_certificates(item.value | default({}), item.key) | indent(0, first=False) }}
 
-{% item.value.ssl.state | default('present') %}
-  {% if item.value.letsencrypt is defined and
-      item.value.letsencrypt %}
-  ssl_certificate     /etc/letsencrypt/live/{{ item.key }}/fullchain.pem;
-  ssl_certificate_key /etc/letsencrypt/live/{{ item.key }}/privkey.pem;
-  {% else %}
-  ssl_certificate     {{ item.value.ssl.certificate     | default('/etc/ssl/certs/ssl-cert-snakeoil.pem') }};
-  ssl_certificate_key {{ item.value.ssl.certificate_key | default('/etc/ssl/private/ssl-cert-snakeoil.key') }};
-  {% endif %}
-{% endif %}
-
-{% if item.value.locations |default([]) | count > 0 %}
-  {% for l in item.value.locations %}
-  location {{ l.location }} {
-    {{ l.options | indent(4) }}
-  }
-  {% endfor %}
-{% endif %}
+  {{ tpl.vhost_locations(item.value | default({})) | indent(0, first=False) }}
 }
 {% endif %}
