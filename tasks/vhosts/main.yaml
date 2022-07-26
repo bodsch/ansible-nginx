@@ -2,7 +2,7 @@
 
 - include_tasks: vhosts/prepare.yaml
 
-- include_tasks: vhosts/remove.yaml
+# - include_tasks: vhosts/remove.yaml
 
 - include_tasks: vhosts/configure.yaml
 

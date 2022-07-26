@@ -25,15 +25,15 @@
   loop:
     - sites-available
     - sites-enabled
+    - includes.d
     - htpasswd.d
 
 - name: remove default site
   file:
-    name: /etc/nginx/sites-enabled/default
+    name: "{{ nginx_default_site.file | default('/etc/nginx/sites-enabled/default') }}"
     state: absent
   when:
-    - nginx_remove_default_site is defined
-    - nginx_remove_default_site
+    - nginx_default_site.remove | default('true')
 
 # - name: create acme challenge directory
 #   file:
@@ -56,10 +56,18 @@
     group: root
     mode: 0644
 
+- name: copy static nginx conf.d
+  copy:
+    src: conf.d/
+    dest: /etc/nginx/conf.d/
+    owner: root
+    group: root
+    mode: 0644
+
 - name: create logformat configuration
   template:
-    src: nginx_log.conf.j2
-    dest: /etc/nginx/nginx_log.conf
+    src: includes.d/nginx_log.conf.j2
+    dest: /etc/nginx/includes.d/nginx_log.conf
     owner: root
     group: root
     mode: 0644

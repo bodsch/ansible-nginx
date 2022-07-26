@@ -2,6 +2,13 @@
 
 nginx_support_ipv6: false
 
+nginx_certbot:
+  enabled: false
+
+nginx_default_site:
+  file: /etc/nginx/sites-enabled/default
+  remove: true
+
 nginx_vhost_templates:
   http: vhost_http.conf.j2
   https: vhost_https.conf.j2
@@ -10,58 +17,15 @@ nginx_vhost_templates:
 nginx_logging:
   base_directory: /var/log/nginx
 
-
-nginx_global:
-  error_log: "{{ nginx_logging.base_directory }}/error.log warn"
-  worker_processes: "{{ ansible_processor_vcpus | default(ansible_processor_count) }}"
-  include_modules: true
-  extra_config: {}
+nginx_global: {}
 
 nginx_events:
   worker_connections: "1024"
   multi_accept: false
 
-nginx_logformat:
-  - name: main
-    format: |
-      '$remote_addr -
-      $remote_user [$time_local] "$request" '
-      '$status $body_bytes_sent "$http_referer" '
-      '"$http_user_agent" "$http_x_forwarded_for"';
+nginx_logformat: {}
 
-  - name: json_combined
-    format: |
-      '{'
-        '"time_local":"$time_local",'
-        '"remote_addr":"$remote_addr",'
-        '"remote_user":"$remote_user",'
-        '"request":"$request",'
-        '"status": "$status",'
-        '"body_bytes_sent":"$body_bytes_sent",'
-        '"request_time":"$request_time",'
-        '"http_referrer":"$http_referer",'
-        '"http_user_agent":"$http_user_agent"'
-      '}';
-    escape: json
-
-nginx_http:
-  mime_file_path: "{{ nginx_mime_file_path }}"
-  server_names_hash_bucket_size: 64
-  client_max_body_size: "64m"
-  access_log: "{{ nginx_logging.base_directory }}/access.log main buffer=32k flush=2m"
-  sendfile: true
-  tcp_nopush: true
-  tcp_nodelay: true
-  server_tokens: false
-  rewrite_log: true
-  keepalive:
-    timeout: 65
-    requests: 100
-  proxy:
-    cache_path: ''
-  gzip:
-    enabled: false
-  extra_options: {}
+nginx_http: {}
 
 nginx_includes:
   - "/etc/nginx/conf.d/*.conf"

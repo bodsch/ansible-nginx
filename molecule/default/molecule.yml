@@ -13,20 +13,32 @@ lint: |
 
 platforms:
   - name: instance
-    image: "diodonfrost/ansible-${DISTRIBUTION:-debian:10}"
+    image: "bodsch/ansible-${DISTRIBUTION:-debian:11}"
     command: ${MOLECULE_DOCKER_COMMAND:-""}
     docker_host: "${DOCKER_HOST:-unix://run/docker.sock}"
     privileged: true
     pre_build_image: true
+    capabilities:
+      - SYS_ADMIN
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    tmpfs:
+      - /run
+      - /tmp
+    published_ports:
+      - 80:80
+      - 443:443
 
 provisioner:
   name: ansible
+  ansible_args:
+    - --diff
+    - -v
   config_options:
     defaults:
       deprecation_warnings: True
       stdout_callback: yaml
+      callbacks_enabled: profile_tasks
 
 scenario:
   test_sequence:

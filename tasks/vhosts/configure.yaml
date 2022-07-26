@@ -9,10 +9,10 @@
     group: root
     mode: 0644
   when:
-    - item | create_vhost('http')
+    # - item # | create_vhost('http')
     - item.value.state | default('present') != 'absent'
   loop:
-    "{{ nginx_vhosts | dict2items }}"
+    "{{ nginx_http_vhosts | dict2items }}"
   loop_control:
     label: "{{ item.value.filename | default( item.key ~ '.conf') }}"
 
@@ -25,62 +25,62 @@
     group: root
     mode: 0644
   when:
-    - item | create_vhost('https')
+    # - item | create_vhost('https')
     - item.value.state | default('present') != 'absent'
   loop:
-    "{{ nginx_vhosts | dict2items }}"
+    "{{ nginx_https_vhosts | dict2items }}"
   loop_control:
     label: "{{ item.value.filename | default( item.key ~ '.conf') }}"
 
-# ---------------------------------------------------------------------------------------
-
-- name: enable HTTP sites configs
-  file:
-    src: /etc/nginx/sites-available/{{ item.value.filename | default( item.key ~ '.conf') }}
-    dest: /etc/nginx/sites-enabled/{{ item.value.filename | default( item.key ~ '.conf') }}
-    state: link
-  loop:
-    "{{ nginx_vhosts | dict2items }}"
-  loop_control:
-    label: "{{ item.value.filename | default( item.key ~ '.conf') }}"
-  when:
-    - item | create_vhost('http')
-    - item.value.state | default('present') != 'absent'
-    - not ansible_check_mode
-  notify:
-    - validate config
-    - reload service
-
-# ---------------------------------------------------------------------------------------
-
-# - name: "DEBUG: enable site config without enabled letsencrypt certificate"
-#   debug:
-#     msg: "{{ item.key }}"
+# # ---------------------------------------------------------------------------------------
+#
+# - name: enable HTTP sites configs
+#   file:
+#     src: /etc/nginx/sites-available/{{ item.value.filename | default( item.key ~ '.conf') }}
+#     dest: /etc/nginx/sites-enabled/{{ item.value.filename | default( item.key ~ '.conf') }}
+#     state: link
+#   loop:
+#     "{{ nginx_http_vhosts | dict2items }}"
+#   loop_control:
+#     label: "{{ item.value.filename | default( item.key ~ '.conf') }}"
 #   when:
+#     - item | create_vhost('http')
 #     - item.value.state | default('present') != 'absent'
-#     - item | create_vhost('https')
-#     - item | activate_vhost_by('https')
+#     - not ansible_check_mode
+#   notify:
+#     - validate config
+#     - reload service
+#
+# # ---------------------------------------------------------------------------------------
+#
+# # - name: "DEBUG: enable site config without enabled letsencrypt certificate"
+# #   debug:
+# #     msg: "{{ item.key }}"
+# #   when:
+# #     - item.value.state | default('present') != 'absent'
+# #     - item | create_vhost('https')
+# #     - item | activate_vhost_by('https')
+# #   loop:
+# #     "{{ nginx_vhosts | dict2items }}"
+# #   loop_control:
+# #     label: "{{ item.value.filename | default( item.key ~ '.conf') }}"
+#
+# - name: enable site config without enabled letsencrypt certificate
+#   file:
+#     src: /etc/nginx/sites-available/{{ item.value.filename | default( item.key ~ '.conf') }}
+#     dest: /etc/nginx/sites-enabled/{{ item.value.filename | default( item.key ~ '.conf') }}
+#     state: link
 #   loop:
 #     "{{ nginx_vhosts | dict2items }}"
 #   loop_control:
 #     label: "{{ item.value.filename | default( item.key ~ '.conf') }}"
-
-- name: enable site config without enabled letsencrypt certificate
-  file:
-    src: /etc/nginx/sites-available/{{ item.value.filename | default( item.key ~ '.conf') }}
-    dest: /etc/nginx/sites-enabled/{{ item.value.filename | default( item.key ~ '.conf') }}
-    state: link
-  loop:
-    "{{ nginx_vhosts | dict2items }}"
-  loop_control:
-    label: "{{ item.value.filename | default( item.key ~ '.conf') }}"
-  when:
-    - item.value.state | default('present') != 'absent'
-    - item | create_vhost('https')
-    - item | activate_vhost_by('https')
-    - not ansible_check_mode
-  notify:
-    - validate config
-    - reload service
+#   when:
+#     - item.value.state | default('present') != 'absent'
+#     - item | create_vhost('https')
+#     - item | activate_vhost_by('https')
+#     - not ansible_check_mode
+#   notify:
+#     - validate config
+#     - reload service
 
 ...

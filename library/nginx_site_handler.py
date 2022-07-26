@@ -1,0 +1,191 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+# (c) 2021, Bodo Schulz <bodo@boone-schulz.de>
+# BSD 2-clause (see LICENSE or https://opensource.org/licenses/BSD-2-Clause)
+
+from __future__ import absolute_import, division, print_function
+import os
+import pwd
+import grp
+
+from ansible.module_utils.basic import AnsibleModule
+
+
+class NginxSiteHandler(object):
+    """
+    """
+    def __init__(self, module):
+        """
+        """
+        self.module = module
+        self.state  = module.params.get("state")
+        self.enabled = module.params.get("enabled")
+        self.vhosts = module.params.get("vhosts")
+
+    def run(self):
+        """
+        """
+        result_state = []
+
+        for vhost, values in self.vhosts.items():
+            file_name = values.get("filename", None)
+            enabled = values.get("enabled", True)
+            state = values.get("state", "present")
+
+            self.module.log(msg=f" - {vhost} : (state: {state} / {self.state}) / (enabled: {enabled} / {self.enabled}) ")
+
+            if not file_name:
+                file_name = f"{vhost}.conf"
+
+            self.module.log(msg=f"   - {file_name}")
+
+            if self.enabled == False and enabled == False:
+                changed = self.disable_site(file_name)
+
+                if changed:
+                    res = {}
+                    res[vhost] = dict(
+                        state = f"vhost {vhost} successfuly disabled"
+                    )
+                    result_state.append(res)
+
+            if self.enabled == True and enabled == True:
+                changed = self.enable_site(file_name)
+
+                if changed:
+                    res = {}
+                    res[vhost] = dict(
+                        state = f"vhost {vhost} successfuly enabled"
+                    )
+                    result_state.append(res)
+
+            if self.state == "absent" and state == "absent":
+                changed = self.remove_site(file_name)
+
+                if changed:
+                    res = {}
+                    res[vhost] = dict(
+                        state = f"vhost {vhost} successfuly disabled and removed"
+                    )
+                    result_state.append(res)
+
+        self.module.log(msg=f" - result_state '{result_state}'")
+
+        # define changed for the running tasks
+        # migrate a list of dict into dict
+        combined_d = {key: value for d in result_state for key, value in d.items()}
+        # find all changed and define our variable
+        changed = (len({k: v for k, v in combined_d.items() if v.get('state')}) > 0)
+
+        result = dict(
+            changed = changed,
+            failed = False,
+            state = result_state
+        )
+
+        return result
+
+    def disable_site(self, file_name):
+        """
+        """
+        changed = False
+
+        site_file = os.path.join("/etc/nginx/sites-enabled", file_name)
+
+        changed = self.__remove_file(site_file)
+
+        return changed
+
+    def enable_site(self, file_name):
+        """
+        """
+        changed = False
+
+        source = os.path.join("/etc/nginx/sites-available", file_name)
+        destination = os.path.join("/etc/nginx/sites-enabled", file_name)
+
+        if(os.path.islink(destination) and os.readlink(destination) == source):
+            # module.log(msg="link exists and is valid")
+            pass
+        else:
+            if(not os.path.islink(destination)):
+                self.create_link(source, destination)
+            else:
+                if(os.readlink(destination) != source):
+                    module.log(msg=f"path '{destination}' is a broken symlink")
+                    self.create_link(source, destination, True)
+                else:
+                    self.create_link(source, destination)
+
+            changed = True
+
+        return changed
+
+    def remove_site(self, file_name):
+        """
+        """
+        changed = False
+
+        self.disable_site(file_name)
+
+        source = os.path.join("/etc/nginx/sites-available", file_name)
+
+        changed = self.__remove_file(source)
+
+        return changed
+
+
+    def __remove_file(self, file_name):
+        """
+        """
+        self.module.log(msg=f"remove {file_name}")
+
+        if os.path.exists(file_name):
+            os.remove(file_name)
+            return True
+
+        return False
+
+# ===========================================
+# Module execution.
+
+
+def main():
+
+    module = AnsibleModule(
+
+        argument_spec=dict(
+            state = dict(
+                required = False,
+                default = "present",
+                choices = [
+                    "absent",
+                    "present"
+                ]
+            ),
+            enabled = dict(
+                required = False,
+                type="bool"
+            ),
+            vhosts=dict(
+                required=True,
+                type="dict"
+            ),
+            site_path = dict(
+                required = False,
+                default = ""
+            ),
+        ),
+        supports_check_mode=True,
+    )
+
+    p = NginxSiteHandler(module)
+    result = p.run()
+
+    # module.log(msg="= result: {}".format(result))
+    module.exit_json(**result)
+
+
+if __name__ == '__main__':
+    main()

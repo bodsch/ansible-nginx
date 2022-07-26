@@ -1,7 +1,23 @@
 ---
 
-nginx_vhosts:
+nginx_logformat:
+  json_combined:
+    format: |
+      '{'
+        '"time_local": "$time_local",'
+        '"remote_addr": "$remote_addr",'
+        '"remote_user": "$remote_user",'
+        '"request": "$request",'
+        '"status": "$status",'
+        '"body_bytes_sent": "$body_bytes_sent",'
+        '"request_time": "$request_time",'
+        '"http_referrer": "$http_referer",'
+        '"http_user_agent": "$http_user_agent"'
+      '}';
+    escape: json
 
+
+nginx_vhosts:
   # HTTP
   # IPv6: false
   # ssl: false
@@ -10,7 +26,8 @@ nginx_vhosts:
     ipv6: false
     # Set default site to return 444 (Connection Closed Without Response)
     # Set to True if you want to redirect http to https
-    ssl: false
+    ssl:
+      enabled: false
     letsencrypt: false
 
   # HTTP
@@ -26,16 +43,26 @@ nginx_vhosts:
 
     root:  /var/www/foo.molecule.lan
 
-    access_log: /var/log/nginx/bar.molecule.lan/access.log
-    error_log: /var/log/nginx/bar.molecule.lan/error.log
+    logfiles:
+      access:
+        file: /var/log/nginx/foo.molecule.lan/access.log
+        loglevel: 'json_analytics'
+      error:
+        file: /var/log/nginx/foo.molecule.lan/error.log
+        loglevel: notice
+
+    # access_log: /var/log/nginx/foo.molecule.lan/access.log
+    # error_log:  /var/log/nginx/foo.molecule.lan/error.log
 
     # creates an htpasswd file under
     # /etc/nginx/htpasswd.d/foo.molecule.lan
     htpasswd:
-      - username: myusername_1
-        password: mysecre
-      - username: myusername_2
-        password: mysecretpassword
+      - state: present
+        username: admin
+        password: ZRhgqhaAjdbuFXj2PLJTzYy5PrRsStNaeYWd9c3Ze3
+      - state: present
+        username: administrator
+        password: gp!tk<r+JcDyJhV5!tgzZVUWx233HLVZMJUy<YNVPZ
 
     # list of upstream servers
     upstreams:
@@ -49,7 +76,6 @@ nginx_vhosts:
           - 127.0.0.1:8090   max_fails=3 fail_timeout=30s
         # strategy: 'ip_hash'
         keepalive: 32
-
 
     locations:
       - location: "^~ /"
@@ -74,6 +100,22 @@ nginx_vhosts:
     # Specify which port you want to listen to with clear HTTP, or leave undefined for 80
     listen: 9000
 
+    logfiles:
+      access:
+        file: /var/log/nginx/bar.molecule.lan/access.log
+        loglevel: 'json_analytics'
+      error:
+        file: /var/log/nginx/bar.molecule.lan/error.log
+        loglevel: notice
+
+    # creates an htpasswd file under
+    # /etc/nginx/htpasswd.d/foo.molecule.lan
+    htpasswd:
+      - state: absent
+        username: myusername_1
+        password: mysecre
+
+
   # HTTPS
   # enabled
   # absent
@@ -81,6 +123,9 @@ nginx_vhosts:
   # > 15-foo.molecule.lan.conf
   15-foo.molecule.lan_9080:
     filename: 15-foo.molecule.lan.conf
+    state: present
+    enabled: false
+
     domains:
       - foo.molecule.lan
 
@@ -95,9 +140,11 @@ nginx_vhosts:
       enabled: false
 
     # enable ssl
-    ssl: true
-    ssl_certificate: /etc/ssl/certs/ssl-cert-snakeoil.pem
-    ssl_certificate_key: /etc/ssl/private/ssl-cert-snakeoil.key
+    ssl:
+      enabled: true
+      certificate: /etc/ssl/certs/ssl-cert-snakeoil.pem
+      certificate_key: /etc/ssl/private/ssl-cert-snakeoil.key
+      dhparam: /etc/letsencrypt/ssl-dhparams.pem
 
   # HTTPS
   # enabled
@@ -119,9 +166,10 @@ nginx_vhosts:
       email: "letsencrypt@test.com"
 
     # enable ssl
-    ssl: true
-    ssl_certificate:     /etc/letsencrypt/live/bar.molecule.lan/fullchain.pem
-    ssl_certificate_key: /etc/letsencrypt/live/bar.molecule.lan/privkey.pem
+    ssl:
+      enabled: true
+      certificate:     /etc/letsencrypt/live/bar.molecule.lan/fullchain.pem
+      certificate_key: /etc/letsencrypt/live/bar.molecule.lan/privkey.pem
 
   # HTTPS
   # enabled
@@ -141,9 +189,10 @@ nginx_vhosts:
     letsencrypt:
       enabled: false
     # enable ssl
-    ssl: true
-    ssl_certificate: /etc/ssl/certs/ssl-cert-snakeoil.pem
-    ssl_certificate_key: /etc/ssl/private/ssl-cert-snakeoil.key
+    ssl:
+      enabled: true
+      certificate: /etc/ssl/certs/ssl-cert-snakeoil.pem
+      certificate_key: /etc/ssl/private/ssl-cert-snakeoil.key
 
   # HTTPS
   # enabled
@@ -152,8 +201,9 @@ nginx_vhosts:
   # > 30-foofoo.molecule.lan
   30-foofoo.molecule.lan:
     filename: 30-foofoo.molecule.lan.conf
-    # state: absent
-    # enabled: false
+    state: absent
+    enabled: false
+
     domains:
       - foo.molecule.lan
 
@@ -164,9 +214,10 @@ nginx_vhosts:
       email: "letsencrypt@test.com"
 
     # enable ssl
-    ssl: true
-    ssl_certificate:     /etc/letsencrypt/live/bar.molecule.lan/fullchain.pem
-    ssl_certificate_key: /etc/letsencrypt/live/bar.molecule.lan/privkey.pem
+    ssl:
+      enabled: true
+      certificate:     /etc/letsencrypt/live/bar.molecule.lan/fullchain.pem
+      certificate_key: /etc/letsencrypt/live/bar.molecule.lan/privkey.pem
 
 
 nginx_vhosts_old:

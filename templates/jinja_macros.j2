@@ -1,0 +1,27 @@
+{#
+
+#}
+{% set print = self %}
+
+{% macro print_options(options) %}
+  {% set with_option = [
+          "host-name",
+          "domain-name-servers",
+          "domain-search",
+          "domain-name",
+          "broadcast-address",
+          "subnet-mask",
+          "routers"
+        ] %}
+  {% for key, value in options.items() %}
+    {%- set key = key.replace('_','-') %}
+    {%- set valid, v = value | has_valid_values %}
+    {% if key in with_option %}
+      {%- set key = "option " + key %}
+    {% endif %}
+    {% if valid %}
+{{ key }} {{ v }};
+    {% endif %}
+  {% endfor -%}
+{% endmacro %}
+

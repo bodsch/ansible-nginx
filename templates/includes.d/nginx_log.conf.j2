@@ -1,0 +1,7 @@
+# {{ ansible_managed }}
+{% for k,v in nginx_logformat.items() %}
+log_format
+    {{ k }} {% if v.escape is defined %}escape = {{ v.escape  }}{% endif %}
+
+{{ v.format | indent(6, first=True) }}
+{% endfor %}

@@ -59,6 +59,7 @@
   package:
     name: "{{ nginx_certbot_packages }}"
     state: present
-  # when: not nginx_certbot_auto
+  when:
+    - nginx_certbot.enabled | default('false')
 
 ...

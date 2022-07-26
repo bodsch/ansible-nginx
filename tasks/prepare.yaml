@@ -18,25 +18,25 @@
         - default.yaml
       skip: true
 
-- block:
-    - name: block installation of python2
-      copy:
-        src: apt/preferences.d/python2.pref
-        dest: /etc/apt/preferences.d/python2.pref
-        mode: 0644
-
-    - name: make sure python3-apt is installed (only debian based)
-      package:
-        name:
-          - python3-apt
-        state: present
-
-    - name: clean apt cache
-      command: apt-get clean
-      args:
-        warn: false
-  when:
-    - ansible_os_family | lower == 'debian'
+# - block:
+#     - name: block installation of python2
+#       copy:
+#         src: apt/preferences.d/python2.pref
+#         dest: /etc/apt/preferences.d/python2.pref
+#         mode: 0644
+#
+#     - name: make sure python3-apt is installed (only debian based)
+#       package:
+#         name:
+#           - python3-apt
+#         state: present
+#
+#     - name: clean apt cache
+#       command: apt-get clean
+#       args:
+#         warn: false
+#   when:
+#     - ansible_os_family | lower == 'debian'
 
 - name: update package cache
   package:
@@ -52,5 +52,11 @@
 #     src: bin/hooks/reload_service.sh.j2
 #     dest: /usr/local/bin/reload_service.sh
 #     mode: 0755
+
+- name: merge nginx configuration between defaults and custom
+  set_fact:
+    nginx_global: "{{ nginx_defaults_global       | combine( nginx_global   , recursive=True ) }}"
+    nginx_http: "{{ nginx_defaults_http           | combine( nginx_http     , recursive=True ) }}"
+    nginx_logformat: "{{ nginx_defaults_logformat | combine( nginx_logformat, recursive=True ) }}"
 
 ...

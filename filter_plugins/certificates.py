@@ -17,28 +17,28 @@ class FilterModule(object):
 
     def filters(self):
         return {
-            'check_certificates': self.certificates,
+            'append_certificate_state': self.certificate_state,
         }
 
-    def certificates(self, data=None, stats=None):
+    def certificate_state(self, data, state):
         """
-          merge two dictionaries
         """
-        display.v(" = certificates(data, stats)")
-        # display.v("   {}".format(data.get('key', "")))
+        display.v(" = certificates(data, state)")
 
-        r = stats.get('results', [])
-        for k in r:
-            item = k.get('item', {}).get('key', '')
-            ssl = k.get('item', {}).get('value', {}).get('ssl', False)
-            lec = k.get('item', {}).get('value', {}).get('letsencrypt', {})
+        missing = state.get("missing_certs")
+        present = state.get("present_certs")
 
-            if lec:
-                lec = lec.get("enabled", False)
+        for k, v in data.items():
+            ssl = v.get('ssl', {})
+            enabled = ssl.get("enabled", False)
+            certificate = ssl.get("certificate", None)
+            certificate_key = ssl.get("certificate_key", None)
 
-            if ssl or lec:
-                data[item]['ssl_certificate_exists'] = k.get('stat', {}).get('exists', False)
+            if certificate and certificate_key:
+                if certificate in missing and certificate_key in missing:
+                    data[k]["ssl"]["state"] = "missing"
 
-        # display.v(" = data {} -  ({})".format(json.dumps(data, indent=2), type(data)))
+                if certificate in present and certificate_key in present:
+                    data[k]["ssl"]["state"] = "present"
 
         return data
