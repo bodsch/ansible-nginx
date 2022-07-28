@@ -58,5 +58,6 @@
     nginx_global: "{{ nginx_defaults_global       | combine( nginx_global   , recursive=True ) }}"
     nginx_http: "{{ nginx_defaults_http           | combine( nginx_http     , recursive=True ) }}"
     nginx_logformat: "{{ nginx_defaults_logformat | combine( nginx_logformat, recursive=True ) }}"
+    nginx_acme: "{{ nginx_defaults_acme           | combine( nginx_acme     , recursive=True ) }}"
 
 ...

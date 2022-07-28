@@ -75,24 +75,24 @@ class FilterModule(object):
 
         return result
 
-    def letsencrypt(self, data):
-        """
-        """
-        display.v(" = letsencrypt({}) - ({})".format(json.dumps(data, indent=2), type(data)))
-
-        result = {}
-
-        for k, v in data.items():
-            display.v(" = data {} ({})".format(json.dumps(v, indent=2), type(v)))
-            if v.get('letsencrypt', {}):
-                result[k] = dict(
-                    domains=v.get('domains', []),
-                    email=v.get('letsencrypt', {}).get('email', '')
-                )
-
-        display.v(" = result {}".format(result))
-
-        return result
+    # def letsencrypt(self, data):
+    #     """
+    #     """
+    #     display.v(" = letsencrypt({}) - ({})".format(json.dumps(data, indent=2), type(data)))
+    #
+    #     result = {}
+    #
+    #     for k, v in data.items():
+    #         display.v(" = data {} ({})".format(json.dumps(v, indent=2), type(v)))
+    #         if v.get('letsencrypt', {}):
+    #             result[k] = dict(
+    #                 domains=v.get('domains', []),
+    #                 email=v.get('letsencrypt', {}).get('email', '')
+    #             )
+    #
+    #     display.v(" = result {}".format(result))
+    #
+    #     return result
 
     def create_vhost(self, data, mode='http'):
         """
@@ -131,10 +131,6 @@ class FilterModule(object):
         """
           return a list of directories for keyword like 'root', access_log or others
         """
-        display.v(" = vhost_directory(data, {})".format(directory))
-
-        # format(json.dumps(data, indent=2)
-
         result = []
 
         for item in data:
@@ -143,15 +139,12 @@ class FilterModule(object):
                     if v.get(directory, None):
                         result.append(v.get(directory))
 
-        display.v(" = result {}".format(result))
-
+        # display.v(" = result {}".format(result))
         return result
-
 
     def htpasswd(self, data):
         """
         """
-        display.v(" = htpasswd(data)")
         result = {}
 
         if isinstance(data, dict):
@@ -162,32 +155,22 @@ class FilterModule(object):
                 if htpasswd:
                     result[k] = htpasswd
 
-        display.v(" = result {}".format(result))
-
+        # display.v(" = result {}".format(result))
         return result
-
 
     def http_vhosts(self, data):
         """
         """
         results = []
-        display.v(" = http_vhosts(data)")
-        # display.v(" = data {} -  ({})".format(json.dumps(data, indent=2), type(data)))
 
         _data = data.copy()
 
         for k, v in _data.items():
             ssl = v.get('ssl', {})
             enabled = ssl.get("enabled", False)
-            # display.v(f"   - {k} : {len(ssl)} : {ssl} ")
 
             if len(ssl) > 0 and enabled:
                 _ = data.pop(k)
-
-        # display.v("-----------------------------------")
-        # for k, v in data.items():
-        #     display.v(f"   - {k}")
-        # display.v("-----------------------------------")
 
         return data
 
@@ -195,20 +178,14 @@ class FilterModule(object):
         """
         """
         results = []
-        display.v(" = https_vhosts(data)")
 
         _data = data.copy()
 
         for k, v in _data.items():
             ssl = v.get('ssl', {})
             enabled = ssl.get("enabled", False)
-            # display.v(f"   - {k} : {len(ssl)} : {ssl} ")
 
             if not(len(ssl) > 0 and enabled):
                 _ = data.pop(k)
 
-        # display.v("-----------------------------------")
-        # for k, v in data.items():
-        #     display.v(f"   - {k}")
-        # display.v("-----------------------------------")
         return data

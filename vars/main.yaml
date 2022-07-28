@@ -45,5 +45,8 @@ nginx_defaults_logformat:
       '$status $body_bytes_sent "$http_referer" '
       '"$http_user_agent" "$http_x_forwarded_for"';
 
+nginx_defaults_acme:
+  enabled: true
+  challenge_directory: /var/www/certbot
 
 ...

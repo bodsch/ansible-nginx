@@ -1,40 +1,38 @@
-#jinja2: trim_blocks: True, lstrip_blocks: True
+#jinja2: trim_blocks: True, rstrip_blocks: True, lstrip_blocks: True
 # {{ ansible_managed }}
-
-{% import 'jinja_macros.j2' as tpl with context %}
+{%- import 'jinja_macros.j2' as tpl with context %}
+{%- set _upstreams = item.value.upstreams | default({}) %}
+{%- set _logfiles = item.value.logfiles | default({}) %}
+{%- set _locations = item.value.locations | default([]) %}
+{%- set _listen = item.value.listen | default('80') %}
 
 {% if item.key == "default" %}
 server {
   server_name _;
-  listen        {{ item.value.listen | default(80) }} default_server;
-  {% if item.value.ipv6 is defined and
-        item.value.ipv6 | default('true') | bool %}
-  listen    [::]:{{ item.value.listen | default(80) }};
-  {% endif %}
+  {{ tpl.vhost_listen(80, True) | indent(0, first=False) }}
   return        444;
-
-  {{ tpl.vhost_logfile(item.logfiles | default({}), item.key) | indent(0, first=False) }}
+  {{ tpl.vhost_logfile(_logfiles, item.key) | indent(0, first=False) -}}
 }
 
 {% else %}
-{# upstream configurations #}
-{{ tpl.vhost_upstreams(item.value | default({})) | indent(0, first=False) }}
+  {% if _upstreams | count > 0 %}
+{{ tpl.vhost_upstreams(_upstreams | default({})) }}
+  {% endif %}
 
 server {
   server_name
     {{ item.value.domains | join('\n') | indent(4, first=False) }};
-  listen         {{ item.value.listen | default(80) }};
-  {% if item.value.ipv6 is defined and
-        item.value.ipv6 | default('true') | bool %}
-  listen    [::]:{{ item.value.listen | default(80) }};
-  {% endif %}
 
-  {{ tpl.vhost_logfile(item.logfiles | default({}), item.key) | indent(0, first=False) }}
-
-  location /.well-known {
-    alias /var/www/{{ item.key }}/.well-known;
+  {{ tpl.vhost_listen(_listen) | indent(0, first=False) }}
+  {{ tpl.vhost_logfile(_logfiles, item.key) | indent(0, first=False) }}
+  location ^~ /.well-known/acme-challenge/ {
+    allow all;
+    default_type "text/plain";
+    root  {{ nginx_acme.challenge_directory }};
   }
-
-  {{ tpl.vhost_locations(item.value | default({})) | indent(0, first=False) }}
+  location = /.well-known/acme-challenge/ {
+    return 404;
+  }
+  {{ tpl.vhost_locations(_locations) | indent(0, first=False) -}}
 }
 {% endif %}

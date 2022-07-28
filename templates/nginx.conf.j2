@@ -1,3 +1,4 @@
+#jinja2: trim_blocks: True, rstrip_blocks: True, lstrip_blocks: True
 # {{ ansible_managed }}
 
 user                  {{ nginx_user }};
@@ -47,8 +48,8 @@ http {
 {% endif %}
 
 {% if nginx_includes is defined and nginx_includes | count > 0 %}
-{% for include in nginx_includes %}
+  {% for include in nginx_includes %}
   include {{ include }};
-{% endfor %}
+  {% endfor %}
 {% endif %}
 }

@@ -55,11 +55,11 @@
 #     - acmetool ist defined
 #     - acmetool | bool
 
-- name: install certbot
-  package:
-    name: "{{ nginx_certbot_packages }}"
-    state: present
-  when:
-    - nginx_certbot.enabled | default('false')
+# - name: install certbot
+#   package:
+#     name: "{{ nginx_certbot_packages }}"
+#     state: present
+#   when:
+#     - nginx_certbot.enabled | default('false')
 
 ...

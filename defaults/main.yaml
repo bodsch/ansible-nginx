@@ -5,6 +5,8 @@ nginx_support_ipv6: false
 nginx_certbot:
   enabled: false
 
+nginx_acme: {}
+
 nginx_default_site:
   file: /etc/nginx/sites-enabled/default
   remove: true

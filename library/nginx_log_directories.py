@@ -33,7 +33,7 @@ class NginxLogDirectories(object):
         result_state = []
 
         for vhost, values in self.vhosts.items():
-            self.module.log(msg=f" - {vhost}")
+            #self.module.log(msg=f" - {vhost}")
             logfiles = values.get("logfiles", {})
 
             if logfiles:
@@ -48,26 +48,23 @@ class NginxLogDirectories(object):
                     dirname = os.path.dirname(error_log)
                     log_dirs.append(dirname)
 
-        self.module.log(msg=f" - {log_dirs}")
+        #self.module.log(msg=f" - {log_dirs}")
 
         unique_dirs = list(dict.fromkeys(log_dirs))
 
-        self.module.log(msg=f" - {unique_dirs}")
+        #self.module.log(msg=f" - {unique_dirs}")
 
         for d in unique_dirs:
             changed = False
             d_created = False
             d_ownership = False
 
-            self.module.log(msg=f" - directory '{d}'")
+            #self.module.log(msg=f" - directory '{d}'")
 
             if not os.path.exists(d):
                 d_created = self.__create_directory(d)
 
             d_ownership = self.__fix_ownership(d)
-
-            self.module.log(msg=f" - d_created   '{d_created}'")
-            self.module.log(msg=f" - d_ownership '{d_ownership}'")
 
             if d_created or d_ownership:
                 changed = True
@@ -83,7 +80,7 @@ class NginxLogDirectories(object):
 
                 result_state.append(res)
 
-        self.module.log(msg=f" - result_state '{result_state}'")
+        #self.module.log(msg=f" - result_state '{result_state}'")
 
         # define changed for the running tasks
         # migrate a list of dict into dict
@@ -126,7 +123,7 @@ class NginxLogDirectories(object):
             # change mode
             if force_mode is not None and force_mode != current_mode:
 
-                self.module.log(msg=f" - '{force_mode}'  {type(force_mode)}")
+                #self.module.log(msg=f" - '{force_mode}'  {type(force_mode)}")
 
                 try:
                     if isinstance(force_mode, int):

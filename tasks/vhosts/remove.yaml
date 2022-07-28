@@ -4,12 +4,25 @@
   nginx_site_handler:
     enabled: false
     vhosts: "{{ nginx_vhosts }}"
+  register: _deactivated_vhost
+
+- name: de-activated vhosts
+  debug:
+    msg: "{{ _deactivated_vhost }}"
+  when:
+    - _deactivated_vhost.changed
 
 - name: remove vhost configurations
   nginx_site_handler:
     state: absent
     vhosts: "{{ nginx_vhosts }}"
+  register: _removed_vhost
 
+- name: removed vhost
+  debug:
+    msg: "{{ _removed_vhost }}"
+  when:
+    - _removed_vhost.changed
 
 # - name: de-activate vhosts
 #   file:

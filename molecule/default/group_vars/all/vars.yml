@@ -19,12 +19,9 @@ nginx_logformat:
 
 nginx_vhosts:
   # HTTP
-  # IPv6: false
   # ssl: false
   # LE: false
   default:
-    ipv6: false
-    # Set default site to return 444 (Connection Closed Without Response)
     # Set to True if you want to redirect http to https
     ssl:
       enabled: false
@@ -33,12 +30,13 @@ nginx_vhosts:
   # HTTP
   # enabled
   # present
-  10-foo.molecule.lan_80:
-    # state: absent
-    # enabled: true
+  10-foo.molecule.lan:
+    state: absent
+    enabled: false
     # template: foo.tpl.j2
     domains:
       - foo.molecule.lan
+
     listen: 80
 
     root:  /var/www/foo.molecule.lan
@@ -50,9 +48,6 @@ nginx_vhosts:
       error:
         file: /var/log/nginx/foo.molecule.lan/error.log
         loglevel: notice
-
-    # access_log: /var/log/nginx/foo.molecule.lan/access.log
-    # error_log:  /var/log/nginx/foo.molecule.lan/error.log
 
     # creates an htpasswd file under
     # /etc/nginx/htpasswd.d/foo.molecule.lan
@@ -91,14 +86,19 @@ nginx_vhosts:
   # HTTP
   # enabled
   # present
-  10-bar.molecule.lan_9000:
+  10-bar.molecule.lan:
     domains:
       - bar.molecule.lan
+
+    state: present
+    enabled: false
 
     root:  /var/www/bar.molecule.lan
 
     # Specify which port you want to listen to with clear HTTP, or leave undefined for 80
-    listen: 9000
+    listen:
+      - "9000"
+      - "[::]:9000 ipv6only=on"
 
     logfiles:
       access:
@@ -121,23 +121,19 @@ nginx_vhosts:
   # absent
   # no letsencrypt
   # > 15-foo.molecule.lan.conf
-  15-foo.molecule.lan_9080:
+  15-foo.molecule.lan:
     filename: 15-foo.molecule.lan.conf
-    state: present
+    state: absent
     enabled: false
 
     domains:
       - foo.molecule.lan
 
-    # state: absent
-
     # Specify which port you want to listen to with clear HTTP, or leave undefined for 80
     listen: 9080
+
     # Specify which port you want to listen to with HTTPS, or leave undefined for 443
     listen_ssl: 9081
-
-    letsencrypt:
-      enabled: false
 
     # enable ssl
     ssl:
@@ -149,7 +145,6 @@ nginx_vhosts:
   # HTTPS
   # enabled
   # present
-  # letsencrypt
   20-bar.molecule.lan:
     # state: absent
     # enabled: false
@@ -159,11 +154,38 @@ nginx_vhosts:
       - slo.molecule.lan
       - zup.molecule.lan
 
-    listen: 443 http2
+    # creates also an HTTP vhost only for redirect to HTTPS
+    redirect:
+      from_port: 80
 
-    letsencrypt:
-      enabled: true
-      email: "letsencrypt@test.com"
+    # https://nginx.org/en/docs/http/ngx_http_core_module.html#listen
+    listen:
+      - 8443 quic reuseport
+      - 443 ssl http2
+
+    logfiles:
+      access:
+        # file: /var/log/nginx/bar.molecule.lan/access.log
+        syslog:
+          server: unix:/var/log/nginx.sock
+          options:
+            - nohostname
+            - tag=nginx
+            - severity=info
+        loglevel: 'json_analytics'
+      error:
+        # file: /var/log/nginx/bar.molecule.lan/error.log
+        syslog:
+          server: 127.0.0.1
+        loglevel: notice
+
+    # Add Alt-Svc header to negotiate HTTP/3.
+    # add_header alt-svc 'h3-23=":443"; ma=86400';
+
+      # error_log syslog:server=192.168.1.1 debug;
+
+      # access_log syslog:server=unix:/var/log/nginx.sock,nohostname;
+      # access_log syslog:server=[2001:db8::1]:12345,facility=local7,tag=nginx,severity=info combined;
 
     # enable ssl
     ssl:
@@ -174,7 +196,6 @@ nginx_vhosts:
   # HTTPS
   # enabled
   # present
-  # no letsencrypt
   # > 20-foo.molecule.lan
   20-foo.molecule.lan:
     filename: 20-foo.molecule.lan.conf
@@ -183,11 +204,10 @@ nginx_vhosts:
 
     # Specify which port you want to listen to with clear HTTP, or leave undefined for 80
     listen: 9080
+
     # Specify which port you want to listen to with HTTPS, or leave undefined for 443
     listen_ssl: 9081
 
-    letsencrypt:
-      enabled: false
     # enable ssl
     ssl:
       enabled: true
@@ -197,7 +217,6 @@ nginx_vhosts:
   # HTTPS
   # enabled
   # present
-  # letsencrypt
   # > 30-foofoo.molecule.lan
   30-foofoo.molecule.lan:
     filename: 30-foofoo.molecule.lan.conf
@@ -208,10 +227,6 @@ nginx_vhosts:
       - foo.molecule.lan
 
     listen: 443 http2
-
-    letsencrypt:
-      enabled: true
-      email: "letsencrypt@test.com"
 
     # enable ssl
     ssl:

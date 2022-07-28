@@ -22,9 +22,9 @@
 
 # create htpasswd
 - name: create authentications
-  no_log: true
+  # no_log: true
   htpasswd:
-    state: "{{  item.1.state | default('present') }}"
+    state: "{{ item.0.state | default('present' | default( item.1.state | default('present'))) }}"
     path: "/etc/nginx/htpasswd.d/{{ item.0.key }}"
     name: "{{ item.1.username }}"
     password: "{{ item.1.password }}"
@@ -41,6 +41,7 @@
     - item.1 is defined
     - item.1.username is defined
     - item.1.password is defined
+    # - item.0.state | default('present') != 'absent'
 
 - name: ensure vhosts root path exists
   file:
