@@ -147,7 +147,7 @@ nginx_vhosts:
   # present
   20-bar.molecule.lan:
     # state: absent
-    # enabled: false
+    enabled: true
     domains:
       - bar.molecule.lan
       - ruf.molecule.lan
@@ -160,23 +160,37 @@ nginx_vhosts:
 
     # https://nginx.org/en/docs/http/ngx_http_core_module.html#listen
     listen:
-      - 8443 quic reuseport
+      - 8443 reuseport
       - 443 ssl http2
 
     logfiles:
       access:
         # file: /var/log/nginx/bar.molecule.lan/access.log
+
+        # https://nginx.org/en/docs/syslog.html
         syslog:
-          server: unix:/var/log/nginx.sock
+          # server=address
+          server: 127.0.0.1:514
+          # facility=string
+          # severity=string
+          # tag=string
           options:
-            - nohostname
+            - facility=local0
             - tag=nginx
-            - severity=info
-        loglevel: 'json_analytics'
+            - severity=debug
+        loglevel: 'json_combined'
       error:
         # file: /var/log/nginx/bar.molecule.lan/error.log
         syslog:
-          server: 127.0.0.1
+          server: 127.0.0.1:514
+        #  Debug – Debugging messages that are not useful most of the time.
+        #  Info – Informational messages that might be good to know.
+        #  Notice – Something normal but significant happened and it should be noted.
+        #  Warn – Something unexpected happened, however it’s not a cause for concern.
+        #  Error – Something failed.
+        #  Crit – A critical condition occurred.
+        #  Alert – Immediate action is required.
+        #  Emerg – The system is unusable.
         loglevel: notice
 
     # Add Alt-Svc header to negotiate HTTP/3.
@@ -190,8 +204,10 @@ nginx_vhosts:
     # enable ssl
     ssl:
       enabled: true
-      certificate:     /etc/letsencrypt/live/bar.molecule.lan/fullchain.pem
-      certificate_key: /etc/letsencrypt/live/bar.molecule.lan/privkey.pem
+      certificate: /etc/ssl/certs/ssl-cert-snakeoil.pem
+      certificate_key: /etc/ssl/private/ssl-cert-snakeoil.key
+      #certificate:     /etc/letsencrypt/live/bar.molecule.lan/fullchain.pem
+      #certificate_key: /etc/letsencrypt/live/bar.molecule.lan/privkey.pem
 
   # HTTPS
   # enabled
