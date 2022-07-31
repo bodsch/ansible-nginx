@@ -2,46 +2,9 @@
 
 - name: define htpasswd values
   set_fact:
-    # nginx_vhosts_htpasswd: "{{ nginx_vhosts | htpasswd }}"
     nginx_vhosts_root_directories: "{{ nginx_vhosts | dict2items | vhost_directory('root') }}"
     nginx_http_vhosts: "{{ nginx_vhosts | http_vhosts }}"
     nginx_https_vhosts: "{{ nginx_vhosts | https_vhosts }}"
-#
-# # - name: d
-# #   debug:
-# #     msg: "{{ nginx_http_vhosts }}"
-#
-# # - name: d
-# #   debug:
-# #     msg:
-# #       - "{{ item.0.key }}"
-# #       - "{{ item.1.username }} : {{ item.1.password }}"
-# #   with_subelements:
-# #     - "{{ nginx_vhosts_htpasswd | dict2items }}"
-# #     - value
-#
-# # create htpasswd
-# - name: create authentications
-#   # no_log: true
-#   htpasswd:
-#     state: "{{ item.0.state | default('present' | default( item.1.state | default('present'))) }}"
-#     path: "/etc/nginx/htpasswd.d/{{ item.0.key }}"
-#     name: "{{ item.1.username }}"
-#     password: "{{ item.1.password }}"
-#     owner: "{{ nginx_user }}"
-#     group: "{{ nginx_group }}"
-#     mode: 0640
-#   with_subelements:
-#     - "{{ nginx_vhosts_htpasswd | dict2items }}"
-#     - value
-#     - skip_missing: true
-#   loop_control:
-#     label: "/etc/nginx/htpasswd.d/{{ item.0.key }}"
-#   when:
-#     - item.1 is defined
-#     - item.1.username is defined
-#     - item.1.password is defined
-#     # - item.0.state | default('present') != 'absent'
 
 - name: ensure vhosts root path exists
   file:
@@ -72,33 +35,8 @@
     - nginx_vhosts is defined
   register: check_domain_cert
 
-# - name: d
-#   debug:
-#     msg: "{{ check_domain_cert }}"
-
-# - name: checking existing domains certificates
-#   stat:
-#     path: '{{ item.value.ssl_certificate_key }}'
-#     get_checksum: false
-#     get_md5: false
-#     get_mime: false
-#     get_attributes: false
-#   loop:
-#     "{{ nginx_vhosts | dict2items }}"
-#   loop_control:
-#     label: "{{ item.key }}"
-#   when:
-#     - item.value.state | default('present') != 'absent'
-#     - item.value.ssl_certificate_key is defined
-#     - item.value.ssl_certificate_key | length > 0
-#   register: check_domain_cert
-
 - name: append certificates state to https vhost configurations
   set_fact:
     nginx_https_vhosts: "{{ nginx_https_vhosts | append_certificate_state( check_domain_cert ) }}"
-
-# - name: d
-#   debug:
-#     msg: "{{ nginx_https_vhosts }}"
 
 ...

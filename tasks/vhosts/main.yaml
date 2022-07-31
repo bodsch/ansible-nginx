@@ -1,12 +1,13 @@
 ---
 
-- include_tasks: vhosts/prepare.yaml
+- name: vhosts prepare
+  include_tasks: vhosts/prepare.yaml
 
-- include_tasks: vhosts/remove.yaml
+- name: vhosts remove
+  include_tasks: vhosts/remove.yaml
 
-- include_tasks: vhosts/configure.yaml
-
-#- include_tasks: vhosts/letsencrypt.yaml
+- name: vhosts configure
+  include_tasks: vhosts/configure.yaml
 
 ...
 

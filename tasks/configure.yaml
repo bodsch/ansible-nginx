@@ -26,7 +26,6 @@
     - sites-available
     - sites-enabled
     - includes.d
-    # - htpasswd.d
 
 - name: remove default site
   file:
@@ -59,22 +58,6 @@
     - nginx_acme.enabled
     - nginx_acme.challenge_directory is defined
     - nginx_acme.challenge_directory | length > 0
-
-# - name: copy static nginx conf.d
-#   copy:
-#     src: conf.d/
-#     dest: /etc/nginx/conf.d/
-#     owner: root
-#     group: root
-#     mode: 0644
-
-# - name: copy static nginx conf.d
-#   copy:
-#     src: conf.d/
-#     dest: /etc/nginx/conf.d/
-#     owner: root
-#     group: root
-#     mode: 0644
 
 - name: create gzip configuration
   template:

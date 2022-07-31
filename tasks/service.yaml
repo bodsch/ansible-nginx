@@ -1,0 +1,13 @@
+---
+
+- name: restart nginx if needed
+  meta: flush_handlers
+
+- name: ensure nginx is enabled on boot
+  become: true
+  service:
+    name: nginx
+    enabled: true
+    state: started
+
+...

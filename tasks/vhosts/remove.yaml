@@ -6,17 +6,17 @@
     vhosts: "{{ nginx_vhosts }}"
   register: _deactivated_vhost
 
-- name: de-activated vhosts
-  debug:
-    msg: "{{ _deactivated_vhost }}"
-  when:
-    - _deactivated_vhost.changed
-
 - name: remove vhost configurations
   nginx_site_handler:
     state: absent
     vhosts: "{{ nginx_vhosts }}"
   register: _removed_vhost
+
+- name: de-activated vhosts
+  debug:
+    msg: "{{ _deactivated_vhost }}"
+  when:
+    - _deactivated_vhost.changed
 
 - name: removed vhost
   debug:
@@ -24,30 +24,6 @@
   when:
     - _removed_vhost.changed
 
-# - name: de-activate vhosts
-#   file:
-#     path: "/etc/nginx/sites-enabled/{{ item.value.filename | default( item.key ~ '.conf' ) }}"
-#     state: absent
-#   loop:
-#     "{{ nginx_vhosts | dict2items }}"
-#   loop_control:
-#     label: "{{ item.value.filename | default( item.key ~ '.conf') }}"
-#   # notify: reload Nginx
-#   when:
-#     - not item.value.enabled | default('true')
-#     # - nginx_de_activate_sites
-#
-# - name: remove vhost configurations
-#   file:
-#     path: "/etc/nginx/sites-available/{{ item.value.filename | default( item.key ~ '.conf' ) }}"
-#     state: absent
-#   when:
-#     - item.value.state | default('present') == 'absent'
-#   loop:
-#     "{{ nginx_vhosts | dict2items }}"
-#   loop_control:
-#     label: "{{ item.value.filename | default( item.key ~ '.conf') }}"
-#
-# # TODO remove log directory, or logfile
+# TODO remove log directory, or logfile
 
 ...
