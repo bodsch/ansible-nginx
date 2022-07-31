@@ -9,14 +9,14 @@ nginx_custom_includes:
     satisfy any;
     # Die IP des HAProxy
     # damit ist es möglich das Jobs, die über den Jenkins aufgerufen werden und gegen
-    # die admin URLs (https://admin.*.arri.com/admin/*) gehen
+    # die admin URLs (https://admin.*.DOMAIN.TLD/admin/*) gehen
     # ohne Username/Passwort zu nutzen
     # Alle anderen Requests benötigen weiterhin die Authentifizierung via BA
     allow 192.168.0.0/24;
     deny  all;
 
     auth_basic           "Administrator’s Area";
-    auth_basic_user_file /etc/nginx/htpasswd.d/.prom_htpasswd;
+    auth_basic_user_file "{{ htpasswd_credentials_path }}/.monitoring-passwdfile";
 
 
 nginx_logformat:
@@ -33,7 +33,7 @@ nginx_logformat:
         '"http_referrer": "$http_referer",'
         '"http_user_agent": "$http_user_agent"'
       '}';
-    escape: json
+    # escape: json
 
 
 nginx_vhosts:
@@ -45,15 +45,16 @@ nginx_vhosts:
     ssl:
       enabled: false
 
-  localhost:
-    domains:
-      - 127.0.0.1
-      - localhost
-
-    listen: 127.0.0.1:8088
-
+  nginx-status:
     filename: 00-status
-
+    state: present  # default: present
+    enabled: true   # default: true
+    # domain(s)
+    domains:
+      - localhost
+    # listen
+    listen: 127.0.0.1:8088
+    # locations
     locations:
       "/nginx_status":
         options: |
@@ -69,7 +70,7 @@ nginx_vhosts:
   10-foo.molecule.lan:
     state: absent
     enabled: false
-    # template: foo.tpl.j2
+
     domains:
       - foo.molecule.lan
 
@@ -85,16 +86,6 @@ nginx_vhosts:
         file: /var/log/nginx/foo.molecule.lan/error.log
         loglevel: notice
 
-    # creates an htpasswd file under
-    # /etc/nginx/htpasswd.d/foo.molecule.lan
-    htpasswd:
-      - state: present
-        username: admin
-        password: ZRhgqhaAjdbuFXj2PLJTzYy5PrRsStNaeYWd9c3Ze3
-      - state: present
-        username: administrator
-        password: gp!tk<r+JcDyJhV5!tgzZVUWx233HLVZMJUy<YNVPZ
-
     # list of upstream servers
     upstreams:
       - name: paperless
@@ -109,7 +100,7 @@ nginx_vhosts:
         keepalive: 32
 
     locations:
-      - location: "^~ /"
+      "^~ /":
         options: |
           add_header X-Backend "bar";
 
@@ -123,18 +114,18 @@ nginx_vhosts:
   # enabled
   # present
   10-bar.molecule.lan:
-    domains:
-      - bar.molecule.lan
-
     state: absent
     enabled: false
 
-    root:  /var/www/bar.molecule.lan
+    domains:
+      - bar.molecule.lan
 
     # Specify which port you want to listen to with clear HTTP, or leave undefined for 80
     listen:
       - "9000"
       - "[::]:9000 ipv6only=on"
+
+    root:  /var/www/bar.molecule.lan
 
     logfiles:
       access:
@@ -144,32 +135,22 @@ nginx_vhosts:
         file: /var/log/nginx/bar.molecule.lan/error.log
         loglevel: notice
 
-    # creates an htpasswd file under
-    # /etc/nginx/htpasswd.d/foo.molecule.lan
-    htpasswd:
-      - state: absent
-        username: myusername_1
-        password: mysecre
-
-
   # HTTPS
   # enabled
   # absent
   # no letsencrypt
   # > 15-foo.molecule.lan.conf
   15-foo.molecule.lan:
-    filename: 15-foo.molecule.lan.conf
     state: absent
     enabled: false
+
+    filename: 15-foo.molecule.lan.conf
 
     domains:
       - foo.molecule.lan
 
     # Specify which port you want to listen to with clear HTTP, or leave undefined for 80
     listen: 9080
-
-    # Specify which port you want to listen to with HTTPS, or leave undefined for 443
-    listen_ssl: 9081
 
     # enable ssl
     ssl:
@@ -184,6 +165,7 @@ nginx_vhosts:
   20-bar.molecule.lan:
     state: absent
     enabled: true
+
     domains:
       - bar.molecule.lan
       - ruf.molecule.lan
@@ -250,9 +232,10 @@ nginx_vhosts:
   # present
   # > 20-foo.molecule.lan
   20-foo.molecule.lan:
-    filename: 20-foo.molecule.lan.conf
     state: absent
     enabled: true
+
+    filename: 20-foo.molecule.lan.conf
 
     domains:
       - foo2.molecule.lan
@@ -271,9 +254,10 @@ nginx_vhosts:
   # present
   # > 30-foofoo.molecule.lan
   30-foofoo.molecule.lan:
-    filename: 30-foofoo.molecule.lan.conf
     state: absent
     enabled: false
+
+    filename: 30-foofoo.molecule.lan.conf
 
     domains:
       - foo.molecule.lan
@@ -294,13 +278,6 @@ nginx_vhosts_old:
     root:  /var/www/bar.molecule.lan
     access_log: /var/log/nginx/bar.molecule.lan/access.log
     error_log:  /var/log/nginx/bar.molecule.lan/error.log
-
-    # Define this block for a single HTTP user/password, or leave undefined for unauthenticated vhosts
-    htpasswd:
-      - username: myusername_1
-        password: mysecretpassword
-      - username: myusername_2
-        password: mysecretpassword
 
     extra_parameters: |
       location ^~ / {

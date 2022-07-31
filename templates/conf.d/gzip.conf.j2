@@ -1,0 +1,20 @@
+#jinja2: trim_blocks: True, rstrip_blocks: True, lstrip_blocks: True
+# {{ ansible_managed }}
+
+{% if nginx_gzip is defined and
+      nginx_gzip.enabled is defined and
+      nginx_gzip.enabled %}
+gzip                on;
+  {% for key, value in nginx_gzip.options.items() %}
+    {% if value | type == "list" %}
+{{ key }}
+{{ value | join('\n') | indent(4, first=True) }};
+    {% elif value | type == "bool" %}
+{{ key.ljust(18) }}  {{ value | bool | ternary('on', 'off') }};
+    {% else %}
+{{ key.ljust(18) }}  {{ value }};
+    {% endif %}
+  {% endfor %}
+{% else %}
+# gzip on;
+{% endif %}

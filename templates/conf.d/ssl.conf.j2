@@ -1,0 +1,17 @@
+#jinja2: trim_blocks: True, rstrip_blocks: True, lstrip_blocks: True
+# {{ ansible_managed }}
+
+{% if nginx_ssl is defined and
+      nginx_ssl.enabled is defined and
+      nginx_ssl.enabled %}
+  {% for key, value in nginx_ssl.options.items() %}
+    {% if value | type == "list" %}
+{{ key }}
+{{ value | join('\n') | indent(4, first=True) }};
+    {% elif value | type == "bool" %}
+{{ key.ljust(18) }}  {{ value | bool | ternary('on', 'off') }};
+    {% else %}
+{{ key.ljust(18) }}  {{ value }};
+    {% endif %}
+  {% endfor %}
+{% endif %}

@@ -26,7 +26,7 @@
     - sites-available
     - sites-enabled
     - includes.d
-    - htpasswd.d
+    # - htpasswd.d
 
 - name: remove default site
   file:

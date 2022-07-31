@@ -69,12 +69,25 @@ upstream {{ upstream.name }} {
 
 {% macro vhost_locations(data) %}
 
-# {{ data | type }}
-{% for l in data %}
+{% if data | type == "dict" %}
+  {% for k, v in data.items() %}
+  location {{ k }} {
+    {% if v.options is defined %}
+    {{ v.options | indent(4) }}
+    {% endif %}
+  }
+
+  {% endfor %}
+{% endif %}
+
+{% if data == "list" %}
+  {% for l in data %}
   location {{ l.location }} {
     {{ l.options | indent(4) }}
   }
-{% endfor %}
+  {% endfor %}
+{% endif %}
+
 {% endmacro %}
 
 {% macro vhost_listen(port=80, default=False) %}

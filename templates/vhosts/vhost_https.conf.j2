@@ -16,18 +16,7 @@ server {
   {{ tpl.vhost_logfile(_logfiles, item.key) | indent(0, first=False) -}}
 }
 {% endif %}
-{#
-{% if item.value.redirect | default({}) is defined and
-      item.value.redirect.from_port is defined %}
-server {
-  server_name   _;
-  {{ tpl.vhost_listen(_support_ipv6, item.value.redirect.from_port | default(80), True) | indent(0, first=False)  }}
-  return        444;
-  {{ tpl.vhost_logfile(_logfiles, item.key) | indent(0, first=False) }}
-  {{ tpl.vhost_certificates(_ssl, item.key) | indent(0, first=False) }}
-}
-{% endif %}
-#}
+
 {% if _upstreams | count > 0 %}
 {{ tpl.vhost_upstreams(_upstreams | default({})) }}
 {% endif %}
@@ -39,8 +28,6 @@ server {
   {% if _listen | type == "list" %}
     {% set _listen_port = _listen | join(' ') | default('443') | regex_replace('(http2|ssl|quic|reuseport)','') %}
   {% endif %}
-
-# port: {{ _listen_port }}
 
 server {
   server_name
