@@ -1,3 +1,6 @@
+#jinja2: trim_blocks: True, rstrip_blocks: True, lstrip_blocks: True
+# {{ ansible_managed }}
+
 {% for log in nginx_logformat %}
 log_format
     {{ log.name }} {% if log.escape is defined %}escape = {{ log.escape  }}{% endif %}

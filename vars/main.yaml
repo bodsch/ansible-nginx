@@ -8,8 +8,8 @@ nginx_packages:
 nginx_user: nginx
 nginx_group: nginx
 
-nginx_certbot_packages:
-  - python3-certbot
+nginx_certbot_packages: []
+  #  - python3-certbot
   # - python3-certbot-nginx
 
 nginx_defaults_global:
@@ -33,9 +33,45 @@ nginx_defaults_http:
     requests: 100
   proxy:
     cache_path: ''
-  gzip:
-    enabled: false
   extra_options: {}
+
+nginx_defaults_gzip:
+  enabled: false
+  options:
+    gzip_static: true
+    gzip_vary: true
+    gzip_proxied: any
+    gzip_comp_level: 6
+    gzip_min_length: 512
+    gzip_buffers: 16 8k
+    gzip_http_version: 1.1
+    gzip_types:
+      - application/javascript
+      - application/x-javascript
+      - image/svg+xml
+      - image/x-icon
+      - text/css
+      - text/javascript
+      - text/plain
+      - text/richtext
+      - text/x-component
+      - text/x-js
+      - text/xml
+      - text/xsd
+      - text/xsl
+
+nginx_defaults_ssl:
+  enabled: true
+  options:
+    ssl_session_timeout: 5m
+    # Enable all TLS versions (TLSv1.3 is required for QUIC).
+    ssl_protocols:
+      - TLSv1.1
+      - TLSv1.2
+      - TLSv1.3
+    ssl_ciphers: 'EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH'
+    ssl_prefer_server_ciphers: true
+    ssl_session_cache: shared:SSL:10m
 
 nginx_defaults_logformat:
   main:
@@ -48,5 +84,7 @@ nginx_defaults_logformat:
 nginx_defaults_acme:
   enabled: true
   challenge_directory: /var/www/certbot
+
+nginx_defaults_custom_includes: {}
 
 ...

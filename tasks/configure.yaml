@@ -60,21 +60,43 @@
     - nginx_acme.challenge_directory is defined
     - nginx_acme.challenge_directory | length > 0
 
-- name: copy static nginx conf.d
-  copy:
-    src: conf.d/
-    dest: /etc/nginx/conf.d/
-    owner: root
-    group: root
-    mode: 0644
+# - name: copy static nginx conf.d
+#   copy:
+#     src: conf.d/
+#     dest: /etc/nginx/conf.d/
+#     owner: root
+#     group: root
+#     mode: 0644
 
-- name: copy static nginx conf.d
-  copy:
-    src: conf.d/
-    dest: /etc/nginx/conf.d/
+# - name: copy static nginx conf.d
+#   copy:
+#     src: conf.d/
+#     dest: /etc/nginx/conf.d/
+#     owner: root
+#     group: root
+#     mode: 0644
+
+- name: create gzip configuration
+  template:
+    src: conf.d/gzip.conf.j2
+    dest: /etc/nginx/conf.d/gzip.conf
     owner: root
     group: root
     mode: 0644
+  notify:
+    - validate config
+    - reload service
+
+- name: create ssl configuration
+  template:
+    src: conf.d/ssl.conf.j2
+    dest: /etc/nginx/conf.d/ssl.conf
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - validate config
+    - reload service
 
 - name: create logformat configuration
   template:
@@ -83,6 +105,20 @@
     owner: root
     group: root
     mode: 0644
+  notify:
+    - validate config
+    - reload service
+
+- name: create custom includes
+  become: true
+  template:
+    src: includes.d/custom_include.j2
+    dest: /etc/nginx/includes.d/{{ item.key }}
+    mode: 0644
+  loop:
+    "{{ nginx_custom_includes | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
   notify:
     - validate config
     - reload service

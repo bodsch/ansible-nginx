@@ -29,10 +29,16 @@ nginx_logformat: {}
 
 nginx_http: {}
 
+nginx_gzip: {}
+
+nginx_ssl: {}
+
+nginx_custom_includes: {}
+
 nginx_includes:
   - "/etc/nginx/conf.d/*.conf"
   - "/etc/nginx/sites-enabled/*.conf"
 
-nginx_vhosts: []
+nginx_vhosts: {}
 
 ...

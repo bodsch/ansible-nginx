@@ -69,6 +69,7 @@ upstream {{ upstream.name }} {
 
 {% macro vhost_locations(data) %}
 
+# {{ data | type }}
 {% for l in data %}
   location {{ l.location }} {
     {{ l.options | indent(4) }}

@@ -1,5 +1,24 @@
 ---
 
+nginx_gzip:
+  enabled: true
+
+nginx_custom_includes:
+  prometheus.conf: |
+    # https://nginx.org/en/docs/http/ngx_http_core_module.html#satisfy
+    satisfy any;
+    # Die IP des HAProxy
+    # damit ist es möglich das Jobs, die über den Jenkins aufgerufen werden und gegen
+    # die admin URLs (https://admin.*.arri.com/admin/*) gehen
+    # ohne Username/Passwort zu nutzen
+    # Alle anderen Requests benötigen weiterhin die Authentifizierung via BA
+    allow 192.168.0.0/24;
+    deny  all;
+
+    auth_basic           "Administrator’s Area";
+    auth_basic_user_file /etc/nginx/htpasswd.d/.prom_htpasswd;
+
+
 nginx_logformat:
   json_combined:
     format: |
@@ -25,7 +44,24 @@ nginx_vhosts:
     # Set to True if you want to redirect http to https
     ssl:
       enabled: false
-    letsencrypt: false
+
+  localhost:
+    domains:
+      - 127.0.0.1
+      - localhost
+
+    listen: 8088
+
+    filename: 00-status
+
+    locations:
+      "/nginx_status":
+        options: |
+          stub_status on;
+          access_log off;
+          allow 127.0.0.1;
+          deny all;
+
 
   # HTTP
   # enabled
@@ -90,7 +126,7 @@ nginx_vhosts:
     domains:
       - bar.molecule.lan
 
-    state: present
+    state: absent
     enabled: false
 
     root:  /var/www/bar.molecule.lan
@@ -146,7 +182,7 @@ nginx_vhosts:
   # enabled
   # present
   20-bar.molecule.lan:
-    # state: absent
+    state: absent
     enabled: true
     domains:
       - bar.molecule.lan
@@ -215,14 +251,14 @@ nginx_vhosts:
   # > 20-foo.molecule.lan
   20-foo.molecule.lan:
     filename: 20-foo.molecule.lan.conf
+    state: absent
+    enabled: true
+
     domains:
       - foo2.molecule.lan
 
     # Specify which port you want to listen to with clear HTTP, or leave undefined for 80
     listen: 9080
-
-    # Specify which port you want to listen to with HTTPS, or leave undefined for 443
-    listen_ssl: 9081
 
     # enable ssl
     ssl:

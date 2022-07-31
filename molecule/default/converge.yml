@@ -9,5 +9,4 @@
     NETRC: ''
 
   roles:
-    - role: syslog-ng
     - role: ansible-nginx
