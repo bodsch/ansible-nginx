@@ -46,6 +46,8 @@
   package:
     name: "{{ nginx_dependencies }}"
     state: present
+  when:
+    - nginx_dependencies | default([]) | count > 0
 
 - name: merge nginx configuration between defaults and custom
   set_fact:

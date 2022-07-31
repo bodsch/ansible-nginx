@@ -63,23 +63,27 @@ nginx_vhosts:
           allow 127.0.0.1;
           deny all;
 
-  10-monitoring.molecule.lan:
-    state: present
+
+  # HTTP
+  # enabled
+  # present
+  10-foo.molecule.lan:
+    state: absent
     enabled: false
 
     domains:
-      - monitoring.molecule.lan
+      - foo.molecule.lan
 
     listen: 80
 
-    root:  /var/www/monitoring.molecule.lan
+    root:  /var/www/foo.molecule.lan
 
     logfiles:
       access:
-        file: /var/log/nginx/monitoring.molecule.lan/access.log
+        file: /var/log/nginx/foo.molecule.lan/access.log
         loglevel: 'json_analytics'
       error:
-        file: /var/log/nginx/monitoring.molecule.lan/error.log
+        file: /var/log/nginx/foo.molecule.lan/error.log
         loglevel: notice
 
     # list of upstream servers
@@ -87,6 +91,12 @@ nginx_vhosts:
       - name: paperless
         servers:
           - 127.0.0.1:8080   max_fails=3 fail_timeout=30s
+        # strategy: 'ip_hash'
+        keepalive: 32
+      - name: unifi
+        servers:
+          - 127.0.0.1:8090   max_fails=3 fail_timeout=30s
+        # strategy: 'ip_hash'
         keepalive: 32
 
     locations:
@@ -131,8 +141,8 @@ nginx_vhosts:
   # no letsencrypt
   # > 15-foo.molecule.lan.conf
   15-foo.molecule.lan:
-    state: present
-    enabled: true
+    state: absent
+    enabled: false
 
     filename: 15-foo.molecule.lan.conf
 
@@ -140,7 +150,7 @@ nginx_vhosts:
       - foo.molecule.lan
 
     # Specify which port you want to listen to with clear HTTP, or leave undefined for 80
-    listen: 9443
+    listen: 9080
 
     # enable ssl
     ssl:
@@ -153,7 +163,7 @@ nginx_vhosts:
   # enabled
   # present
   20-bar.molecule.lan:
-    state: present
+    state: absent
     enabled: true
 
     domains:
@@ -171,10 +181,121 @@ nginx_vhosts:
       - 8443 reuseport
       - 443 ssl http2
 
+    logfiles:
+      access:
+        # file: /var/log/nginx/bar.molecule.lan/access.log
+
+        # https://nginx.org/en/docs/syslog.html
+        syslog:
+          # server=address
+          server: 127.0.0.1:514
+          # facility=string
+          # severity=string
+          # tag=string
+          options:
+            - facility=local0
+            - tag=nginx
+            - severity=debug
+        loglevel: 'json_combined'
+      error:
+        # file: /var/log/nginx/bar.molecule.lan/error.log
+        syslog:
+          server: 127.0.0.1:514
+        #  Debug – Debugging messages that are not useful most of the time.
+        #  Info – Informational messages that might be good to know.
+        #  Notice – Something normal but significant happened and it should be noted.
+        #  Warn – Something unexpected happened, however it’s not a cause for concern.
+        #  Error – Something failed.
+        #  Crit – A critical condition occurred.
+        #  Alert – Immediate action is required.
+        #  Emerg – The system is unusable.
+        loglevel: notice
+
+    # Add Alt-Svc header to negotiate HTTP/3.
+    # add_header alt-svc 'h3-23=":443"; ma=86400';
+
+      # error_log syslog:server=192.168.1.1 debug;
+
+      # access_log syslog:server=unix:/var/log/nginx.sock,nohostname;
+      # access_log syslog:server=[2001:db8::1]:12345,facility=local7,tag=nginx,severity=info combined;
+
+    # enable ssl
+    ssl:
+      enabled: true
+      certificate: /etc/ssl/certs/ssl-cert-snakeoil.pem
+      certificate_key: /etc/ssl/private/ssl-cert-snakeoil.key
+      #certificate:     /etc/letsencrypt/live/bar.molecule.lan/fullchain.pem
+      #certificate_key: /etc/letsencrypt/live/bar.molecule.lan/privkey.pem
+
+  # HTTPS
+  # enabled
+  # present
+  # > 20-foo.molecule.lan
+  20-foo.molecule.lan:
+    state: absent
+    enabled: true
+
+    filename: 20-foo.molecule.lan.conf
+
+    domains:
+      - foo2.molecule.lan
+
+    # Specify which port you want to listen to with clear HTTP, or leave undefined for 80
+    listen: 9080
+
+    # enable ssl
+    ssl:
+      enabled: true
+      certificate: /etc/ssl/certs/ssl-cert-snakeoil.pem
+      certificate_key: /etc/ssl/private/ssl-cert-snakeoil.key
+
+  # HTTPS
+  # enabled
+  # present
+  # > 30-foofoo.molecule.lan
+  30-foofoo.molecule.lan:
+    state: absent
+    enabled: false
+
+    filename: 30-foofoo.molecule.lan.conf
+
+    domains:
+      - foo.molecule.lan
+
+    listen: 443 http2
+
     # enable ssl
     ssl:
       enabled: true
       certificate:     /etc/letsencrypt/live/bar.molecule.lan/fullchain.pem
       certificate_key: /etc/letsencrypt/live/bar.molecule.lan/privkey.pem
+
+
+nginx_vhosts_old:
+  - server_name: "bar.molecule.lan"
+    listen: 80
+    state: present
+    root:  /var/www/bar.molecule.lan
+    access_log: /var/log/nginx/bar.molecule.lan/access.log
+    error_log:  /var/log/nginx/bar.molecule.lan/error.log
+
+    extra_parameters: |
+      location ^~ / {
+        add_header X-Backend "bar";
+
+        proxy_pass         http://paperless/;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+      }
+      # include modules.d/99-letsencrypt-acme-challenge.conf;
+
+  - server_name: "foo.molecule.lan"
+    listen: 80
+    state: present
+    root:  /var/www/foo.molecule.lan
+    access_log: /var/log/nginx/foo.molecule.lan/access.log
+    error_log:  /var/log/nginx/foo.molecule.lan/error.log
 
 ...

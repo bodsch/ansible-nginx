@@ -8,6 +8,8 @@ nginx_packages:
 nginx_user: nginx
 nginx_group: nginx
 
+nginx_mime_file_path: /etc/nginx/mime.types
+
 nginx_defaults_global:
   error_log: "{{ nginx_logging.base_directory }}/error.log warn"
   worker_processes: "{{ ansible_processor_vcpus | default(ansible_processor_count) }}"

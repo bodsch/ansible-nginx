@@ -26,6 +26,7 @@
     - sites-available
     - sites-enabled
     - includes.d
+    - conf.d
 
 - name: remove default site
   file:

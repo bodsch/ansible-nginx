@@ -6,6 +6,4 @@ nginx_packages:
 nginx_user: www-data
 nginx_group: www-data
 
-nginx_mime_file_path: /etc/nginx/mime.types
-
 ...
