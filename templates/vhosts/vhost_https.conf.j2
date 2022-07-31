@@ -44,7 +44,7 @@ server {
 
 server {
   server_name
-    {{ item.value.domains | join('\n') | indent(4, first=False) }};
+    {{ item.value.domains | default['localhost']) | join('\n') | indent(4, first=False) }};
 
   {{ tpl.vhost_listen(item.value.redirect.from_port | default(80)) | indent(0, first=False)  }}
   {{ tpl.vhost_logfile(_logfiles, item.key) | indent(0, first=False) }}

@@ -50,7 +50,7 @@ nginx_vhosts:
       - 127.0.0.1
       - localhost
 
-    listen: 8088
+    listen: 127.0.0.1:8088
 
     filename: 00-status
 
