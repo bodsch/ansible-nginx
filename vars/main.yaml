@@ -8,10 +8,6 @@ nginx_packages:
 nginx_user: nginx
 nginx_group: nginx
 
-nginx_certbot_packages: []
-  #  - python3-certbot
-  # - python3-certbot-nginx
-
 nginx_defaults_global:
   error_log: "{{ nginx_logging.base_directory }}/error.log warn"
   worker_processes: "{{ ansible_processor_vcpus | default(ansible_processor_count) }}"

@@ -1,11 +1,12 @@
 # python 3 headers, required if submitting to Ansible
+
+# (c) 2021-2022, Bodo Schulz <bodo@boone-schulz.de>
+# Apache (see LICENSE or https://opensource.org/licenses/Apache-2.0)
+
 from __future__ import (absolute_import, division, print_function)
 __metaclass__ = type
 
 from ansible.utils.display import Display
-
-import json
-import crypt
 
 display = Display()
 
@@ -30,7 +31,7 @@ class FilterModule(object):
 
         for k, v in data.items():
             ssl = v.get('ssl', {})
-            enabled = ssl.get("enabled", False)
+            # enabled = ssl.get("enabled", False)
             certificate = ssl.get("certificate", None)
             certificate_key = ssl.get("certificate_key", None)
 

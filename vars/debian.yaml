@@ -1,11 +1,5 @@
 ---
 
-nginx_dependencies:
-  - ssl-cert
-  - python3-passlib
-
-nginx_certbot_packages: []
-
 nginx_packages:
   - nginx
 

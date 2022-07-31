@@ -5,24 +5,16 @@
     enabled: false
     vhosts: "{{ nginx_vhosts }}"
   register: _deactivated_vhost
+  notify:
+    - de-activated vhosts
 
 - name: remove vhost configurations
   nginx_site_handler:
     state: absent
     vhosts: "{{ nginx_vhosts }}"
   register: _removed_vhost
-
-- name: de-activated vhosts
-  debug:
-    msg: "{{ _deactivated_vhost }}"
-  when:
-    - _deactivated_vhost.changed
-
-- name: removed vhost
-  debug:
-    msg: "{{ _removed_vhost }}"
-  when:
-    - _removed_vhost.changed
+  notify:
+    - removed vhost
 
 # TODO remove log directory, or logfile
 

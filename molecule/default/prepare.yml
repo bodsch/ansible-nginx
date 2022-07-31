@@ -14,3 +14,6 @@
 
   roles:
     - role: syslog-ng
+    - role: htpasswd
+
+...

@@ -10,4 +10,3 @@
   include_tasks: vhosts/configure.yaml
 
 ...
-

@@ -1,6 +1,6 @@
 ---
 
-- name: define htpasswd values
+- name: define vhosts variables
   set_fact:
     nginx_vhosts_root_directories: "{{ nginx_vhosts | dict2items | vhost_directory('root') }}"
     nginx_http_vhosts: "{{ nginx_vhosts | http_vhosts }}"

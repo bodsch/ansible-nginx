@@ -1,5 +1,17 @@
 ---
 
+- name: de-activated vhosts
+  debug:
+    msg: "{{ _deactivated_vhost }}"
+  when:
+    - _deactivated_vhost.changed
+
+- name: removed vhost
+  debug:
+    msg: "{{ _removed_vhost }}"
+  when:
+    - _removed_vhost.changed
+
 - name: validate config
   command: |
     nginx -t

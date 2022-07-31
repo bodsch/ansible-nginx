@@ -2,12 +2,10 @@
 # -*- coding: utf-8 -*-
 
 # (c) 2021-2022, Bodo Schulz <bodo@boone-schulz.de>
-# BSD 2-clause (see LICENSE or https://opensource.org/licenses/BSD-2-Clause)
+# Apache (see LICENSE or https://opensource.org/licenses/Apache-2.0)
 
 from __future__ import absolute_import, division, print_function
 import os
-import pwd
-import grp
 
 from ansible.module_utils.basic import AnsibleModule
 

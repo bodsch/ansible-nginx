@@ -9,5 +9,4 @@
     NETRC: ''
 
   roles:
-    - role: htpasswd
     - role: ansible-nginx

@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# (c) 2021, Bodo Schulz <bodo@boone-schulz.de>
-# BSD 2-clause (see LICENSE or https://opensource.org/licenses/BSD-2-Clause)
+# (c) 2021-2022, Bodo Schulz <bodo@boone-schulz.de>
+# Apache (see LICENSE or https://opensource.org/licenses/Apache-2.0)
 
 from __future__ import absolute_import, division, print_function
 import os
-import pwd
-import grp
 
 from ansible.module_utils.basic import AnsibleModule
 
@@ -15,6 +13,7 @@ from ansible.module_utils.basic import AnsibleModule
 class NginxSiteHandler(object):
     """
     """
+
     def __init__(self, module):
         """
         """
@@ -40,7 +39,7 @@ class NginxSiteHandler(object):
 
             self.module.log(msg=f"   - {file_name}")
 
-            if self.enabled == False and enabled == False:
+            if not self.enabled and not enabled:
                 changed = self.disable_site(file_name)
 
                 if changed:
@@ -50,7 +49,7 @@ class NginxSiteHandler(object):
                     )
                     result_state.append(res)
 
-            if self.enabled == True and enabled == True:
+            if self.enabled and enabled:
                 changed = self.enable_site(file_name)
 
                 if changed:
@@ -113,7 +112,7 @@ class NginxSiteHandler(object):
                 self.create_link(source, destination)
             else:
                 if(os.readlink(destination) != source):
-                    module.log(msg=f"path '{destination}' is a broken symlink")
+                    self.module.log(msg=f"path '{destination}' is a broken symlink")
                     self.create_link(source, destination, True)
                 else:
                     self.create_link(source, destination)
@@ -134,7 +133,6 @@ class NginxSiteHandler(object):
         changed = self.__remove_file(source)
 
         return changed
-
 
     def __remove_file(self, file_name):
         """

@@ -1,11 +1,12 @@
 # python 3 headers, required if submitting to Ansible
+
+# (c) 2021-2022, Bodo Schulz <bodo@boone-schulz.de>
+# Apache (see LICENSE or https://opensource.org/licenses/Apache-2.0)
+
 from __future__ import (absolute_import, division, print_function)
 __metaclass__ = type
 
 from ansible.utils.display import Display
-
-import json
-import crypt
 
 display = Display()
 
@@ -21,12 +22,11 @@ class FilterModule(object):
             # 'letsencrypt': self.letsencrypt,
             'create_vhost': self.create_vhost,
             'vhost_directory': self.vhost_directory,
-            'htpasswd': self.htpasswd,
             'http_vhosts': self.http_vhosts,
             'https_vhosts': self.https_vhosts,
         }
 
-    def activate_vhost_by(self, data=None, mode='http'):  # certificate_exists=False):
+    def activate_vhost_by(self, data, mode='http'):
         """
         """
         display.v(" = activate_vhost_by(data, {}))".format(mode))
@@ -44,7 +44,7 @@ class FilterModule(object):
         if enabled and present:
             result = True
 
-        #if mode == 'http' and present:
+        # if mode == 'http' and present:
         #    result = True
 
         if mode == 'https':
@@ -53,74 +53,39 @@ class FilterModule(object):
 
             certificate_exists = value.get("ssl_certificate_exists", False)
 
-            letsencrypt = value.get("letsencrypt", {})
-
-            if letsencrypt:
-                le_enabled  = letsencrypt.get('enabled', False)
-                le_email    = letsencrypt.get('email', "")
-
             display.v("   - certificate_exists {}".format(certificate_exists))
             display.v("   - ssl                {}".format(ssl))
-            display.v("   - letsencrypt        {}".format(le_enabled))
-
-            display.v("   - x                  {}".format(not certificate_exists and (not ssl or not le_enabled)))
+            display.v("   - x                  {}".format(not certificate_exists and not ssl))
 
             if not certificate_exists and (not ssl or not le_enabled):
                 result = False
 
-                #if certificate_exists and not le_enabled:
+                # if certificate_exists and not le_enabled:
                 #    result = False
 
         display.v(" = result {}".format(result))
 
         return result
 
-    # def letsencrypt(self, data):
-    #     """
-    #     """
-    #     display.v(" = letsencrypt({}) - ({})".format(json.dumps(data, indent=2), type(data)))
-    #
-    #     result = {}
-    #
-    #     for k, v in data.items():
-    #         display.v(" = data {} ({})".format(json.dumps(v, indent=2), type(v)))
-    #         if v.get('letsencrypt', {}):
-    #             result[k] = dict(
-    #                 domains=v.get('domains', []),
-    #                 email=v.get('letsencrypt', {}).get('email', '')
-    #             )
-    #
-    #     display.v(" = result {}".format(result))
-    #
-    #     return result
-
     def create_vhost(self, data, mode='http'):
         """
         """
         display.v(" = create_vhost(data, {})".format(mode))
-        # display.v(" = create_vhost({}, {}) -  ({})".format(json.dumps(data, indent=2), mode, type(data)))
         display.v("   {}".format(data.get('key', "")))
 
         result = False
         present = True
-        letsencrypt = False
 
         value = data.get('value', {})
 
-        state = value.get("state", True)
-        ssl = value.get("ssl", {})
-        if value.get("letsencrypt", {}):
-            letsencrypt = value.get("letsencrypt", {}).get("enabled", False)
+        # state = value.get("state", True)
+        ssl = value.get("ssl", {}).get("enabled", False)
 
         display.v("    - present            {}".format(present))
-        #display.v("    - ssl                {}".format(ssl))
-        #display.v("    - letsencrypt        {}".format(letsencrypt))
 
-        if mode == 'http' and (present and not ssl and not letsencrypt):
+        if mode == 'http' and (present and not ssl):
             result = True
-        if mode == 'https' and (present and ssl and not letsencrypt):
-            result = True
-        if mode == 'acme' and (present and ssl and letsencrypt):
+        if mode in ['https', 'acme'] and (present and ssl):
             result = True
 
         display.v(" = result {}".format(result))
@@ -142,27 +107,9 @@ class FilterModule(object):
         # display.v(" = result {}".format(result))
         return result
 
-    def htpasswd(self, data):
-        """
-        """
-        result = {}
-
-        if isinstance(data, dict):
-            """
-            """
-            for k, v in data.items():
-                htpasswd = v.get('htpasswd', None)
-                if htpasswd:
-                    result[k] = htpasswd
-
-        # display.v(" = result {}".format(result))
-        return result
-
     def http_vhosts(self, data):
         """
         """
-        results = []
-
         _data = data.copy()
 
         for k, v in _data.items():
@@ -177,8 +124,6 @@ class FilterModule(object):
     def https_vhosts(self, data):
         """
         """
-        results = []
-
         _data = data.copy()
 
         for k, v in _data.items():
