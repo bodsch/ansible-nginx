@@ -69,14 +69,14 @@ nginx_includes:
 nginx_vhosts: {}
 ```
 
-- [`nginx_acme`](acme.md)
-- [`nginx_custom_includes`](custom_includes.md)
-- [`nginx_global`](global.md)
-- [`nginx_gzip`](gzip.md)
-- [`nginx_http`](http.md)
-- [`nginx_logformat`](logformat.md)
-- [`nginx_ssl`](ssl.md)
-- [`nginx_vhosts`](vhosts.md)
+- [`nginx_acme`](doc/acme.md)
+- [`nginx_custom_includes`](doc/custom_includes.md)
+- [`nginx_global`](doc/global.md)
+- [`nginx_gzip`](doc/gzip.md)
+- [`nginx_http`](doc/http.md)
+- [`nginx_logformat`](doc/logformat.md)
+- [`nginx_ssl`](doc/ssl.md)
+- [`nginx_vhosts`](doc/vhosts.md)
 
 
 ## Contribution
