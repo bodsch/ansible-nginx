@@ -1,0 +1,13 @@
+# custom rules like
+
+map $http_user_agent $badagent {
+  default                0;
+  ~*malicious            1;
+  ~*backdoor             1;
+  ~*netcrawler           1;
+  ~Antivirx              1;
+  ~Arian                 1;
+  ~webbandit             1;
+  ~cyberscan             1;
+  ~*paloaltonetworks.com 1;
+}
