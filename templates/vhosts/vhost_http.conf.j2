@@ -1,6 +1,9 @@
 #jinja2: trim_blocks: True, rstrip_blocks: True, lstrip_blocks: True
 # {{ ansible_managed }}
+#
+# {{ item.key }}
 {%- import 'jinja_macros.j2' as tpl with context %}
+{%- set _server_name = item.value.domains | default('_') %}
 {%- set _upstreams = item.value.upstreams | default({}) %}
 {%- set _logfiles = item.value.logfiles | default({}) %}
 {%- set _locations = item.value.locations | default([]) %}
@@ -9,9 +12,19 @@
 {% if item.key == "default" %}
 server {
   server_name _;
+
   {{ tpl.vhost_listen(80, True) | indent(0, first=False) }}
+  {{ tpl.vhost_logfile(_logfiles, item.key) | indent(0, first=False) }}
+
+  {% if item.value.root is defined %}
+  root          {{ item.value.root }};
+  {% endif %}
+  {% if item.value.index is defined %}
+  index
+    {{ item.value.index | join('\n') | indent(4, first=False) }};
+  {% endif %}
+
   return        444;
-  {{ tpl.vhost_logfile(_logfiles, item.key) | indent(0, first=False) -}}
 }
 
 {% else %}
@@ -20,11 +33,23 @@ server {
   {% endif %}
 
 server {
-  server_name
-    {{ item.value.domains | join('\n') | indent(4, first=False) }};
-
+  {{ tpl.vhost_server_name(_server_name) }}
   {{ tpl.vhost_listen(_listen) | indent(0, first=False) }}
   {{ tpl.vhost_logfile(_logfiles, item.key) | indent(0, first=False) }}
+
+  {% if item.value.root is defined %}
+  root                {{ item.value.root }};
+  {% endif %}
+  {% if item.value.index is defined %}
+  index
+    {{ item.value.index | join('\n') | indent(4, first=False) }};
+  {% endif %}
+  {% if item.value.includes is defined %}
+    {% for inc in item.value.includes %}
+  include             {{ inc }};
+    {% endfor %}
+  {% endif %}
+{#
   location ^~ /.well-known/acme-challenge/ {
     allow all;
     default_type "text/plain";
@@ -33,6 +58,7 @@ server {
   location = /.well-known/acme-challenge/ {
     return 404;
   }
-  {{ tpl.vhost_locations(_locations) | indent(0, first=False) -}}
+#}
+  {{- tpl.vhost_locations(_locations) | indent(0, first=False) -}}
 }
 {% endif %}

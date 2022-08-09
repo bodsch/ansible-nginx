@@ -4,6 +4,7 @@
 # {{ item.key }}
 
 {%- import 'jinja_macros.j2' as tpl with context %}
+{%- set _server_name = item.value.domains | default('_') %}
 {%- set _upstreams = item.value.upstreams | default({}) %}
 {%- set _logfiles = item.value.logfiles | default({}) %}
 {%- set _ssl = item.value.ssl | default({}) %}
@@ -14,15 +15,26 @@
 {# DEFAULT vhost #}
 server {
   server_name   _;
-  {{ tpl.vhost_listen(80, True) | indent(0, first=False)  }}
+
+  {{ tpl.vhost_listen(80, True) | indent(0, first=False) }}
+  {{ tpl.vhost_logfile(_logfiles, item.key) | indent(0, first=False) }}
+
+  {% if item.value.root is defined %}
+  root          {{ item.value.root }};
+  {% endif %}
+  {% if item.value.index is defined %}
+  index
+    {{ item.value.index | join('\n') | indent(4, first=False) }};
+  {% endif %}
+
   return        444;
-  {{ tpl.vhost_logfile(_logfiles, item.key) | indent(0, first=False) -}}
 }
 {% endif %}
 
 {% if _upstreams | count > 0 %}
 {{ tpl.vhost_upstreams(_upstreams | default({})) }}
-{% endif %}
+{% endif -%}
+
 {% if item.value.redirect is defined and
       item.value.redirect.from_port is defined %}
   {% if _listen | type == "str" %}
@@ -33,11 +45,10 @@ server {
   {% endif %}
 
 server {
-  server_name
-    {{ item.value.domains | default(['localhost']) | join('\n') | indent(4, first=False) }};
-
-  {{ tpl.vhost_listen(item.value.redirect.from_port | default(80)) | indent(0, first=False)  }}
+  {{ tpl.vhost_server_name(_server_name) }}
+  {{ tpl.vhost_listen(item.value.redirect.from_port | default(80)) | indent(0, first=False) }}
   {{ tpl.vhost_logfile(_logfiles, item.key) | indent(0, first=False) }}
+
   location ^~ /.well-known/acme-challenge/ {
     allow all;
     default_type "text/plain";
@@ -53,11 +64,23 @@ server {
 {% endif %}
 
 server {
-  server_name
-    {{ item.value.domains | join('\n') | indent(4, first=False) }};
-
-  {{ tpl.vhost_listen(_listen | default(443)) | indent(0, first=False)  }}
+  {{ tpl.vhost_server_name(_server_name) | indent(0, first=False) }}
+  {{ tpl.vhost_listen(_listen) | indent(0, first=False) }}
   {{ tpl.vhost_logfile(_logfiles, item.key) | indent(0, first=False) }}
   {{ tpl.vhost_certificates(_ssl, item.key) | indent(0, first=False) }}
+  {% if item.value.includes is defined %}
+    {% for inc in item.value.includes %}
+  include             {{ inc }};
+    {% endfor %}
+  {% endif -%}
+
+  {%- if item.value.root is defined %}
+  root          {{ item.value.root }};
+  {% endif %}
+  {%- if item.value.index is defined %}
+  index
+    {{ item.value.index | join('\n') | indent(4, first=False) }};
+  {% endif %}
+
   {{ tpl.vhost_locations(_locations) | indent(0, first=False) -}}
 }

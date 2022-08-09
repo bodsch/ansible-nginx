@@ -37,6 +37,7 @@
     src: /etc/nginx/sites-available/{{ item.value.filename | default( item.key ~ '.conf') }}
     dest: /etc/nginx/sites-enabled/{{ item.value.filename | default( item.key ~ '.conf') }}
     state: link
+    force: true
   loop:
     "{{ nginx_http_vhosts | dict2items }}"
   loop_control:
@@ -56,6 +57,7 @@
     src: /etc/nginx/sites-available/{{ item.value.filename | default( item.key ~ '.conf') }}
     dest: /etc/nginx/sites-enabled/{{ item.value.filename | default( item.key ~ '.conf') }}
     state: link
+    force: true
   loop:
     "{{ nginx_https_vhosts | dict2items }}"
   loop_control:

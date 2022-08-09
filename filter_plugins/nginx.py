@@ -22,6 +22,7 @@ class FilterModule(object):
             # 'letsencrypt': self.letsencrypt,
             'create_vhost': self.create_vhost,
             'vhost_directory': self.vhost_directory,
+            'vhost_listen': self.vhost_listen,
             'http_vhosts': self.http_vhosts,
             'https_vhosts': self.https_vhosts,
         }
@@ -106,6 +107,28 @@ class FilterModule(object):
 
         # display.v(" = result {}".format(result))
         return result
+
+    def vhost_listen(self, data, port, default):
+        """
+        """
+        display.v(f"vhost_listen({port}, {default})")
+
+        result = []
+
+        if (isinstance(port, str) or isinstance(port, int)):
+            result.append(port)
+
+        if isinstance(port, list):
+            result = port
+
+        if default:
+            result.append('default_server')
+
+        display.v(f" = result {result}")
+
+        return result
+
+
 
     def http_vhosts(self, data):
         """

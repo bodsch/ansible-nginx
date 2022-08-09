@@ -53,6 +53,7 @@
   set_fact:
     nginx_global: "{{ nginx_defaults_global       | combine( nginx_global   , recursive=True ) }}"
     nginx_http: "{{ nginx_defaults_http           | combine( nginx_http     , recursive=True ) }}"
+    nginx_events: "{{ nginx_defaults_events       | combine( nginx_events   , recursive=True ) }}"
     nginx_gzip: "{{ nginx_defaults_gzip           | combine( nginx_gzip     , recursive=True ) }}"
     nginx_ssl: "{{ nginx_defaults_ssl             | combine( nginx_ssl      , recursive=True ) }}"
     nginx_logformat: "{{ nginx_defaults_logformat | combine( nginx_logformat, recursive=True ) }}"

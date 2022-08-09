@@ -4,53 +4,63 @@
 #}
 {% set print = self %}
 
+{% macro vhost_server_name(data) %}
+
+{%- if data | type == "str" -%}
+  server_name
+    {{ data }};
+{%- elif data | type == "list" -%}
+  server_name
+    {{ data | join('\n') | indent(4, first=False) }};
+{% endif %}
+
+{% endmacro %}
+
 {% macro vhost_logfile(logfiles, domain) %}
 
 {% if logfiles | default({}) | count > 0 %}
-    {% if logfiles.access.file | default('') | string | length > 0 %}
-  access_log {{ logfiles.access.file }} {{ logfiles.access.loglevel | default('') }};
-    {% elif logfiles.access.syslog | default({}) | count > 0 and
+  {% if logfiles.access.file | default('') | string | length > 0 %}
+  access_log          {{ logfiles.access.file }} {{ logfiles.access.loglevel | default('') }};
+  {% elif logfiles.access.syslog | default({}) | count > 0 and
             logfiles.access.syslog.server is defined and
             logfiles.access.syslog.server | string | length > 0 %}
-      {% set _access_options = "" %}
-      {% set _error_options = "" %}
-      {% if logfiles.access.syslog.options | default([]) | count > 0 %}
-        {% set _access_options = "," ~ logfiles.access.syslog.options | join(",") %}
-      {% endif %}
-  access_log syslog:server={{ logfiles.access.syslog.server }}{{ _access_options }} {{ logfiles.access.loglevel | default('') }};
+    {% set _access_options = "" %}
+    {% set _error_options = "" %}
+    {% if logfiles.access.syslog.options | default([]) | count > 0 %}
+      {% set _access_options = "," ~ logfiles.access.syslog.options | join(",") %}
     {% endif %}
-    {% if logfiles.error.file | default('') | string | length > 0 %}
-  error_log  {{ logfiles.error.file }} {{ logfiles.error.loglevel | default('error') }};
-    {% elif logfiles.error.syslog | default({}) | count > 0 and
+  access_log          syslog:server={{ logfiles.access.syslog.server }}{{ _access_options }} {{ logfiles.access.loglevel | default('') }};
+  {% endif %}
+  {% if logfiles.error.file | default('') | string | length > 0 %}
+  error_log           {{ logfiles.error.file }} {{ logfiles.error.loglevel | default('error') }};
+  {% elif logfiles.error.syslog | default({}) | count > 0 and
             logfiles.error.syslog.server is defined and
             logfiles.error.syslog.server | string | length > 0 %}
-      {% if logfiles.error.syslog.options | default([]) | count > 0 %}
-        {% set _error_options = "," ~ logfiles.error.syslog.options | join(",") %}
-      {% endif %}
-  error_log  syslog:server={{ logfiles.error.syslog.server }}{{ _error_options }} {{ logfiles.error.loglevel | default('error') }};
+    {% if logfiles.error.syslog.options | default([]) | count > 0 %}
+      {% set _error_options = "," ~ logfiles.error.syslog.options | join(",") %}
     {% endif %}
+  error_log           syslog:server={{ logfiles.error.syslog.server }}{{ _error_options }} {{ logfiles.error.loglevel | default('error') }};
+  {% endif %}
 {% else %}
-  access_log /var/log/nginx/{{ domain }}_access.log;
-  error_log  /var/log/nginx/{{ domain }}_error.log error;
+  access_log          /var/log/nginx/{{ domain }}_access.log;
+  error_log           /var/log/nginx/{{ domain }}_error.log error;
 {% endif -%}
 {% endmacro %}
 
 {% macro vhost_certificates(data, domain) %}
-
 {% if data.state | default('present') %}
-  include             conf.d/ssl.conf;
+include             conf.d/ssl.conf;
   ssl_certificate     {{ data.certificate }};
   ssl_certificate_key {{ data.certificate_key }};
     {% if data.dhparam is defined and
           data.dhparam | string | length > 0 %}
-  dhparam             {{ data.dhparam }};
+  ssl_dhparam         {{ data.dhparam }};
     {% endif %}
 {% endif %}
 
 {% endmacro %}
 
 {% macro vhost_upstreams(data) %}
-
 {% for upstream in data %}
 upstream {{ upstream.name }} {
   {% if upstream.strategy is defined %}
@@ -79,7 +89,6 @@ upstream {{ upstream.name }} {
 
   {% endfor %}
 {% endif %}
-
 {% if data == "list" %}
   {% for l in data %}
   location {{ l.location }} {
@@ -91,14 +100,6 @@ upstream {{ upstream.name }} {
 {% endmacro %}
 
 {% macro vhost_listen(port=80, default=False) %}
-
-{% if port | type == "str" or port | type == "int" %}
-  listen        {{ port }}{% if default %} default_server{% endif %};
-{% endif %}
-{% if port | type == "list" %}
-  {% for l in port %}
-  listen        {{ l }}{% if default %} default_server{% endif %};
-  {% endfor %}
-{% endif %}
-
+listen
+    {{ "" | vhost_listen(port, default) | join('\n') | indent(4, first=False) }};
 {% endmacro %}
