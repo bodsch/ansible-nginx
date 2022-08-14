@@ -128,8 +128,6 @@ class FilterModule(object):
 
         return result
 
-
-
     def http_vhosts(self, data):
         """
         """
