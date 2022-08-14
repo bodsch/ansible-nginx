@@ -63,24 +63,19 @@ def get_vars(host):
     """
     base_dir, molecule_dir = base_directory()
     distribution = host.system_info.distribution
-
-    print(" -> {}".format(distribution))
-    print(" -> {}".format(base_dir))
+    operation_system = None
 
     if distribution in ['debian', 'ubuntu']:
-        os = "debian"
+        operation_system = "debian"
     elif distribution in ['redhat', 'ol', 'centos', 'rocky', 'almalinux']:
-        os = "redhat"
-    elif distribution in ['arch']:
-        os = "archlinux"
+        operation_system = "redhat"
+    elif distribution in ['arch', 'artix']:
+        operation_system = f"{distribution}linux"
 
-    print(" -> {} / {}".format(distribution, os))
-
-    file_defaults      = read_ansible_yaml("{}/defaults/main".format(base_dir), "role_defaults")
-    file_vars          = read_ansible_yaml("{}/vars/main".format(base_dir), "role_vars")
-    file_distibution   = read_ansible_yaml("{}/vars/{}".format(base_dir, os), "role_distibution")
-    file_molecule      = read_ansible_yaml("{}/group_vars/all/vars".format(molecule_dir), "test_vars")
-    # file_host_molecule = read_ansible_yaml("{}/host_vars/{}/vars".format(base_dir, HOST), "host_vars")
+    file_defaults = f"file={base_dir}/defaults/main.yaml name=role_defaults"
+    file_vars = f"file={base_dir}/vars/main.yaml name=role_vars"
+    file_molecule = f"file={molecule_dir}/group_vars/all/vars.yml name=test_vars"
+    file_distibution = f"file={base_dir}/vars/{operation_system}.yaml name=role_distibution"
 
     defaults_vars      = host.ansible("include_vars", file_defaults).get("ansible_facts").get("role_defaults")
     vars_vars          = host.ansible("include_vars", file_vars).get("ansible_facts").get("role_vars")
@@ -101,8 +96,15 @@ def get_vars(host):
 
 
 def test_installed_package(host):
-    p = host.package("nginx")
-    assert p.is_installed
+    distribution = host.system_info.distribution
+    release = host.system_info.release
+
+    print(f"distribution: {distribution}")
+    print(f"release     : {release}")
+
+    if not distribution == "artix":
+        p = host.package("nginx")
+        assert p.is_installed
 
 
 @pytest.mark.parametrize("dirs", [

@@ -2,4 +2,4 @@
 
 . hooks/_tox_base
 
-tox ${TOX_OPTS} -- molecule converge ${TOX_ARGS}
+tox ${TOX_OPTS} -- molecule converge ${TOX_ARGS} -- -v

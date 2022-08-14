@@ -15,6 +15,8 @@
         - "{{ ansible_distribution | lower }}.yaml"
         # eg. redhat / debian / archlinux
         - "{{ ansible_os_family | lower }}.yaml"
+        # artixlinux
+        - "{{ ansible_os_family | lower | replace(' ', '') }}.yaml"
         - default.yaml
       skip: true
 

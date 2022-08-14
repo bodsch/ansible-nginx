@@ -1,0 +1,10 @@
+---
+
+nginx_packages:
+  - nginx
+  - nginx-openrc
+
+nginx_user: http
+nginx_group: http
+
+...
