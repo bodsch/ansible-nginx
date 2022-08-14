@@ -2,7 +2,7 @@
 extends: default
 rules:
   line-length:
-    max: 195
+    max: 600
     level: warning
 #   braces:
 #     min-spaces-inside: 0
