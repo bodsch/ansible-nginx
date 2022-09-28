@@ -4,19 +4,17 @@
 #}
 {% set print = self %}
 
-{% macro vhost_server_name(data) %}
-
-{%- if data | type == "str" -%}
+{%- macro vhost_server_name(data) -%}
+{% if data | type == "str" %}
   server_name
     {{ data }};
-{%- elif data | type == "list" -%}
+{% elif data | type == "list" %}
   server_name
     {{ data | join('\n') | indent(4, first=False) }};
 {% endif %}
+{%- endmacro -%}
 
-{% endmacro %}
-
-{% macro vhost_logfile(logfiles, domain) %}
+{%- macro vhost_logfile(logfiles, domain) -%}
 
 {% if logfiles | default({}) | count > 0 %}
   {% if logfiles.access.file | default('') | string | length > 0 %}
@@ -44,10 +42,10 @@
 {% else %}
   access_log          /var/log/nginx/{{ domain }}_access.log;
   error_log           /var/log/nginx/{{ domain }}_error.log error;
-{% endif -%}
-{% endmacro %}
+{% endif %}
+{%- endmacro -%}
 
-{% macro vhost_certificates(data, domain) %}
+{%- macro vhost_certificates(data, domain) -%}
 {% if data.state | default('present') %}
 include             conf.d/ssl.conf;
   ssl_certificate     {{ data.certificate }};
@@ -58,9 +56,9 @@ include             conf.d/ssl.conf;
     {% endif %}
 {% endif %}
 
-{% endmacro %}
+{%- endmacro -%}
 
-{% macro vhost_upstreams(data) %}
+{%- macro vhost_upstreams(data) -%}
 {% for upstream in data %}
 upstream {{ upstream.name }} {
   {% if upstream.strategy is defined %}
@@ -75,16 +73,16 @@ upstream {{ upstream.name }} {
 }
 {% endfor %}
 
-{% endmacro %}
+{%- endmacro -%}
 
-{% macro vhost_locations(data) %}
+{%- macro vhost_locations(data) -%}
 
 {% if data | type == "dict" %}
   {% for k, v in data.items() %}
   location {{ k }} {
     {% if v.options is defined %}
     {{ v.options | indent(4) }}
-    {% endif %}
+    {%- endif %}
   }
 
   {% endfor %}
@@ -97,9 +95,19 @@ upstream {{ upstream.name }} {
   {% endfor %}
 {% endif %}
 
-{% endmacro %}
+{%- endmacro -%}
 
-{% macro vhost_listen(port=80, default=False) %}
-listen
-    {{ "" | vhost_listen(port, default) | join('\n') | indent(4, first=False) }};
-{% endmacro %}
+{%- macro vhost_listen(port=80, default=False) -%}
+
+{% if port | type == "str" or port | type == "int" %}
+  listen
+    {{ port }}{% if default %} default_server{% endif %};
+{% endif %}
+{% if port | type == "list" %}
+  {% for l in port %}
+  listen
+    {{ l }}{% if default %} default_server{% endif %};
+  {% endfor %}
+{% endif %}
+
+{%- endmacro -%}
