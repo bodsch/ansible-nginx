@@ -37,6 +37,6 @@
 
 - name: append certificates state to https vhost configurations
   set_fact:
-    nginx_https_vhosts: "{{ nginx_https_vhosts | append_certificate_state( check_domain_cert ) }}"
+    nginx_https_vhosts: "{{ nginx_https_vhosts | append_certificate_state(check_domain_cert) }}"
 
 ...

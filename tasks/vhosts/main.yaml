@@ -9,4 +9,7 @@
 - name: vhosts configure
   include_tasks: vhosts/configure.yaml
 
+- name: flush handlers
+  meta: flush_handlers
+
 ...

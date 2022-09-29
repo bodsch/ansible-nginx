@@ -92,4 +92,8 @@ nginx_defaults_acme:
 
 nginx_defaults_custom_includes: {}
 
+# ------------------------------------------------------------------------------------------------
+
+_nginx_changed_vhosts: false
+
 ...

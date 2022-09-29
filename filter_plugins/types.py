@@ -26,17 +26,14 @@ class FilterModule(object):
         '''
         Get the type of a variable
         '''
-        # display.v("var   : {} ({})".format(var, type(var)))
-        # display.v("result: {}".format(type(var).__name__))
-
         _type = type(var).__name__
 
-        display.v(f" {var}, type: {_type}")
+        # display.v(f" {var}, type: {_type}")
 
         if (isinstance(var, str) or _type == "AnsibleUnsafeText"):
             _type = "str"
 
-        display.v(f" = result {_type}")
+        # display.v(f" = result {_type}")
 
         return _type
 

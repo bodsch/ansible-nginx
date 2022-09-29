@@ -10,6 +10,7 @@
     mode: 0644
   when:
     - item.value.state | default('present') == 'present'
+  register: _created_vhost_http
   loop:
     "{{ nginx_http_vhosts | dict2items }}"
   loop_control:
@@ -25,10 +26,29 @@
     mode: 0644
   when:
     - item.value.state | default('present') == 'present'
+  register: _created_vhost_https
   loop:
     "{{ nginx_https_vhosts | dict2items }}"
   loop_control:
     label: "{{ item.value.filename | default( item.key ~ '.conf') }}"
+
+- name: changed vhosts
+  set_fact:
+    _nginx_changed_vhosts: "{{ 'true'
+        if
+          _created_vhost_http | changed_vhosts or
+          _created_vhost_https | changed_vhosts
+        else
+          'false'
+    }}"
+
+- name: trigger handler when vhosts configurations have been changed
+  debug:
+    msg: "{{ _nginx_changed_vhosts | bool }}"
+  changed_when: "_nginx_changed_vhosts | default('false') | bool"
+  notify:
+    - validate config
+    - reload service
 
 # ---------------------------------------------------------------------------------------
 
