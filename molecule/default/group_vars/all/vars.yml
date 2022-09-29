@@ -46,14 +46,15 @@ nginx_vhosts:
       enabled: false
 
   nginx-status:
-    filename: 00-status
+    filename: 00-status.conf
     state: present  # default: present
     enabled: true   # default: true
     # domain(s)
     domains:
       - localhost
     # listen
-    listen: 127.0.0.1:8088
+    listen:
+      - 127.0.0.1:8088
     # locations
     locations:
       "/nginx_status":

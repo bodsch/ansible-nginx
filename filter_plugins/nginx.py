@@ -6,6 +6,8 @@
 from __future__ import (absolute_import, division, print_function)
 __metaclass__ = type
 
+# import json
+
 from ansible.utils.display import Display
 
 display = Display()
@@ -18,13 +20,14 @@ class FilterModule(object):
 
     def filters(self):
         return {
-            'activate_vhost_by': self.activate_vhost_by,
+            # 'activate_vhost_by': self.activate_vhost_by,
             # 'letsencrypt': self.letsencrypt,
-            'create_vhost': self.create_vhost,
+            # 'create_vhost': self.create_vhost,
             'vhost_directory': self.vhost_directory,
             'vhost_listen': self.vhost_listen,
             'http_vhosts': self.http_vhosts,
             'https_vhosts': self.https_vhosts,
+            'changed_vhosts': self.changed_vhosts
         }
 
     def activate_vhost_by(self, data, mode='http'):
@@ -71,8 +74,8 @@ class FilterModule(object):
     def create_vhost(self, data, mode='http'):
         """
         """
-        display.v(" = create_vhost(data, {})".format(mode))
-        display.v("   {}".format(data.get('key', "")))
+        # display.v(" = create_vhost(data, {})".format(mode))
+        # display.v("   {}".format(data.get('key', "")))
 
         result = False
         present = True
@@ -82,14 +85,14 @@ class FilterModule(object):
         # state = value.get("state", True)
         ssl = value.get("ssl", {}).get("enabled", False)
 
-        display.v("    - present            {}".format(present))
+        #  display.v("    - present            {}".format(present))
 
         if mode == 'http' and (present and not ssl):
             result = True
         if mode in ['https', 'acme'] and (present and ssl):
             result = True
 
-        display.v(" = result {}".format(result))
+        # display.v(" = result {}".format(result))
 
         return result
 
@@ -111,7 +114,7 @@ class FilterModule(object):
     def vhost_listen(self, data, port, default):
         """
         """
-        display.v(f"vhost_listen({port}, {default})")
+        # display.v(f"vhost_listen({port}, {default})")
 
         result = []
 
@@ -124,7 +127,7 @@ class FilterModule(object):
         if default:
             result.append('default_server')
 
-        display.v(f" = result {result}")
+        # display.v(f" = result {result}")
 
         return result
 
@@ -151,7 +154,26 @@ class FilterModule(object):
             ssl = v.get('ssl', {})
             enabled = ssl.get("enabled", False)
 
-            if not(len(ssl) > 0 and enabled):
+            if not (len(ssl) > 0 and enabled):
                 _ = data.pop(k)
 
         return data
+
+    def changed_vhosts(self, data):
+        """
+        """
+        result = []
+
+        if isinstance(data, dict):
+            """
+            """
+            results = data.get("results", None)
+            if results:
+                for item in results:
+                    changed = item.get("changed", False)
+                    if changed:
+                        result.append(item.get("item", {}).get("key", None))
+
+        # display.v(f"  => changed: {(len(result) > 0)} - {result}")
+
+        return (len(result) > 0)

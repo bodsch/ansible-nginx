@@ -1,6 +1,9 @@
 ---
 
-- block:
+- name: detect nginx group
+  when:
+    - not nginx_group is defined or nginx_group | length > 0
+  block:
     - name: "find primary group for user '{{ nginx_user }}'"
       getent:
         database: group
@@ -12,8 +15,6 @@
         nginx_group: "{{ getent_group | list | first }}"
       when:
         - getent_group is defined
-  when:
-    - not nginx_group is defined or nginx_group | length > 0
 
 - name: create nginx sites directories
   file:
@@ -36,6 +37,11 @@
     - nginx_default_site.remove | default('true')
 
 - name: acme challenge
+  when:
+    - nginx_acme is defined
+    - nginx_acme.enabled
+    - nginx_acme.challenge_directory is defined
+    - nginx_acme.challenge_directory | length > 0
   block:
     - name: create acme challenge directory
       file:
@@ -53,12 +59,6 @@
         group: "{{ nginx_group }}"
         mode: 0755
         recurse: true
-
-  when:
-    - nginx_acme is defined
-    - nginx_acme.enabled
-    - nginx_acme.challenge_directory is defined
-    - nginx_acme.challenge_directory | length > 0
 
 - name: create gzip configuration
   template:
