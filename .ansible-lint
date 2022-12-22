@@ -1,13 +1,5 @@
 ---
 
-exclude_paths:
-  - .github/
-  - molecule/
-
 skip_list:
-  - fqcn-builtins
   - name[casing]
   - name[template]
-  - yaml[line-length]
-
-warn_list: []
