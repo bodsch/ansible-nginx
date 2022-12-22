@@ -1,7 +1,7 @@
 ---
 
 - name: install nginx
-  package:
+  ansible.builtin.package:
     name: "{{ nginx_packages }}"
     state: present
 

@@ -28,7 +28,7 @@ def base_directory():
     """ ... """
     cwd = os.getcwd()
 
-    if('group_vars' in os.listdir(cwd)):
+    if ('group_vars' in os.listdir(cwd)):
         directory = "../.."
         molecule_directory = "."
     else:
@@ -124,9 +124,10 @@ def test_directories(host, dirs):
     "/etc/nginx/conf.d/ssl.conf",
     "/etc/nginx/conf.d/gzip.conf",
 ])
-def test_directories(host, files):
+def test_files(host, files):
     d = host.file(files)
     assert d.is_file
+
 
 def test_service(host):
     service = host.service("nginx")

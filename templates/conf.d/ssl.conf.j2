@@ -5,6 +5,9 @@
       nginx_ssl.enabled is defined and
       nginx_ssl.enabled %}
   {% for key, value in nginx_ssl.options.items() %}
+    {% if key == "ssl_ciphers" %}
+      {% set value = value | join(":") %}
+    {% endif %}
     {% if value | type == "list" %}
 {{ key }}
 {{ value | join('\n') | indent(4, first=True) }};

@@ -1,7 +1,7 @@
 ---
 
 - name: create HTTP vhost configurations
-  template:
+  ansible.builtin.template:
     src: "{{ item.value.template | default( 'vhosts/' ~ nginx_vhost_templates.http ) }}"
     dest: "/etc/nginx/sites-available/{{ item.value.filename | default( item.key ~ '.conf' ) }}"
     force: true
@@ -17,7 +17,7 @@
     label: "{{ item.value.filename | default( item.key ~ '.conf') }}"
 
 - name: create HTTPs vhost configurations
-  template:
+  ansible.builtin.template:
     src: "{{ item.value.template | default( 'vhosts/' ~ nginx_vhost_templates.https ) }}"
     dest: "/etc/nginx/sites-available/{{ item.value.filename | default( item.key ~ '.conf' ) }}"
     force: true
@@ -33,7 +33,7 @@
     label: "{{ item.value.filename | default( item.key ~ '.conf') }}"
 
 - name: changed vhosts
-  set_fact:
+  ansible.builtin.set_fact:
     _nginx_changed_vhosts: "{{ 'true'
         if
           _created_vhost_http | changed_vhosts or
@@ -43,7 +43,7 @@
     }}"
 
 - name: trigger handler when vhosts configurations have been changed
-  debug:
+  ansible.builtin.debug:
     msg: "{{ _nginx_changed_vhosts | bool }}"
   changed_when: "_nginx_changed_vhosts | default('false') | bool"
   notify:
@@ -53,7 +53,7 @@
 # ---------------------------------------------------------------------------------------
 
 - name: enable HTTP sites configs
-  file:
+  ansible.builtin.file:
     src: /etc/nginx/sites-available/{{ item.value.filename | default( item.key ~ '.conf') }}
     dest: /etc/nginx/sites-enabled/{{ item.value.filename | default( item.key ~ '.conf') }}
     state: link
@@ -73,7 +73,7 @@
 # ---------------------------------------------------------------------------------------
 
 - name: enable HTTPs sites configs with existing certificates
-  file:
+  ansible.builtin.file:
     src: /etc/nginx/sites-available/{{ item.value.filename | default( item.key ~ '.conf') }}
     dest: /etc/nginx/sites-enabled/{{ item.value.filename | default( item.key ~ '.conf') }}
     state: link

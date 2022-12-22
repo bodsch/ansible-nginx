@@ -1,13 +1,13 @@
 ---
 
 - name: define vhosts variables
-  set_fact:
+  ansible.builtin.set_fact:
     nginx_vhosts_root_directories: "{{ nginx_vhosts | dict2items | vhost_directory('root') }}"
     nginx_http_vhosts: "{{ nginx_vhosts | http_vhosts }}"
     nginx_https_vhosts: "{{ nginx_vhosts | https_vhosts }}"
 
 - name: ensure vhosts root path exists
-  file:
+  ansible.builtin.file:
     path: "{{ item }}"
     state: directory
     owner: "{{ nginx_user }}"
@@ -36,7 +36,7 @@
   register: check_domain_cert
 
 - name: append certificates state to https vhost configurations
-  set_fact:
+  ansible.builtin.set_fact:
     nginx_https_vhosts: "{{ nginx_https_vhosts | append_certificate_state(check_domain_cert) }}"
 
 ...

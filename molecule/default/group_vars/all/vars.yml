@@ -35,7 +35,6 @@ nginx_logformat:
       '}';
     # escape: json
 
-
 nginx_vhosts:
   # HTTP
   # ssl: false

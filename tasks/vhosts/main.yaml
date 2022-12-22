@@ -1,15 +1,15 @@
 ---
 
 - name: vhosts prepare
-  include_tasks: vhosts/prepare.yaml
+  ansible.builtin.include_tasks: vhosts/prepare.yaml
 
 - name: vhosts remove
-  include_tasks: vhosts/remove.yaml
+  ansible.builtin.include_tasks: vhosts/remove.yaml
 
 - name: vhosts configure
-  include_tasks: vhosts/configure.yaml
+  ansible.builtin.include_tasks: vhosts/configure.yaml
 
 - name: flush handlers
-  meta: flush_handlers
+  ansible.builtin.meta: flush_handlers
 
 ...

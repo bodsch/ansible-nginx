@@ -104,14 +104,14 @@ class NginxSiteHandler(object):
         source = os.path.join("/etc/nginx/sites-available", file_name)
         destination = os.path.join("/etc/nginx/sites-enabled", file_name)
 
-        if(os.path.islink(destination) and os.readlink(destination) == source):
+        if os.path.islink(destination) and os.readlink(destination) == source:
             # module.log(msg="link exists and is valid")
             pass
         else:
-            if(not os.path.islink(destination)):
+            if not os.path.islink(destination):
                 self.create_link(source, destination)
             else:
-                if(os.readlink(destination) != source):
+                if os.readlink(destination) != source:
                     self.module.log(msg=f"path '{destination}' is a broken symlink")
                     self.create_link(source, destination, True)
                 else:

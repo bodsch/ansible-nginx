@@ -1,7 +1,7 @@
 ---
 
 - name: include OS specific configuration ({{ ansible_distribution }} ({{ ansible_os_family }}) {{ ansible_distribution_major_version }})
-  include_vars: "{{ lookup('first_found', params) }}"
+  ansible.builtin.include_vars: "{{ lookup('first_found', params) }}"
   vars:
     params:
       paths:
@@ -41,18 +41,18 @@
 #     - ansible_os_family | lower == 'debian'
 
 - name: update package cache
-  package:
+  ansible.builtin.package:
     update_cache: true
 
 - name: install requirements
-  package:
+  ansible.builtin.package:
     name: "{{ nginx_dependencies }}"
     state: present
   when:
     - nginx_dependencies | default([]) | count > 0
 
 - name: merge nginx configuration between defaults and custom
-  set_fact:
+  ansible.builtin.set_fact:
     nginx_global: "{{ nginx_defaults_global | combine(nginx_global, recursive=True) }}"
     nginx_http: "{{ nginx_defaults_http | combine(nginx_http, recursive=True) }}"
     nginx_events: "{{ nginx_defaults_events | combine(nginx_events, recursive=True) }}"

@@ -5,19 +5,19 @@
     - not nginx_group is defined or nginx_group | length > 0
   block:
     - name: "find primary group for user '{{ nginx_user }}'"
-      getent:
+      ansible.builtin.getent:
         database: group
         key: "{{ nginx_user }}"
         split: ':'
 
     - name: "set nginx_group '{{ getent_group | list | first }}'"
-      set_fact:
+      ansible.builtin.set_fact:
         nginx_group: "{{ getent_group | list | first }}"
       when:
         - getent_group is defined
 
 - name: create nginx sites directories
-  file:
+  ansible.builtin.file:
     path: "/etc/nginx/{{ item }}"
     state: directory
     owner: root
@@ -30,7 +30,7 @@
     - conf.d
 
 - name: remove default site
-  file:
+  ansible.builtin.file:
     name: "{{ nginx_default_site.file | default('/etc/nginx/sites-enabled/default') }}"
     state: absent
   when:
@@ -44,7 +44,7 @@
     - nginx_acme.challenge_directory | length > 0
   block:
     - name: create acme challenge directory
-      file:
+      ansible.builtin.file:
         path: "{{ nginx_acme.challenge_directory }}/.well-known/acme-challenge"
         state: directory
         owner: "{{ nginx_user }}"
@@ -52,7 +52,7 @@
         mode: 0755
 
     - name: fix directory rights for {{ nginx_acme.challenge_directory }}
-      file:
+      ansible.builtin.file:
         path: "{{ nginx_acme.challenge_directory }}"
         state: directory
         owner: "{{ nginx_user }}"
@@ -61,7 +61,7 @@
         recurse: true
 
 - name: create gzip configuration
-  template:
+  ansible.builtin.template:
     src: conf.d/gzip.conf.j2
     dest: /etc/nginx/conf.d/gzip.conf
     owner: root
@@ -72,7 +72,7 @@
     - reload service
 
 - name: create ssl configuration
-  template:
+  ansible.builtin.template:
     src: conf.d/ssl.conf.j2
     dest: /etc/nginx/conf.d/ssl.conf
     owner: root
@@ -83,7 +83,7 @@
     - reload service
 
 - name: create logformat configuration
-  template:
+  ansible.builtin.template:
     src: includes.d/nginx_log.conf.j2
     dest: /etc/nginx/includes.d/nginx_log.conf
     owner: root
@@ -95,7 +95,7 @@
 
 - name: create custom includes
   become: true
-  template:
+  ansible.builtin.template:
     src: includes.d/custom_include.j2
     dest: /etc/nginx/includes.d/{{ item.key }}
     mode: 0644
@@ -108,7 +108,7 @@
     - reload service
 
 - name: create nginx main configuration
-  template:
+  ansible.builtin.template:
     src: nginx.conf.j2
     dest: /etc/nginx/nginx.conf
     owner: root
