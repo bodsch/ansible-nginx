@@ -1,20 +1,23 @@
 ---
 
-- name: de-activated vhosts
+- name: de-activated vhosts  # noqa no-handler
   ansible.builtin.debug:
     msg: "{{ _deactivated_vhost }}"
   when:
     - _deactivated_vhost.changed
 
-- name: removed vhost
+- name: removed vhost  # noqa no-handler
   ansible.builtin.debug:
     msg: "{{ _removed_vhost }}"
   when:
     - _removed_vhost.changed
 
-- name: validate config
+- name: validate config  # noqa no-handler
   ansible.builtin.command: |
     nginx -t
+  register: _validate
+  changed_when: _validate.rc != 0
+  failed_when: _validate.rc != 0
 
 - name: reload service
   ansible.builtin.service:
