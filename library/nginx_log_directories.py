@@ -106,19 +106,6 @@ class NginxLogDirectories(object):
 
         return result
 
-    # def __create_directory(self, dir):
-    #     """
-    #     """
-    #     try:
-    #         os.makedirs(dir, exist_ok=True)
-    #     except FileExistsError:
-    #         pass
-    #
-    #     if os.path.isdir(dir):
-    #         return True
-    #     else:
-    #         return False
-
     def __fix_ownership(self, dir):
         """
         """

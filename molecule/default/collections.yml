@@ -1,0 +1,7 @@
+---
+# requirements.yml
+collections:
+  - name: https://github.com/bodsch/ansible-collection-core.git
+    type: git
+    version: main
+#    version: 1.0.2
