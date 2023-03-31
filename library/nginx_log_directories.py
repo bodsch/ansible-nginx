@@ -10,6 +10,7 @@ import pwd
 import grp
 
 from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.bodsch.core.plugins.module_utils.directory import create_directory
 
 
 class NginxLogDirectories(object):
@@ -31,32 +32,49 @@ class NginxLogDirectories(object):
         """
         log_dirs = []
         result_state = []
+        unique_dirs = []
 
-        for vhost, values in self.vhosts.items():
-            # self.module.log(msg=f" - {vhost}")
-            logfiles = values.get("logfiles", {})
+        self.module.log(msg=f" self.vhosts: {type(self.vhosts)}")
 
-            if logfiles:
-                access_log = logfiles.get("access", {}).get("file", None)
-                error_log = logfiles.get("error", {}).get("file", None)
+        if isinstance(self.vhosts, dict):
+            for vhost, values in self.vhosts.items():
+                # self.module.log(msg=f" - {vhost}")
+                logfiles = values.get("logfiles", {})
 
-                if access_log:
-                    dirname = os.path.dirname(access_log)
-                    log_dirs.append(dirname)
+                if logfiles:
+                    access_log = logfiles.get("access", {}).get("file", None)
+                    error_log = logfiles.get("error", {}).get("file", None)
 
-                if error_log:
-                    dirname = os.path.dirname(error_log)
-                    log_dirs.append(dirname)
+                    if access_log:
+                        dirname = os.path.dirname(access_log)
+                        log_dirs.append(dirname)
 
-        unique_dirs = list(dict.fromkeys(log_dirs))
+                    if error_log:
+                        dirname = os.path.dirname(error_log)
+                        log_dirs.append(dirname)
+
+            unique_dirs = list(dict.fromkeys(log_dirs))
+
+        elif isinstance(self.vhosts, list):
+            access_log = [os.path.dirname(x.get("logfiles").get("access", {}).get("file", None)) for x in self.vhosts if x.get("logfiles", {})]
+            error_log  = [os.path.dirname(x.get("logfiles").get("error", {}).get("file", None)) for x in self.vhosts if x.get("logfiles", {})]
+
+            self.module.log(msg=f" access log: {access_log}")
+            self.module.log(msg=f" error log : {error_log}")
+
+            unique_dirs = list(set(access_log + error_log))
+
+        self.module.log(msg=f" unique_dirs: {unique_dirs}")
 
         for d in unique_dirs:
             changed = False
             d_created = False
             d_ownership = False
 
+            self.module.log(msg=f" dir: {d}")
+
             if not os.path.exists(d):
-                d_created = self.__create_directory(d)
+                d_created = create_directory(self.module, d)
 
             d_ownership = self.__fix_ownership(d)
 
@@ -88,18 +106,18 @@ class NginxLogDirectories(object):
 
         return result
 
-    def __create_directory(self, dir):
-        """
-        """
-        try:
-            os.makedirs(dir, exist_ok=True)
-        except FileExistsError:
-            pass
-
-        if os.path.isdir(dir):
-            return True
-        else:
-            return False
+    # def __create_directory(self, dir):
+    #     """
+    #     """
+    #     try:
+    #         os.makedirs(dir, exist_ok=True)
+    #     except FileExistsError:
+    #         pass
+    #
+    #     if os.path.isdir(dir):
+    #         return True
+    #     else:
+    #         return False
 
     def __fix_ownership(self, dir):
         """
@@ -212,7 +230,7 @@ def main():
         argument_spec=dict(
             vhosts=dict(
                 required=True,
-                type="dict"
+                type="raw"
             ),
             owner=dict(
                 required=False,

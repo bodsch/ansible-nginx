@@ -72,12 +72,12 @@
     - reload service
 
 - name: create ssl configuration
-  ansible.builtin.template:
-    src: conf.d/ssl.conf.j2
-    dest: /etc/nginx/conf.d/ssl.conf
-    owner: root
-    group: root
-    mode: 0644
+  nginx_ssl:
+    config: "{{ nginx_ssl }}"
+    dest: /etc/nginx/includes.d
+  when:
+    - nginx_ssl is defined
+    - nginx_ssl.enabled | default('false') | bool
   notify:
     - validate config
     - reload service

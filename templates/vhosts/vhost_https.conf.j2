@@ -1,42 +1,41 @@
 #jinja2: trim_blocks: True, rstrip_blocks: True, lstrip_blocks: True
 # {{ ansible_managed }}
 #
-# {{ item.key }}
-
 {%- import 'jinja_macros.j2' as tpl with context %}
-{%- set _server_name = item.value.domains | default('_') %}
-{%- set _upstreams = item.value.upstreams | default({}) %}
-{%- set _logfiles = item.value.logfiles | default({}) %}
-{%- set _ssl = item.value.ssl | default({}) %}
-{%- set _locations = item.value.locations | default({}) %}
-{%- set _listen = item.value.listen | default(['443 ssl http2']) %}
-
-{% if item.key == "default" %}
+{% set data = item %}
+{%- set _server_name = data.domains | default('_') %}
+{%- set _upstreams = data.upstreams | default({}) %}
+{%- set _logfiles = data.logfiles | default({}) %}
+{%- set _ssl = data.ssl | default({}) %}
+{%- set _locations = data.locations | default({}) %}
+{%- set _listen = data.listen | default(['443 ssl http2']) %}
 {# DEFAULT vhost #}
+{#
+{% if data.name == "default" %}
 server {
   server_name   _;
 
 {{ tpl.vhost_listen(80, True) | indent(0, first=False) }}
-{{ tpl.vhost_logfile(_logfiles, item.key) | indent(0, first=False) }}
+{{ tpl.vhost_logfile(_logfiles, item.name) | indent(0, first=False) }}
 
-  {% if item.value.root is defined %}
-  root          {{ item.value.root }};
+  {% if data.root is defined %}
+  root          {{ data.root }};
   {% endif %}
-  {% if item.value.index is defined %}
+  {% if data.index is defined %}
   index
-    {{ item.value.index | join('\n') | indent(4, first=False) }};
+    {{ data.index | join('\n') | indent(4, first=False) }};
   {% endif %}
 
   return        444;
 }
 {% endif %}
-
+#}
 {% if _upstreams | count > 0 %}
 {{ tpl.vhost_upstreams(_upstreams | default({})) }}
 {% endif -%}
 
-{% if item.value.redirect is defined and
-      item.value.redirect.from_port is defined %}
+{% if data.redirect is defined and
+      data.redirect.from_port is defined %}
   {% if _listen | type == "str" %}
     {% set _listen_port = _listen | default('443 ssl http2') | regex_replace('(http2|ssl|quic|reuseport)','') %}
   {% endif %}
@@ -46,8 +45,8 @@ server {
 
 server {
 {{ tpl.vhost_server_name(_server_name) }}
-{{ tpl.vhost_listen(item.value.redirect.from_port | default(80)) | indent(0, first=False) }}
-{{ tpl.vhost_logfile(_logfiles, item.key) | indent(0, first=False) }}
+{{ tpl.vhost_listen(data.redirect.from_port | default(80)) | indent(0, first=False) }}
+{{ tpl.vhost_logfile(_logfiles, item.name) | indent(0, first=False) }}
 
   location ^~ /.well-known/acme-challenge/ {
     allow all;
@@ -66,20 +65,21 @@ server {
 server {
 {{ tpl.vhost_server_name(_server_name) | indent(0, first=False) }}
 {{ tpl.vhost_listen(_listen) | indent(0, first=False) }}
-{{ tpl.vhost_logfile(_logfiles, item.key) | indent(0, first=False) }}
-{{ tpl.vhost_certificates(_ssl, item.key) | indent(0, first=False) }}
-  {% if item.value.includes is defined %}
-    {% for inc in item.value.includes %}
+{{ tpl.vhost_logfile(_logfiles, item.name) | indent(0, first=False) }}
+{{ tpl.vhost_certificates(_ssl, item.name) | indent(0, first=False) }}
+
+  {% if data.includes is defined %}
+    {% for inc in data.includes %}
   include             {{ inc }};
     {% endfor %}
   {% endif %}
-  {% if item.value.root is defined %}
-  root                {{ item.value.root }};
+  {% if data.root is defined %}
+  root                {{ data.root }};
   {% endif %}
 
-  {% if item.value.index is defined %}
+  {% if data.index is defined %}
   index
-    {{ item.value.index | join('\n') | indent(4, first=False) }};
+    {{ data.index | join('\n') | indent(4, first=False) }};
   {% endif %}
 
 {{ tpl.vhost_locations(_locations) | indent(0, first=False) -}}

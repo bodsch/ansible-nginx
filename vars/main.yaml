@@ -64,15 +64,60 @@ nginx_defaults_gzip:
 
 nginx_defaults_ssl:
   enabled: true
-  options:
-    ssl_session_timeout: 5m
-    # Enable all TLS versions (TLSv1.3 is required for QUIC).
-    ssl_protocols:
-      # - TLSv1.1
-      - TLSv1.2
-      - TLSv1.3
-    # ssl_ciphers: 'EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH'
-    ssl_ciphers:
+  ssl_session_timeout: 5m
+  # Enable all TLS versions (TLSv1.3 is required for QUIC).
+  ssl_protocols:
+    # - TLSv1.1
+    - TLSv1.2
+    - TLSv1.3
+  # ssl_ciphers: 'EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH'
+  ssl_ciphers:
+    strong:
+      - ECDHE-ECDSA-AES128-GCM-SHA256
+      - ECDHE-RSA-AES128-GCM-SHA256
+      - ECDHE-ECDSA-AES256-GCM-SHA384
+      - ECDHE-RSA-AES256-GCM-SHA384
+      - ECDHE-ECDSA-CHACHA20-POLY1305
+      - ECDHE-RSA-CHACHA20-POLY1305
+      - DHE-RSA-AES128-GCM-SHA256
+      - DHE-RSA-AES256-GCM-SHA384
+    intermediate:
+      - ECDHE-ECDSA-AES128-GCM-SHA256
+      - ECDHE-RSA-AES128-GCM-SHA256
+      - ECDHE-ECDSA-AES256-GCM-SHA384
+      - ECDHE-RSA-AES256-GCM-SHA384
+      - ECDHE-ECDSA-CHACHA20-POLY1305
+      - ECDHE-RSA-CHACHA20-POLY1305
+      - DHE-RSA-AES128-GCM-SHA256
+      - DHE-RSA-AES256-GCM-SHA384
+    old:
+      - ECDHE-ECDSA-AES128-GCM-SHA256
+      - ECDHE-RSA-AES128-GCM-SHA256
+      - ECDHE-ECDSA-AES256-GCM-SHA384
+      - ECDHE-RSA-AES256-GCM-SHA384
+      - ECDHE-ECDSA-CHACHA20-POLY1305
+      - ECDHE-RSA-CHACHA20-POLY1305
+      - DHE-RSA-AES128-GCM-SHA256
+      - DHE-RSA-AES256-GCM-SHA384
+      - DHE-RSA-CHACHA20-POLY1305
+      - ECDHE-ECDSA-AES128-SHA256
+      - ECDHE-RSA-AES128-SHA256
+      - ECDHE-ECDSA-AES128-SHA
+      - ECDHE-RSA-AES128-SHA
+      - ECDHE-ECDSA-AES256-SHA384
+      - ECDHE-RSA-AES256-SHA384
+      - ECDHE-ECDSA-AES256-SHA
+      - ECDHE-RSA-AES256-SHA
+      - DHE-RSA-AES128-SHA256
+      - DHE-RSA-AES256-SHA256
+      - AES128-GCM-SHA256
+      - AES256-GCM-SHA384
+      - AES128-SHA256
+      - AES256-SHA256
+      - AES128-SHA
+      - AES256-SHA
+      - DES-CBC3-SHA
+    default:
       - ECDHE-RSA-AES128-GCM-SHA256
       - ECDHE-ECDSA-AES128-GCM-SHA256
       - ECDHE-RSA-AES256-GCM-SHA384
@@ -102,10 +147,10 @@ nginx_defaults_ssl:
       - "!3DES"
       - "!MD5"
       - "!PSK"
-    ssl_prefer_server_ciphers: true
-    ssl_session_cache: shared:SSL:10m
-    ssl_stapling: true
-    ssl_stapling_verify: true
+  ssl_prefer_server_ciphers: true
+  ssl_session_cache: shared:SSL:10m
+  ssl_stapling: true
+  ssl_stapling_verify: true
 
 nginx_defaults_logformat:
   main:
@@ -116,7 +161,7 @@ nginx_defaults_logformat:
       '"$http_user_agent" "$http_x_forwarded_for"';
 
 nginx_defaults_acme:
-  enabled: true
+  enabled: false
   challenge_directory: /var/www/certbot
 
 nginx_defaults_custom_includes: {}

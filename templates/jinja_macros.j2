@@ -45,9 +45,13 @@
 {% endif %}
 {%- endmacro -%}
 
+{# ssl_* #}
 {%- macro vhost_certificates(data, domain) -%}
 {% if data.state | default('present') %}
-include             conf.d/ssl.conf;
+  include             includes.d/ssl.conf;
+  {% if data.ciphers is defined %}
+  include             includes.d/ssl_{{ data.ciphers }}.conf;
+  {% endif %}
   ssl_certificate     {{ data.certificate }};
   ssl_certificate_key {{ data.certificate_key }};
     {% if data.dhparam is defined and
@@ -58,6 +62,7 @@ include             conf.d/ssl.conf;
 
 {%- endmacro -%}
 
+{# upstreams #}
 {%- macro vhost_upstreams(data) -%}
 {% for upstream in data %}
 upstream {{ upstream.name }} {

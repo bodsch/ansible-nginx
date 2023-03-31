@@ -2,35 +2,35 @@
 
 - name: create HTTP vhost configurations
   ansible.builtin.template:
-    src: "{{ item.value.template | default( 'vhosts/' ~ nginx_vhost_templates.http ) }}"
-    dest: "/etc/nginx/sites-available/{{ item.value.filename | default( item.key ~ '.conf' ) }}"
+    src: "{{ item.template | default( 'vhosts/' ~ nginx_vhost_templates.http ) }}"
+    dest: "/etc/nginx/sites-available/{{ item.filename | default( item.name ~ '.conf' ) }}"
     force: true
     owner: root
     group: root
     mode: 0644
   when:
-    - item.value.state | default('present') == 'present'
+    - item.state | default('present') == 'present'
   register: _created_vhost_http
   loop:
-    "{{ nginx_http_vhosts | dict2items }}"
+    "{{ nginx_vhosts_http }}"
   loop_control:
-    label: "{{ item.value.filename | default( item.key ~ '.conf') }}"
+    label: "{{ item.filename | default( item.name ~ '.conf') }}"
 
 - name: create HTTPs vhost configurations
   ansible.builtin.template:
-    src: "{{ item.value.template | default( 'vhosts/' ~ nginx_vhost_templates.https ) }}"
-    dest: "/etc/nginx/sites-available/{{ item.value.filename | default( item.key ~ '.conf' ) }}"
+    src: "{{ item.template | default( 'vhosts/' ~ nginx_vhost_templates.https ) }}"
+    dest: "/etc/nginx/sites-available/{{ item.filename | default( item.name ~ '.conf' ) }}"
     force: true
     owner: root
     group: root
     mode: 0644
   when:
-    - item.value.state | default('present') == 'present'
+    - item.state | default('present') == 'present'
   register: _created_vhost_https
   loop:
-    "{{ nginx_https_vhosts | dict2items }}"
+    "{{ nginx_vhosts_https }}"
   loop_control:
-    label: "{{ item.value.filename | default( item.key ~ '.conf') }}"
+    label: "{{ item.filename | default( item.name ~ '.conf') }}"
 
 - name: changed vhosts
   ansible.builtin.set_fact:
@@ -53,44 +53,21 @@
 # ---------------------------------------------------------------------------------------
 
 - name: enable HTTP sites configs
-  ansible.builtin.file:
-    src: /etc/nginx/sites-available/{{ item.value.filename | default( item.key ~ '.conf') }}
-    dest: /etc/nginx/sites-enabled/{{ item.value.filename | default( item.key ~ '.conf') }}
-    state: link
-    force: true
-  loop:
-    "{{ nginx_http_vhosts | dict2items }}"
-  loop_control:
-    label: "{{ item.value.filename | default( item.key ~ '.conf') }}"
-  when:
-    - item.value.state | default('present') == 'present'
-    - item.value.enabled | default('true')
-    - not ansible_check_mode
+  nginx_site_handler:
+    enabled: true
+    vhosts: "{{ nginx_vhosts_http }}"
+  register: _activated_vhost_http
   notify:
     - validate config
     - reload service
-
-# ---------------------------------------------------------------------------------------
 
 - name: enable HTTPs sites configs with existing certificates
-  ansible.builtin.file:
-    src: /etc/nginx/sites-available/{{ item.value.filename | default( item.key ~ '.conf') }}
-    dest: /etc/nginx/sites-enabled/{{ item.value.filename | default( item.key ~ '.conf') }}
-    state: link
-    force: true
-  loop:
-    "{{ nginx_https_vhosts | dict2items }}"
-  loop_control:
-    label: "{{ item.value.filename | default( item.key ~ '.conf') }}"
-  when:
-    - item.value.state | default('present') == 'present'
-    - item.value.enabled | default('true')
-    - item.value.ssl.state | default('missing') == 'present'
-    - not ansible_check_mode
+  nginx_site_handler:
+    enabled: true
+    vhosts: "{{ nginx_vhosts_https | certificate_existing }}"
+  register: _activated_vhost_https
   notify:
     - validate config
     - reload service
-
-# ---------------------------------------------------------------------------------------
 
 ...

@@ -24,22 +24,41 @@ class NginxTLSCerts(object):
         """
         """
         cert_files = []
+        unique_files = []
 
-        for vhost, values in self.vhosts.items():
-            ssl = values.get("ssl", {})
-            if ssl:
-                enabled = ssl.get("enabled", True)
-                cert = ssl.get("certificate", None)
-                key = ssl.get("certificate_key", None)
+        if isinstance(self.vhosts, dict):
 
-                if enabled:
-                    if cert:
-                        cert_files.append(cert)
+            for vhost, values in self.vhosts.items():
+                ssl = values.get("ssl", {})
+                if ssl:
+                    enabled = ssl.get("enabled", True)
+                    cert = ssl.get("certificate", None)
+                    key = ssl.get("certificate_key", None)
 
-                    if key:
-                        cert_files.append(key)
+                    if enabled:
+                        if cert:
+                            cert_files.append(cert)
 
-        unique_files = list(dict.fromkeys(cert_files))
+                        if key:
+                            cert_files.append(key)
+
+            unique_files = list(dict.fromkeys(cert_files))
+
+        elif isinstance(self.vhosts, list):
+
+            data = [x for x in self.vhosts if x.get("ssl", {}).get("enabled")]
+
+            self.module.log(msg=f" data: {data}")
+
+            cert = [x.get("ssl", {}).get("certificate") for x in data if x.get("ssl", {}).get("enabled")]
+            key  = [x.get("ssl", {}).get("certificate_key") for x in data if x.get("ssl", {}).get("enabled")]
+
+            self.module.log(msg=f" certs: {cert}")
+            self.module.log(msg=f" keys : {key}")
+
+            unique_files = list(set(cert + key))
+
+        self.module.log(msg=f" unique_files: {unique_files}")
 
         missing = []
         present = []
@@ -50,14 +69,58 @@ class NginxTLSCerts(object):
             else:
                 present.append(f)
 
+        vhosts = self.append_tls_state(missing, present)
+
         result = dict(
             failed = False,
             missing_certs = missing,
-            present_certs = present
+            present_certs = present,
+            https_vhosts = vhosts
         )
 
         return result
 
+    def append_tls_state(self, missing = [], present = []):
+        """
+        """
+
+        data = self.vhosts
+
+        if isinstance(data, dict):
+            for k, v in data.items():
+                certificate, certificate_key = self._ssl_data(v)
+
+                if certificate and certificate_key:
+                    if certificate in missing and certificate_key in missing:
+                        data[k]["ssl"]["state"] = "missing"
+
+                    if certificate in present and certificate_key in present:
+                        data[k]["ssl"]["state"] = "present"
+
+        elif isinstance(data, list):
+            _data = data.copy()
+            for d in _data:
+                certificate, certificate_key = self._ssl_data(d)
+
+                if certificate and certificate_key:
+                    if certificate in missing and certificate_key in missing:
+                        d["ssl"]["state"] = "missing"
+
+                    if certificate in present and certificate_key in present:
+                        d["ssl"]["state"] = "present"
+
+        self.module.log(msg=f"= result : {data}")
+
+        return data
+
+    def _ssl_data(self, data):
+        """
+        """
+        ssl = data.get('ssl', {})
+        certificate = ssl.get("certificate", None)
+        certificate_key = ssl.get("certificate_key", None)
+
+        return certificate, certificate_key
 
 # ===========================================
 # Module execution.
@@ -70,7 +133,7 @@ def main():
         argument_spec=dict(
             vhosts=dict(
                 required=True,
-                type="dict"
+                type="raw"
             ),
         ),
         supports_check_mode=True,

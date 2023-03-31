@@ -16,7 +16,9 @@ Ansible role to install and configure nginx.
 
 ## Requirements & Dependencies
 
-- None
+Ansible Collections
+
+- [bodsch.core](https://github.com/bodsch/ansible-collection-core)
 
 ### Operating systems
 

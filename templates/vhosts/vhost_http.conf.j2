@@ -1,27 +1,27 @@
 #jinja2: trim_blocks: True, rstrip_blocks: True, lstrip_blocks: True
 # {{ ansible_managed }}
 #
-# {{ item.key }}
 {%- import 'jinja_macros.j2' as tpl with context %}
-{%- set _server_name = item.value.domains | default('_') %}
-{%- set _upstreams = item.value.upstreams | default({}) %}
-{%- set _logfiles = item.value.logfiles | default({}) %}
-{%- set _locations = item.value.locations | default([]) %}
-{%- set _listen = item.value.listen | default('80') %}
+{% set data = item %}
+{%- set _server_name = data.domains | default('_') %}
+{%- set _upstreams = data.upstreams | default({}) %}
+{%- set _logfiles = data.logfiles | default({}) %}
+{%- set _locations = data.locations | default([]) %}
+{%- set _listen = data.listen | default('80') %}
 
-{% if item.key == "default" %}
+{% if data.name == "default" %}
 server {
   server_name _;
 
 {{ tpl.vhost_listen(80, True) | indent(0, first=False) }}
-{{ tpl.vhost_logfile(_logfiles, item.key) | indent(0, first=False) }}
+{{ tpl.vhost_logfile(_logfiles, item.name) | indent(0, first=False) }}
 
-  {% if item.value.root is defined %}
-  root          {{ item.value.root }};
+  {% if data.root is defined %}
+  root          {{ data.root }};
   {% endif %}
-  {% if item.value.index is defined %}
+  {% if data.index is defined %}
   index
-    {{ item.value.index | join('\n') | indent(4, first=False) }};
+    {{ data.index | join('\n') | indent(4, first=False) }};
   {% endif %}
 
   return        444;
@@ -35,19 +35,19 @@ server {
 server {
 {{ tpl.vhost_server_name(_server_name) }}
 {{ tpl.vhost_listen(_listen) | indent(0, first=False) }}
-{{ tpl.vhost_logfile(_logfiles, item.key) | indent(0, first=False) }}
-  {% if item.value.includes is defined %}
-    {% for inc in item.value.includes %}
+{{ tpl.vhost_logfile(_logfiles, item.name) | indent(0, first=False) }}
+  {% if data.includes is defined %}
+    {% for inc in data.includes %}
   include             {{ inc }};
     {% endfor %}
   {%- endif -%}
-  {% if item.value.root is defined %}
-  root                {{ item.value.root }};
+  {% if data.root is defined %}
+  root                {{ data.root }};
   {% endif %}
 
-  {% if item.value.index is defined %}
+  {% if data.index is defined %}
   index
-    {{ item.value.index | join('\n') | indent(4, first=False) }};
+    {{ data.index | join('\n') | indent(4, first=False) }};
   {% endif %}
 
 {{ tpl.vhost_locations(_locations) | indent(0, first=False) -}}

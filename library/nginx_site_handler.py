@@ -27,47 +27,95 @@ class NginxSiteHandler(object):
         """
         result_state = []
 
-        for vhost, values in self.vhosts.items():
-            file_name = values.get("filename", None)
-            enabled = values.get("enabled", True)
-            state = values.get("state", "present")
+        if isinstance(self.vhosts, dict):
 
-            self.module.log(msg=f" - {vhost} : (state: {state} / {self.state}) / (enabled: {enabled} / {self.enabled}) ")
+            for vhost, values in self.vhosts.items():
+                file_name = values.get("filename", None)
+                enabled = values.get("enabled", True)
+                state = values.get("state", "present")
 
-            if not file_name:
-                file_name = f"{vhost}.conf"
+                self.module.log(msg=f" - {vhost} : (state: {state} / {self.state}) / (enabled: {enabled} / {self.enabled}) ")
 
-            self.module.log(msg=f"   - {file_name}")
+                if not file_name:
+                    file_name = f"{vhost}.conf"
 
-            if not self.enabled and not enabled:
-                changed = self.disable_site(file_name)
+                self.module.log(msg=f"   - {file_name}")
 
-                if changed:
-                    res = {}
-                    res[vhost] = dict(
-                        state = f"vhost {vhost} successfuly disabled"
-                    )
-                    result_state.append(res)
+                if not self.enabled and not enabled:
+                    changed = self.disable_site(file_name)
 
-            if self.enabled and enabled:
-                changed = self.enable_site(file_name)
+                    if changed:
+                        res = {}
+                        res[vhost] = dict(
+                            state = f"vhost {vhost} successfuly disabled"
+                        )
+                        result_state.append(res)
 
-                if changed:
-                    res = {}
-                    res[vhost] = dict(
-                        state = f"vhost {vhost} successfuly enabled"
-                    )
-                    result_state.append(res)
+                if self.enabled and enabled:
+                    changed = self.enable_site(file_name)
 
-            if self.state == "absent" and state == "absent":
-                changed = self.remove_site(file_name)
+                    if changed:
+                        res = {}
+                        res[vhost] = dict(
+                            state = f"vhost {vhost} successfuly enabled"
+                        )
+                        result_state.append(res)
 
-                if changed:
-                    res = {}
-                    res[vhost] = dict(
-                        state = f"vhost {vhost} successfuly disabled and removed"
-                    )
-                    result_state.append(res)
+                if self.state == "absent" and state == "absent":
+                    changed = self.remove_site(file_name)
+
+                    if changed:
+                        res = {}
+                        res[vhost] = dict(
+                            state = f"vhost {vhost} successfuly disabled and removed"
+                        )
+                        result_state.append(res)
+
+        elif isinstance(self.vhosts, list):
+            for vhost in self.vhosts:
+                name = vhost.get("name", None)
+                file_name = vhost.get("filename", None)
+                enabled = vhost.get("enabled", True)
+                state = vhost.get("state", "present")
+
+                self.module.log(f" - {name} :")
+                self.module.log(f"     vhost state: {state} / module state: {self.state}")
+                self.module.log(f"     vhost enabled: {enabled} / module enabled: {self.enabled}")
+
+                if not file_name:
+                    file_name = f"{name}.conf"
+
+                self.module.log(msg=f"   - {file_name}")
+
+                if not self.enabled and not enabled:
+                    changed = self.disable_site(file_name)
+
+                    if changed:
+                        res = {}
+                        res[name] = dict(
+                            state = f"vhost {name} successfuly disabled"
+                        )
+                        result_state.append(res)
+
+                if self.enabled and enabled:
+                    changed = self.enable_site(file_name)
+
+                    if changed:
+                        res = {}
+                        res[name] = dict(
+                            state = f"vhost {name} successfuly enabled"
+                        )
+                        result_state.append(res)
+
+                if self.state == "absent" and state == "absent":
+                    changed = self.remove_site(file_name)
+
+                    if changed:
+                        res = {}
+                        res[name] = dict(
+                            state = f"vhost {name} successfuly disabled and removed"
+                        )
+                        result_state.append(res)
 
         self.module.log(msg=f" - result_state '{result_state}'")
 
@@ -134,6 +182,19 @@ class NginxSiteHandler(object):
 
         return changed
 
+    def create_link(self, source, destination, force=False):
+        """
+        """
+        self.module.log(msg=f"create_link({source}, {destination}, {force})")
+
+        if (force):
+            os.remove(destination)
+            os.symlink(source, destination)
+        else:
+            os.symlink(source, destination)
+
+        pass
+
     def __remove_file(self, file_name):
         """
         """
@@ -151,30 +212,31 @@ class NginxSiteHandler(object):
 
 def main():
 
-    module = AnsibleModule(
-
-        argument_spec=dict(
-            state = dict(
-                required = False,
-                default = "present",
-                choices = [
-                    "absent",
-                    "present"
-                ]
-            ),
-            enabled = dict(
-                required = False,
-                type="bool"
-            ),
-            vhosts=dict(
-                required=True,
-                type="dict"
-            ),
-            site_path = dict(
-                required = False,
-                default = ""
-            ),
+    args = dict(
+        state = dict(
+            required = False,
+            default = "present",
+            choices = [
+                "absent",
+                "present"
+            ]
         ),
+        enabled = dict(
+            required = False,
+            type="bool"
+        ),
+        vhosts=dict(
+            required=True,
+            type="raw"
+        ),
+        site_path = dict(
+            required = False,
+            default = ""
+        ),
+    )
+
+    module = AnsibleModule(
+        argument_spec=args,
         supports_check_mode=True,
     )
 

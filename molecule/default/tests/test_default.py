@@ -121,7 +121,8 @@ def test_directories(host, dirs):
 @pytest.mark.parametrize("files", [
     "/etc/nginx/nginx.conf",
     "/etc/nginx/includes.d/nginx_log.conf",
-    "/etc/nginx/conf.d/ssl.conf",
+    "/etc/nginx/includes.d/ssl.conf",
+    "/etc/nginx/includes.d/ssl_default.conf",
     "/etc/nginx/conf.d/gzip.conf",
 ])
 def test_files(host, files):

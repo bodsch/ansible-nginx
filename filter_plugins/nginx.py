@@ -20,99 +20,43 @@ class FilterModule(object):
 
     def filters(self):
         return {
-            # 'activate_vhost_by': self.activate_vhost_by,
-            # 'letsencrypt': self.letsencrypt,
-            # 'create_vhost': self.create_vhost,
             'vhost_directory': self.vhost_directory,
             'vhost_listen': self.vhost_listen,
             'http_vhosts': self.http_vhosts,
-            'https_vhosts': self.https_vhosts,
-            'changed_vhosts': self.changed_vhosts
+            'changed_vhosts': self.changed_vhosts,
+            'certificate_existing': self.certificate_existing,
         }
 
-    def activate_vhost_by(self, data, mode='http'):
+    def vhost_directory(self, data, directory, state="present"):
         """
+          return a list of directories for keyword like 'root_directory', access_log or others
         """
-        display.v(" = activate_vhost_by(data, {}))".format(mode))
-        display.v("   {}".format(data.get('key', "")))
+        # display.v(f"vhost_directory(data, {directory}, {state})")
+        # display.v(f"  {type(data)}")
+        # display.v(f"{data}")
 
-        result = False
-        enabled = True
-        present = True
-
-        display.v("   - enabled            {}".format(enabled))
-        display.v("   - present            {}".format(present))
-
-        value = data.get('value', {})
-
-        if enabled and present:
-            result = True
-
-        # if mode == 'http' and present:
-        #    result = True
-
-        if mode == 'https':
-            le_enabled = False
-            ssl = value.get("ssl", False)
-
-            certificate_exists = value.get("ssl_certificate_exists", False)
-
-            display.v("   - certificate_exists {}".format(certificate_exists))
-            display.v("   - ssl                {}".format(ssl))
-            display.v("   - x                  {}".format(not certificate_exists and not ssl))
-
-            if not certificate_exists and (not ssl or not le_enabled):
-                result = False
-
-                # if certificate_exists and not le_enabled:
-                #    result = False
-
-        display.v(" = result {}".format(result))
-
-        return result
-
-    def create_vhost(self, data, mode='http'):
-        """
-        """
-        # display.v(" = create_vhost(data, {})".format(mode))
-        # display.v("   {}".format(data.get('key', "")))
-
-        result = False
-        present = True
-
-        value = data.get('value', {})
-
-        # state = value.get("state", True)
-        ssl = value.get("ssl", {}).get("enabled", False)
-
-        #  display.v("    - present            {}".format(present))
-
-        if mode == 'http' and (present and not ssl):
-            result = True
-        if mode in ['https', 'acme'] and (present and ssl):
-            result = True
-
-        # display.v(" = result {}".format(result))
-
-        return result
-
-    def vhost_directory(self, data, directory):
-        """
-          return a list of directories for keyword like 'root', access_log or others
-        """
         result = []
 
-        for item in data:
-            for k, v in item.items():
-                if k == "value":
-                    if v.get(directory, None):
-                        result.append(v.get(directory))
+        if isinstance(data, dict):
+            for item in data:
+                for k, v in item.items():
+                    if k == "value":
+                        if v.get(directory, None):
+                            result.append(v.get(directory))
 
-        # display.v(" = result {}".format(result))
+        elif isinstance(data, list):
+            result = [
+                x.get(directory)
+                for x in data
+                if x.get("state", state) and x.get(directory, None) and x.get("root_directory_create", False)
+            ]
+
+        # display.v(f" = result {result}")
         return result
 
     def vhost_listen(self, data, port, default):
         """
+            used in jinja_macros.j2
         """
         # display.v(f"vhost_listen({port}, {default})")
 
@@ -131,31 +75,34 @@ class FilterModule(object):
 
         return result
 
-    def http_vhosts(self, data):
+    def http_vhosts(self, data, tls=False):
         """
         """
-        _data = data.copy()
+        # display.v(f"http_vhosts(data, {tls})")
+        # display.v(f"  {type(data)}")
+        # display.v(f"{data}")
 
-        for k, v in _data.items():
-            ssl = v.get('ssl', {})
-            enabled = ssl.get("enabled", False)
+        if isinstance(data, dict):
+            _data = data.copy()
 
-            if len(ssl) > 0 and enabled:
-                _ = data.pop(k)
+            for k, v in _data.items():
+                ssl = v.get('ssl', {})
+                enabled = ssl.get("enabled", False)
 
-        return data
+                if not tls:
+                    if len(ssl) > 0 and enabled:
+                        _ = data.pop(k)
+                else:
+                    if not (len(ssl) > 0 and enabled):
+                        _ = data.pop(k)
 
-    def https_vhosts(self, data):
-        """
-        """
-        _data = data.copy()
+        if isinstance(data, list):
+            if tls:
+                data = [x for x in data if x.get("ssl", {}).get("enabled")]
+            else:
+                data = [x for x in data if not x.get("ssl", {}).get("enabled")]
 
-        for k, v in _data.items():
-            ssl = v.get('ssl', {})
-            enabled = ssl.get("enabled", False)
-
-            if not (len(ssl) > 0 and enabled):
-                _ = data.pop(k)
+        # display.v(f" = result {data}")
 
         return data
 
@@ -177,3 +124,16 @@ class FilterModule(object):
         # display.v(f"  => changed: {(len(result) > 0)} - {result}")
 
         return (len(result) > 0)
+
+    def certificate_existing(self, data):
+        """
+            returns a list of vhosts where the certificate exists.
+        """
+        display.v(f"certificate_existing({data})")
+
+        if isinstance(data, list):
+            data = [x for x in data if x.get("ssl", {}).get("state") == "present"]
+
+        display.v(f" = result {data}")
+
+        return data

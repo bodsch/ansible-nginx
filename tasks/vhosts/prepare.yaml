@@ -2,9 +2,9 @@
 
 - name: define vhosts variables
   ansible.builtin.set_fact:
-    nginx_vhosts_root_directories: "{{ nginx_vhosts | dict2items | vhost_directory('root') }}"
-    nginx_http_vhosts: "{{ nginx_vhosts | http_vhosts }}"
-    nginx_https_vhosts: "{{ nginx_vhosts | https_vhosts }}"
+    nginx_vhosts_root_directories: "{{ nginx_vhosts | vhost_directory(directory='root_directory', state='present') }}"
+    nginx_vhosts_http: "{{ nginx_vhosts | http_vhosts(tls=False) }}"
+    nginx_vhosts_https: "{{ nginx_vhosts | http_vhosts(tls=True) }}"
 
 - name: ensure vhosts root path exists
   ansible.builtin.file:
@@ -12,8 +12,6 @@
     state: directory
     owner: "{{ nginx_user }}"
     mode: 0750
-  when:
-    - item.value.state | default('present') != 'absent'
   loop:
     "{{ nginx_vhosts_root_directories }}"
   loop_control:
@@ -30,13 +28,13 @@
 
 - name: checking existing domains certificates
   nginx_tls_certificates:
-    vhosts: "{{ nginx_vhosts }}"
+    vhosts: "{{ nginx_vhosts_https }}"
   when:
     - nginx_vhosts is defined
   register: check_domain_cert
 
-- name: append certificates state to https vhost configurations
+- name: re-define nginx_vhosts_https with certificates state
   ansible.builtin.set_fact:
-    nginx_https_vhosts: "{{ nginx_https_vhosts | append_certificate_state(check_domain_cert) }}"
+    nginx_vhosts_https: "{{ check_domain_cert.https_vhosts }}"
 
 ...

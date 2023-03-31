@@ -11,7 +11,7 @@ A simple example:
 ```yaml
 nginx_vhosts:
 
-  nginx-status:
+  - name: nginx-status
     filename: 00-status
     state: present  # default: present
     enabled: true   # default: true
@@ -55,7 +55,7 @@ If several listeners per VHost are desired, `listen` can be defined as a list in
 ```yaml
 nginx_vhosts:
 
-  bar.molecule.lan:
+  - name: bar.molecule.lan
     ...
 
     listen:
@@ -78,7 +78,7 @@ Own definitions can be made via the parameter `logfiles`:
 ```yaml
 nginx_vhosts:
 
-  bar.molecule.lan:
+  - name: bar.molecule.lan
     ...
 
     logfiles:
@@ -123,7 +123,7 @@ A corresponding configuration could - for example - look like this:
 ```yaml
 nginx_vhosts:
 
-  bar.molecule.lan:
+  - name: bar.molecule.lan
     ...
 
     logfiles:
@@ -155,7 +155,7 @@ These are freely definable and are defined as a text block:
 ```yaml
 nginx_vhosts:
 
-  bar.molecule.lan:
+  - name: bar.molecule.lan
     ...
 
     locations:
@@ -196,7 +196,7 @@ In addition to defining at least one upstream, you would need to configure one o
 ```yaml
 nginx_vhosts:
 
-  bar.molecule.lan:
+  - name: bar.molecule.lan
     ...
 
     upstreams:
@@ -218,15 +218,21 @@ Corresponding certificates can be defined via `ssl`:
 ```yaml
 nginx_vhosts:
 
-  bar.molecule.lan:
+  - name: bar.molecule.lan
     ...
 
     ssl:
       enabled: true
-      certificate:     /etc/letsencrypt/live/bar.molecule.lan/fullchain.pem
+      ciphers: default
+      certificate: /etc/letsencrypt/live/bar.molecule.lan/fullchain.pem
       certificate_key: /etc/letsencrypt/live/bar.molecule.lan/privkey.pem
     ...
 ```
+
+The keyword `ciphers` can be used to define an individual configuration file with ciphers.
+
+These can be defined via `nginx_ssl.ssl_ciphers`.
+
 **However, nginx would not start if the certificates are not available!**
 
 Therefore, these VHost definitions are only activated when the corresponding certificates are available in the system.
@@ -243,7 +249,7 @@ A redirect from port 80 (or any other port) to a TLS vhost can be defined via `r
 ```yaml
 nginx_vhosts:
 
-  bar.molecule.lan:
+  - name: bar.molecule.lan
     ...
 
     redirect:
@@ -257,7 +263,7 @@ nginx_vhosts:
 ```yaml
 nginx_vhosts:
 
-  nginx-status:
+  - name: nginx-status
     state: present
     enabled: true
 
@@ -277,7 +283,7 @@ nginx_vhosts:
           deny all;
 
 
-  10-prometheus.molecule.lan:
+  - name: 10-prometheus.molecule.lan
     state: present
     enabled: false
 
@@ -314,7 +320,7 @@ nginx_vhosts:
           proxy_set_header   X-Forwarded-Proto $scheme;
 
 
-  20-bar.molecule.lan:
+  - name: 20-bar.molecule.lan
     state: absent
     enabled: true
 

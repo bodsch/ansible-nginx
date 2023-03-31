@@ -20,26 +20,6 @@
         - default.yaml
       skip: true
 
-# - block:
-#     - name: block installation of python2
-#       copy:
-#         src: apt/preferences.d/python2.pref
-#         dest: /etc/apt/preferences.d/python2.pref
-#         mode: 0644
-#
-#     - name: make sure python3-apt is installed (only debian based)
-#       package:
-#         name:
-#           - python3-apt
-#         state: present
-#
-#     - name: clean apt cache
-#       command: apt-get clean
-#       args:
-#         warn: false
-#   when:
-#     - ansible_os_family | lower == 'debian'
-
 - name: update package cache
   ansible.builtin.package:
     update_cache: true
