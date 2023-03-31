@@ -6,11 +6,9 @@
 
 from __future__ import absolute_import, division, print_function
 import os
-import pwd
-import grp
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.bodsch.core.plugins.module_utils.directory import create_directory
+from ansible_collections.bodsch.core.plugins.module_utils.directory import create_directory, fix_ownership
 
 
 class NginxLogDirectories(object):
@@ -33,8 +31,6 @@ class NginxLogDirectories(object):
         log_dirs = []
         result_state = []
         unique_dirs = []
-
-        self.module.log(msg=f" self.vhosts: {type(self.vhosts)}")
 
         if isinstance(self.vhosts, dict):
             for vhost, values in self.vhosts.items():
@@ -59,24 +55,20 @@ class NginxLogDirectories(object):
             access_log = [os.path.dirname(x.get("logfiles").get("access", {}).get("file", None)) for x in self.vhosts if x.get("logfiles", {})]
             error_log  = [os.path.dirname(x.get("logfiles").get("error", {}).get("file", None)) for x in self.vhosts if x.get("logfiles", {})]
 
-            self.module.log(msg=f" access log: {access_log}")
-            self.module.log(msg=f" error log : {error_log}")
+            # self.module.log(msg=f" access log: {access_log}")
+            # self.module.log(msg=f" error log : {error_log}")
 
             unique_dirs = list(set(access_log + error_log))
-
-        self.module.log(msg=f" unique_dirs: {unique_dirs}")
 
         for d in unique_dirs:
             changed = False
             d_created = False
             d_ownership = False
 
-            self.module.log(msg=f" dir: {d}")
-
             if not os.path.exists(d):
-                d_created = create_directory(self.module, d)
+                d_created = create_directory(d)
 
-            d_ownership = self.__fix_ownership(d)
+            d_ownership, error_msg = fix_ownership(d, self.owner, self.group, self.mode)
 
             if d_created or d_ownership:
                 changed = True
@@ -86,7 +78,6 @@ class NginxLogDirectories(object):
                 state = "directory successful created"
 
                 res[d] = dict(
-                    # changed=True,
                     state=state
                 )
 
@@ -106,105 +97,6 @@ class NginxLogDirectories(object):
 
         return result
 
-    def __fix_ownership(self, dir):
-        """
-        """
-        changed      = False
-        force_owner  = self.owner
-        force_group  = self.group
-        force_mode   = self.mode
-
-        if os.path.isdir(dir):
-            current_owner, current_group, current_mode = self.__current_state(dir)
-
-            # change mode
-            if force_mode is not None and force_mode != current_mode:
-                try:
-                    if isinstance(force_mode, int):
-                        mode = int(str(force_mode), base=8)
-                except Exception as e:
-                    self.module.log(msg=f" - ERROR '{e}'")
-
-                try:
-                    if isinstance(force_mode, str):
-                        mode = int(force_mode, base=8)
-                except Exception as e:
-                    self.module.log(msg=f" - ERROR '{e}'")
-
-                os.chmod(dir, mode)
-
-            # change ownership
-            if force_owner is not None or force_group is not None and (force_owner != current_owner or force_group != current_group):
-                if force_owner is not None:
-                    try:
-                        force_owner = pwd.getpwnam(str(force_owner)).pw_uid
-                    except KeyError:
-                        force_owner = int(force_owner)
-                        pass
-                elif current_owner is not None:
-                    force_owner = current_owner
-                else:
-                    force_owner = 0
-
-                if force_group is not None:
-                    try:
-                        force_group = grp.getgrnam(str(force_group)).gr_gid
-                    except KeyError:
-                        force_group = int(force_group)
-                        pass
-                elif current_group is not None:
-                    force_group = current_group
-                else:
-                    force_group = 0
-
-                os.chown(
-                    dir,
-                    int(force_owner),
-                    int(force_group)
-                )
-
-            _owner, _group, _mode = self.__current_state(dir)
-
-            if (current_owner != _owner) or (current_group != _group) or (current_mode != _mode):
-                changed = True
-
-        return changed
-
-    def __current_state(self, dir):
-        """
-        """
-        if os.path.isdir(dir):
-            _state = os.stat(dir)
-            try:
-                current_owner  = pwd.getpwuid(_state.st_uid).pw_uid
-            except KeyError:
-                pass
-
-            try:
-                current_group = grp.getgrgid(_state.st_gid).gr_gid
-            except KeyError:
-                pass
-
-            try:
-                current_mode  = oct(_state.st_mode)[-4:]
-            except KeyError:
-                pass
-
-        return current_owner, current_group, current_mode
-
-    def _permstr_to_octal(self, modestr, umask):
-        '''
-            Convert a Unix permission string (rw-r--r--) into a mode (0644)
-        '''
-        revstr = modestr[::-1]
-        mode = 0
-        for j in range(0, 3):
-            for i in range(0, 3):
-                if revstr[i + 3 * j] in ['r', 'w', 'x', 's', 't']:
-                    mode += 2 ** (i + 3 * j)
-
-        return (mode & ~umask)
-
 
 # ===========================================
 # Module execution.
@@ -212,27 +104,28 @@ class NginxLogDirectories(object):
 
 def main():
 
-    module = AnsibleModule(
-
-        argument_spec=dict(
-            vhosts=dict(
-                required=True,
-                type="raw"
-            ),
-            owner=dict(
-                required=False,
-                type="str"
-            ),
-            group=dict(
-                required=False,
-                type="str"
-            ),
-            mode=dict(
-                required=False,
-                type="raw",
-                default="0755"
-            )
+    args = dict(
+        vhosts=dict(
+            required=True,
+            type="raw"
         ),
+        owner=dict(
+            required=False,
+            type="str"
+        ),
+        group=dict(
+            required=False,
+            type="str"
+        ),
+        mode=dict(
+            required=False,
+            type="raw",
+            default="0755"
+        )
+    )
+
+    module = AnsibleModule(
+        argument_spec=args,
         supports_check_mode=True,
     )
 

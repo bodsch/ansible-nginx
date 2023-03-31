@@ -8,7 +8,6 @@ from __future__ import absolute_import, division, print_function
 import os
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.bodsch.core.plugins.module_utils.directory import create_directory
 
 
 class NginxTLSCerts(object):
@@ -49,17 +48,10 @@ class NginxTLSCerts(object):
 
             data = [x for x in self.vhosts if x.get("ssl", {}).get("enabled")]
 
-            self.module.log(msg=f" data: {data}")
-
             cert = [x.get("ssl", {}).get("certificate") for x in data if x.get("ssl", {}).get("enabled")]
             key  = [x.get("ssl", {}).get("certificate_key") for x in data if x.get("ssl", {}).get("enabled")]
 
-            self.module.log(msg=f" certs: {cert}")
-            self.module.log(msg=f" keys : {key}")
-
             unique_files = list(set(cert + key))
-
-        self.module.log(msg=f" unique_files: {unique_files}")
 
         missing = []
         present = []
@@ -84,7 +76,6 @@ class NginxTLSCerts(object):
     def append_tls_state(self, missing = [], present = []):
         """
         """
-
         data = self.vhosts
 
         if isinstance(data, dict):
@@ -110,8 +101,6 @@ class NginxTLSCerts(object):
                     if certificate in present and certificate_key in present:
                         d["ssl"]["state"] = "present"
 
-        self.module.log(msg=f"= result : {data}")
-
         return data
 
     def _ssl_data(self, data):
@@ -129,14 +118,15 @@ class NginxTLSCerts(object):
 
 def main():
 
-    module = AnsibleModule(
-
-        argument_spec=dict(
-            vhosts=dict(
-                required=True,
-                type="raw"
-            ),
+    args = dict(
+        vhosts=dict(
+            required=True,
+            type="raw"
         ),
+    )
+
+    module = AnsibleModule(
+        argument_spec=args,
         supports_check_mode=True,
     )
 
