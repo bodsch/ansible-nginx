@@ -4,7 +4,7 @@
 
 TOX_TEST="${1}"
 
-set -e
+set -x
 
 if [ -f "./collections.yml" ]
 then

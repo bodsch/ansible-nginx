@@ -97,6 +97,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r test-requirements.txt
 
+      # - name: install ansible collection
+      #   run: |
+      #     ansible-galaxy collection install bodsch.core
+
       - name: test with tox
         run: |
           make \
