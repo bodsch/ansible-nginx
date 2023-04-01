@@ -4,12 +4,34 @@ name: code linter
 
 on:
   workflow_dispatch:
-  pull_request:
+    inputs:
+      logLevel:
+        description: 'Log level'
+        required: true
+        default: 'warning'
+        type: choice
+        options:
+          - info
+          - warning
+          - debug
   push:
     branches:
-      - main
-      - feature/*
-      - fix/*
+      - 'main/**'
+      - 'feature/**'
+      - '!doc/**'
+    paths:
+      - "!Makefile"
+      - "!README.md"
+      - "tasks/**"
+  pull_request:
+    branches:
+      - 'main/**'
+      - 'feature/**'
+      - '!doc/**'
+    paths:
+      - "!Makefile"
+      - "!README.md"
+      - "tasks/**"
 
 jobs:
   lint:
