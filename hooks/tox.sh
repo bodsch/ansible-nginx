@@ -4,47 +4,25 @@
 
 TOX_TEST="${1}"
 
-set -x
+set -e
 
-if [ -f "./requirements.yml" ]
+if [ -f "./collections.yml" ]
 then
-  collections_installed=$(ansible-galaxy collection list | grep -c bodsch.core)
-  # ansible-galaxy collection list | grep bodsch
-  # /home/bodsch/.ansible/collections/ansible_collections
-  # bodsch.core        1.0.2:
-  # ansible-galaxy collection install --requirements-file ./requirements.old
-fi
+  for collection in $(grep "name: " collections.yml | awk -F ': ' '{print $2}')
+  do
+    collections_installed="$(ansible-galaxy collection list | grep ${collection})"
 
-# if [ ! -z "${TOX_COLLECTION_ROLE}" ]
-# then
-#   if [ -d "roles/${TOX_COLLECTION_ROLE}" ]
-#   then
-#     echo "- ${TOX_COLLECTION_ROLE} - ${TOX_COLLECTION_SCENARIO}"
-#
-#     pushd "roles/${TOX_COLLECTION_ROLE}"
-#
-#     tox "${TOX_OPTS}" -- molecule ${TOX_TEST} --scenario-name ${TOX_COLLECTION_SCENARIO}
-#
-#     popd
-#   else
-#     echo "collection role ${TOX_COLLECTION_ROLE} not found."
-#   fi
-# else
-#   for role in $(find roles -maxdepth 1 -mindepth 1 -type d -printf "%f\n")
-#   do
-#     pushd roles/$role
-#
-#     if [ -f "./tox.ini" ]
-#     then
-#       for test in $(find molecule -maxdepth 1 -mindepth 1 -type d -printf "%f\n")
-#       do
-#         export TOX_SCENARIO=$test
-#
-#         tox ${TOX_OPTS} -- molecule ${TOX_TEST} ${TOX_ARGS}
-#       done
-#     fi
-#     popd
-#   done
-# fi
+    if [ -z "${collections_installed}" ]
+    then
+      echo "Install the required collection '${collection}'"
+      ansible-galaxy collection install ${collection}
+    else
+      collection_version=$(echo "${collections_installed}" | awk -F ' ' '{print $2}')
+
+      echo "The required collection '${collection}' is installed in version ${collection_version}."
+    fi
+  done
+  echo ""
+fi
 
 tox ${TOX_OPTS} -- molecule ${TOX_TEST} ${TOX_ARGS}
