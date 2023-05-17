@@ -22,6 +22,8 @@
     "{{ nginx_vhosts_root_directories }}"
   loop_control:
     label: "{{ item }}"
+  when:
+    - nginx_vhosts_root_directories | default([]) | count > 0
 
 - name: ensure vhosts log path exists
   nginx_log_directories:

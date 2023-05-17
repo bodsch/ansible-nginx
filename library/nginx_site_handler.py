@@ -8,6 +8,7 @@ from __future__ import absolute_import, division, print_function
 import os
 
 from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.bodsch.core.plugins.module_utils.module_results import results
 from ansible_collections.bodsch.core.plugins.module_utils.file import remove_file, create_link
 
 
@@ -115,13 +116,10 @@ class NginxSiteHandler(object):
                         result_state.append(res)
 
         # define changed for the running tasks
-        # migrate a list of dict into dict
-        combined_d = {key: value for d in result_state for key, value in d.items()}
-        # find all changed and define our variable
-        changed = (len({k: v for k, v in combined_d.items() if v.get('state')}) > 0)
+        _state, _changed, _failed, state, changed, failed = results(self.module, result_state)
 
         result = dict(
-            changed = changed,
+            changed = _changed,
             failed = False,
             state = result_state
         )

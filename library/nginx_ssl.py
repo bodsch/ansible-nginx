@@ -9,7 +9,7 @@ import os
 import json
 
 from ansible.module_utils.basic import AnsibleModule
-
+from ansible_collections.bodsch.core.plugins.module_utils.module_results import results
 from ansible_collections.bodsch.core.plugins.module_utils.directory import create_directory
 from ansible_collections.bodsch.core.plugins.module_utils.checksum import Checksum
 
@@ -110,18 +110,11 @@ class NginxSsl(object):
                 result_state.append(res)
 
         # define changed for the running tasks
-        # migrate a list of dict into dict
-        combined_d = {key: value for d in result_state for key, value in d.items()}
-        # find all changed and define our variable
-        changed = {k: v for k, v in combined_d.items() if isinstance(v, dict) if v.get('changed')}
-        failed = {k: v for k, v in combined_d.items() if isinstance(v, dict) if v.get('failed')}
-
-        _changed = (len(changed) > 0)
-        _failed = (len(failed) > 0)
+        _state, _changed, _failed, state, changed, failed = results(self.module, result_state)
 
         result = dict(
-            failed = _failed,
             changed = _changed,
+            failed = _failed,
             result = result_state
         )
 
