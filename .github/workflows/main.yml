@@ -24,8 +24,7 @@ jobs:
           - archlinux:latest
           - artixlinux:latest
         ansible-version:
-          - '6.1'
-          - '7.3'
+          - '6.7'
         scenario:
           - default
     steps:
@@ -68,8 +67,7 @@ jobs:
           - debian:11
           - ubuntu:20.04
         ansible-version:
-          - '5.1'
-          - '6.1'
+          - '6.7'
         scenario:
           - default
     steps:
