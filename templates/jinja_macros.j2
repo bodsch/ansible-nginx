@@ -5,10 +5,10 @@
 {% set print = self %}
 
 {%- macro vhost_server_name(data) -%}
-{% if data | type == "str" %}
+{% if data | bodsch.core.type == "str" %}
   server_name
     {{ data }};
-{% elif data | type == "list" %}
+{% elif data | bodsch.core.type == "list" %}
   server_name
     {{ data | join('\n') | indent(4, first=False) }};
 {% endif %}
@@ -82,7 +82,7 @@ upstream {{ upstream.name }} {
 
 {%- macro vhost_locations(data) -%}
 
-{% if data | type == "dict" %}
+{% if data | bodsch.core.type == "dict" %}
   {% for k, v in data.items() %}
   location {{ k }} {
     {% if v.options is defined %}
@@ -104,11 +104,11 @@ upstream {{ upstream.name }} {
 
 {%- macro vhost_listen(port=80, default=False) -%}
 
-{% if port | type == "str" or port | type == "int" %}
+{% if port | bodsch.core.type == "str" or port | bodsch.core.type == "int" %}
   listen
     {{ port }}{% if default %} default_server{% endif %};
 {% endif %}
-{% if port | type == "list" %}
+{% if port | bodsch.core.type == "list" %}
   {% for l in port %}
   listen
     {{ l }}{% if default %} default_server{% endif %};

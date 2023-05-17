@@ -3,11 +3,11 @@
 #
 {%- import 'jinja_macros.j2' as tpl with context %}
 {% set data = item %}
-{%- set _server_name = data.domains | default('_') %}
-{%- set _upstreams = data.upstreams | default({}) %}
-{%- set _logfiles = data.logfiles | default({}) %}
-{%- set _locations = data.locations | default([]) %}
-{%- set _listen = data.listen | default('80') %}
+{% set _server_name = data.domains | default('_') %}
+{% set _upstreams = data.upstreams | default({}) %}
+{% set _logfiles = data.logfiles | default({}) %}
+{% set _locations = data.locations | default([]) %}
+{% set _listen = data.listen | default('80') %}
 
 {% if data.name == "default" %}
 server {

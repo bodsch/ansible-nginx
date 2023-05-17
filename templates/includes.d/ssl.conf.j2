@@ -8,11 +8,11 @@
     {% if key == "ssl_ciphers" %}
       {% set value = {} %} {#value | join(":") %}#}
     {% endif %}
-    {% if value | type == "list" %}
+    {% if value | bodsch.core.type == "list" %}
 {{ key }}
 {{ value | join('\n') | indent(4, first=True) }};
-    {% elif value | type == "bool" %}
-{{ key.ljust(18) }}  {{ value | bool | ternary('on', 'off') }};
+    {% elif value | bodsch.core.type == "bool" %}
+{{ key.ljust(18) }}  {{ value | bool | bodsch.core.config_bool(true_as='on', false_as='off') }};
     {% else %}
 {{ key.ljust(18) }}  {{ value }};
     {% endif %}

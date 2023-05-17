@@ -40,6 +40,14 @@ nginx_vhosts:
 
     listen: 80
 
+    upstreams:
+      - name: grafana
+        servers:
+          - 127.0.0.1:3000
+      - name: prometheus
+        servers:
+          - 127.0.0.1:9090
+
     root_directory: /var/www/monitoring.molecule.lan
     root_directory_create: true
 

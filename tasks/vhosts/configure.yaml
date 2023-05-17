@@ -9,6 +9,7 @@
     group: root
     mode: 0644
   when:
+    - nginx_vhosts_http | default([]) | count > 0
     - item.state | default('present') == 'present'
   register: _created_vhost_http
   loop:
@@ -25,6 +26,7 @@
     group: root
     mode: 0644
   when:
+    - nginx_vhosts_https | default([]) | count > 0
     - item.state | default('present') == 'present'
   register: _created_vhost_https
   loop:

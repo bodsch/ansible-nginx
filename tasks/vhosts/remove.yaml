@@ -7,6 +7,8 @@
   register: _deactivated_vhost
   notify:
     - de-activated vhosts
+    - validate config
+    - reload service
 
 - name: remove vhost configurations
   nginx_site_handler:
@@ -15,6 +17,8 @@
   register: _removed_vhost
   notify:
     - removed vhost
+    - validate config
+    - reload service
 
 # TODO remove log directory, or logfile
 

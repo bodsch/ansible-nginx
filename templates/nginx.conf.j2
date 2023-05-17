@@ -15,7 +15,7 @@ include               /etc/nginx/modules-enabled/*.conf;
 
 events {
   worker_connections  {{ nginx_events.worker_connections }};
-  multi_accept        "{{ nginx_events.multi_accept | bool | ternary('on', 'off')  }}";
+  multi_accept        "{{ nginx_events.multi_accept | bool | bodsch.core.config_bool(true_as='on', false_as='off') }}";
 }
 
 http {
@@ -31,14 +31,14 @@ http {
 {% if nginx_http.rewrite_log | default('false') | bool %}
   rewrite_log         on;
 {% endif %}
-  sendfile            {{ nginx_http.sendfile | bool | ternary('on', 'off') }};
-  tcp_nopush          {{ nginx_http.tcp_nopush | bool | ternary('on', 'off') }};
-  tcp_nodelay         {{ nginx_http.tcp_nodelay | bool | ternary('on', 'off') }};
+  sendfile            {{ nginx_http.sendfile | bool | bodsch.core.config_bool(true_as='on', false_as='off') }};
+  tcp_nopush          {{ nginx_http.tcp_nopush | bool | bodsch.core.config_bool(true_as='on', false_as='off') }};
+  tcp_nodelay         {{ nginx_http.tcp_nodelay | bool | bodsch.core.config_bool(true_as='on', false_as='off') }};
 
   keepalive_timeout   {{ nginx_http.keepalive.timeout }};
   keepalive_requests  {{ nginx_http.keepalive.requests }};
 
-  server_tokens       {{ nginx_http.server_tokens | bool | ternary('on', 'off') }};
+  server_tokens       {{ nginx_http.server_tokens | bool | bodsch.core.config_bool(true_as='on', false_as='off') }};
 {% if nginx_http.proxy.cache_path %}
   proxy_cache_path    {{ nginx_http.proxy.cache_path }};
 {% endif %}

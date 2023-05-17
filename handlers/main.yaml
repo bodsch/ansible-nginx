@@ -23,8 +23,6 @@
   ansible.builtin.service:
     name: nginx
     state: reloaded
-#  command: |
-#    [ -e /run/nxinx.pid ] && nginx -s reload
 
 - name: restart service
   ansible.builtin.service:

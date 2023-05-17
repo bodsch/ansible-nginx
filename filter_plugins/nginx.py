@@ -31,7 +31,7 @@ class FilterModule(object):
         """
           return a list of directories for keyword like 'root_directory', access_log or others
         """
-        # display.v(f"vhost_directory(data, {directory}, {state})")
+        display.v(f"vhost_directory(data, {directory}, {state})")
         # display.v(f"  {type(data)}")
         # display.v(f"{data}")
 
@@ -51,14 +51,14 @@ class FilterModule(object):
                 if x.get("state", state) and x.get(directory, None) and x.get("root_directory_create", False)
             ]
 
-        # display.v(f" = result {result}")
+        display.v(f" = result {result}")
         return result
 
     def vhost_listen(self, data, port, default):
         """
             used in jinja_macros.j2
         """
-        # display.v(f"vhost_listen({port}, {default})")
+        display.v(f"vhost_listen({port}, {default})")
 
         result = []
 
@@ -71,14 +71,14 @@ class FilterModule(object):
         if default:
             result.append('default_server')
 
-        # display.v(f" = result {result}")
+        display.v(f" = result {result}")
 
         return result
 
     def http_vhosts(self, data, tls=False):
         """
         """
-        # display.v(f"http_vhosts(data, {tls})")
+        display.v(f"http_vhosts(data, {tls})")
         # display.v(f"  {type(data)}")
         # display.v(f"{data}")
 
@@ -102,7 +102,7 @@ class FilterModule(object):
             else:
                 data = [x for x in data if not x.get("ssl", {}).get("enabled")]
 
-        # display.v(f" = result {data}")
+        display.v(f" = result {data}")
 
         return data
 

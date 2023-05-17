@@ -34,6 +34,6 @@ nginx_includes:
   - "/etc/nginx/conf.d/*.conf"
   - "/etc/nginx/sites-enabled/*.conf"
 
-nginx_vhosts: {}
+nginx_vhosts: []
 
 ...

@@ -1,5 +1,11 @@
 ---
 
+- name: validate variables
+  ansible.builtin.fail:
+    msg: "'nginx_vhosts' should be a list!\nPlease update your configuration."
+  when:
+    - nginx_vhosts | bodsch.core.type != "list"
+
 - name: define vhosts variables
   ansible.builtin.set_fact:
     nginx_vhosts_root_directories: "{{ nginx_vhosts | vhost_directory(directory='root_directory', state='present') }}"

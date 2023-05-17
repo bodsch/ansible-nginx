@@ -3,12 +3,12 @@
 #
 {%- import 'jinja_macros.j2' as tpl with context %}
 {% set data = item %}
-{%- set _server_name = data.domains | default('_') %}
-{%- set _upstreams = data.upstreams | default({}) %}
-{%- set _logfiles = data.logfiles | default({}) %}
-{%- set _ssl = data.ssl | default({}) %}
-{%- set _locations = data.locations | default({}) %}
-{%- set _listen = data.listen | default(['443 ssl http2']) %}
+{% set _server_name = data.domains | default('_') %}
+{% set _upstreams = data.upstreams | default({}) %}
+{% set _logfiles = data.logfiles | default({}) %}
+{% set _ssl = data.ssl | default({}) %}
+{% set _locations = data.locations | default({}) %}
+{% set _listen = data.listen | default(['443 ssl http2']) %}
 {# DEFAULT vhost #}
 {#
 {% if data.name == "default" %}
@@ -32,14 +32,14 @@ server {
 #}
 {% if _upstreams | count > 0 %}
 {{ tpl.vhost_upstreams(_upstreams | default({})) }}
-{% endif -%}
+{% endif %}
 
 {% if data.redirect is defined and
       data.redirect.from_port is defined %}
-  {% if _listen | type == "str" %}
+  {% if _listen | bodsch.core.type == "str" %}
     {% set _listen_port = _listen | default('443 ssl http2') | regex_replace('(http2|ssl|quic|reuseport)','') %}
   {% endif %}
-  {% if _listen | type == "list" %}
+  {% if _listen | bodsch.core.type == "list" %}
     {% set _listen_port = _listen | join(' ') | default('443') | regex_replace('(http2|ssl|quic|reuseport)','') %}
   {% endif %}
 

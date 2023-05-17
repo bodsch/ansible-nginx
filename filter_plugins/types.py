@@ -18,7 +18,7 @@ class FilterModule(object):
 
     def filters(self):
         return {
-            'type': self.var_type,
+            # 'type': self.var_type,
             'has_valid_values': self.has_values
         }
 

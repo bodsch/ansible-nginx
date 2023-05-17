@@ -4,13 +4,11 @@
 
 TOX_TEST="${1}"
 
-set -x
-
 if [ -f "./collections.yml" ]
 then
   for collection in $(grep "name: " collections.yml | awk -F ': ' '{print $2}')
   do
-    collections_installed="$(ansible-galaxy collection list | grep ${collection})"
+    collections_installed="$(ansible-galaxy collection list | grep ${collection} 2> /dev/null)"
 
     if [ -z "${collections_installed}" ]
     then
