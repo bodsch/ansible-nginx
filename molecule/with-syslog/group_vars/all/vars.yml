@@ -68,7 +68,7 @@ nginx_vhosts:
   # enabled
   # present
   - name: 10-foo.molecule.lan
-    state: absent
+    state: present
     enabled: false
 
     domains:
