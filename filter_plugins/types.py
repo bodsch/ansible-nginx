@@ -18,24 +18,8 @@ class FilterModule(object):
 
     def filters(self):
         return {
-            # 'type': self.var_type,
             'has_valid_values': self.has_values
         }
-
-    def var_type(self, var):
-        '''
-        Get the type of a variable
-        '''
-        _type = type(var).__name__
-
-        # display.v(f" {var}, type: {_type}")
-
-        if (isinstance(var, str) or _type == "AnsibleUnsafeText"):
-            _type = "str"
-
-        # display.v(f" = result {_type}")
-
-        return _type
 
     def has_values(self, var):
         result = False

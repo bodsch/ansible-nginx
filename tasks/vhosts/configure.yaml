@@ -1,6 +1,12 @@
 ---
 
 - name: create HTTP vhost configurations
+  nginx_vhosts:
+    vhost: "{{ nginx_vhosts_http }}"
+    template: "{{ nginx_vhost_templates.http }}"
+    acme: "{{ nginx_acme }}"
+
+- name: create HTTP vhost configurations
   ansible.builtin.template:
     src: "{{ item.template | default( 'vhosts/' ~ nginx_vhost_templates.http ) }}"
     dest: "/etc/nginx/sites-available/{{ item.filename | default( item.name ~ '.conf' ) }}"

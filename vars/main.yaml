@@ -1,5 +1,11 @@
 ---
 
+nginx_local_tmp_directory: "{{
+  lookup('env', 'CUSTOM_LOCAL_TMP_DIRECTORY') |
+  default(lookup('env', 'HOME') ~ '/.cache/ansible/nginx', true) }}"
+
+nginx_remote_tmp_directory: /var/cache/ansible/nginx
+
 nginx_dependencies: []
 
 nginx_packages:

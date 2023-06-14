@@ -3,13 +3,21 @@
 - name: vhosts prepare
   ansible.builtin.include_tasks: vhosts/prepare.yaml
 
-- name: vhosts remove
-  ansible.builtin.include_tasks: vhosts/remove.yaml
+- name: create HTTP vhost configurations
+  nginx_vhosts:
+    vhosts: "{{ nginx_vhosts }}"
+    template:
+      path: "{{ nginx_remote_tmp_directory }}/{{ ansible_fqdn }}"
+      http: "{{ nginx_vhost_templates.http }}"
+      https: "{{ nginx_vhost_templates.https }}"
 
-- name: vhosts configure
-  ansible.builtin.include_tasks: vhosts/configure.yaml
+# - name: vhosts remove
+#   ansible.builtin.include_tasks: vhosts/remove.yaml
 
-- name: flush handlers
-  ansible.builtin.meta: flush_handlers
+# - name: vhosts configure
+#   ansible.builtin.include_tasks: vhosts/configure.yaml
+
+# - name: flush handlers
+#   ansible.builtin.meta: flush_handlers
 
 ...

@@ -1,0 +1,199 @@
+---
+
+nginx_vhosts:
+
+  - name: default
+    description: |
+      simply a default vhost
+    ssl:
+      enabled: false
+
+  - name: nginx-status
+    filename: 00-status.conf
+    state: present  # default: present
+    enabled: true   # default: true
+    template: vhost_status.j2
+    # domain(s)
+    domains:
+      - localhost
+    # listen
+    listen:
+      - 127.0.0.1:8088
+
+    root_directory: /var/www/
+
+    # locations
+    locations:
+      "/nginx_status":
+        options: |
+          stub_status on;
+          access_log off;
+          allow 127.0.0.1;
+          deny all;
+
+  - name: 01.molecule.lan
+    filename: 10-01.molecule.lan.conf
+    state: present
+    enabled: true
+
+    listen: 80
+    domains:
+      - 01.molecule.lan
+
+    root_directory: /var/www/01.molecule.lan
+    root_directory_create: True
+
+    logfiles: {}
+
+  - name: 02.molecule.lan
+    filename: 10-02.molecule.lan.conf
+    state: present
+    enabled: true
+
+    listen: 80
+    domains:
+      - 02.molecule.lan
+
+    root_directory: /var/www/02.molecule.lan
+
+  - name: 03.molecule.lan
+    filename: 10-03.molecule.lan.conf
+    state: present
+    enabled: true
+
+    listen: 80
+    domains:
+      - 03.molecule.lan
+  - name: 02.molecule.lan
+    filename: 10-02.molecule.lan.conf
+    state: present
+    enabled: true
+
+    listen: 80
+    domains:
+      - 02.molecule.lan
+
+  - name: 03.molecule.lan
+    filename: 10-03.molecule.lan.conf
+    state: present
+    enabled: true
+
+    listen: 80
+    domains:
+      - 03.molecule.lan
+
+  - name: 04.molecule.lan
+    filename: 10-04.molecule.lan.conf
+    state: present
+    enabled: true
+
+    listen: 80
+    domains:
+      - 04.molecule.lan
+
+  - name: 05.molecule.lan
+    filename: 10-05.molecule.lan.conf
+    state: present
+    enabled: true
+
+    listen: 80
+    domains:
+      - 05.molecule.lan
+
+  - name: 06.molecule.lan
+    filename: 10-06.molecule.lan.conf
+    state: present
+    enabled: true
+
+    listen: 80
+    domains:
+      - 06.molecule.lan
+
+  - name: 07.molecule.lan
+    filename: 10-07.molecule.lan.conf
+    state: present
+    enabled: true
+
+    listen: 80
+    domains:
+      - 07.molecule.lan
+
+  - name: 08.molecule.lan
+    filename: 10-08.molecule.lan.conf
+    state: present
+    enabled: true
+
+    listen: 80
+    domains:
+      - 08.molecule.lan
+
+  - name: 09.molecule.lan
+    filename: 10-09.molecule.lan.conf
+    state: present
+    enabled: true
+
+    listen: 80
+    domains:
+      - 09.molecule.lan
+
+  - name: 10.molecule.lan
+    filename: 10-10.molecule.lan.conf
+    state: present
+    enabled: true
+
+    listen: 80
+    domains:
+      - 10.molecule.lan
+
+  - name: 11.molecule.lan
+    filename: 10-11.molecule.lan.conf
+    state: present
+    enabled: true
+
+    listen: 80
+    domains:
+      - 11.molecule.lan
+
+  - name: 12.molecule.lan
+    filename: 10-12.molecule.lan.conf
+    state: present
+    enabled: true
+
+    listen: 80
+    domains:
+      - 12.molecule.lan
+
+  - name: 13.molecule.lan
+    filename: 10-13.molecule.lan.conf
+    state: present
+    enabled: true
+
+    listen: 80
+    domains:
+      - 13.molecule.lan
+
+  - name: 20-www.molecule.lan
+    state: present
+    enabled: true
+
+    domains:
+      - www.molecule.lan
+      - molecule.lan
+
+    # creates also an HTTP vhost only for redirect to HTTPS
+    redirect:
+      from_port: 80
+
+    # https://nginx.org/en/docs/http/ngx_http_core_module.html#listen
+    listen:
+      - 8443 reuseport
+      - 443 ssl http2
+
+    # enable ssl
+    ssl:
+      enabled: true
+      ciphers: default
+      certificate:     /etc/snakeoil/molecule.lan/molecule.lan.pem
+      certificate_key: /etc/snakeoil/molecule.lan/molecule.lan.pem
+
+...
