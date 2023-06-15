@@ -38,26 +38,26 @@ server {
 {% endif %}
 {% if _listen | bodsch.core.var_type == "list" %}
   {% set _listen_port = _listen | join(' ') | default('443') | regex_replace('(http2|ssl|quic|reuseport)','') %}
+  {% set _listen_port = _listen_port | split(' ') %}
 {% endif %}
 server {
 {{ tpl.vhost_server_name(_server_name) | indent(0, first=False) }}
 {{ tpl.vhost_listen(_listen_port) | indent(0, first=False) }}
 {{ tpl.vhost_logfile(_logfiles, item.name) | indent(0, first=False) }}
 {{ tpl.vhost_certificates(_ssl, item.name) | indent(0, first=False) }}
-
   {% if data.includes is defined %}
+
     {% for inc in data.includes %}
   include             {{ inc }};
     {% endfor %}
   {% endif %}
-  {% if data.root is defined %}
+  {% if data.root is defined and data.root | string | length > 0 %}
   root                {{ data.root }};
   {% endif %}
-
   {% if data.index is defined %}
+
   index
     {{ data.index | join('\n') | indent(4, first=False) }};
   {% endif %}
-
-{{ tpl.vhost_locations(_locations) | indent(0, first=False) -}}
+{{ tpl.vhost_locations(_locations) | indent(0, first=False) }}
 }

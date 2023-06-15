@@ -10,10 +10,12 @@ import shutil
 import re
 
 from ansible.module_utils.basic import AnsibleModule
-from jinja2 import Template, Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader
 from ansible_collections.bodsch.core.plugins.module_utils.directory import create_directory
 from ansible_collections.bodsch.core.plugins.module_utils.checksum import Checksum
 from ansible_collections.bodsch.core.plugins.module_utils.module_results import results
+from ansible_collections.bodsch.core.plugins.module_utils.file import remove_file, create_link
+
 
 class NginxVHosts(object):
     """
@@ -27,10 +29,11 @@ class NginxVHosts(object):
         self.dest = module.params.get("dest")
 
         template = module.params.get("template")
+        self.acme = module.params.get("acme")
+
         self.default_http_template = template.get("http")
         self.default_https_template = template.get("https")
         self.template_path = template.get("path")
-        self.acme = template.get("acme")
 
         self.site_enabled = "/etc/nginx/sites-enabled"
         self.site_available = "/etc/nginx/sites-available"
@@ -47,66 +50,117 @@ class NginxVHosts(object):
 
         if isinstance(self.vhosts, list):
             for vhost in self.vhosts:
+                res = {}
                 state = vhost.get("state", "present")
-                enabled = vhost.get("enabled", True)
+                # enabled = vhost.get("enabled", True)
+                name = vhost.get("name", None)
+                # self.module.log(msg=f" - vhost {vhost}")
+                # self.module.log(msg=f"   name {name}")
 
-                self.module.log(msg=f" - vhost {vhost}")
-                self.module.log(msg=f"   state {state}")
-                self.module.log(msg=f"   enabled {enabled}")
+                res[name] = dict()
 
                 if state == "absent":
                     disabled, removed = self.remove_vhost(vhost)
-                else:
-                    result = self.create_vhost(vhost)
+                    msg = ""
+                    changed = False
+                    if disabled:
+                        changed = True
+                        msg = "The VHost was successfuly disabled."
+                    elif removed:
+                        changed = True
+                        msg = "The VHost was successfuly removed."
+                    elif disabled and removed:
+                        changed = True
+                        msg = "The VHost was successfuly disabled and removed."
 
-                    if not enabled:
-                        disabled = self.disable_vhost(vhost)
+                    if changed:
+                        res[name].update({
+                            "changed": changed,
+                            "msg": msg
+                        })
+
+                        result_state.append(res)
+
+                else:
+                    failed, changed, msg = self.create_vhost(vhost)
+
+                    res[name].update({
+                        "failed": failed,
+                        "changed": changed,
+                        "msg": msg
+                    })
+
+                    result_state.append(res)
 
         # define changed for the running tasks
         _state, _changed, _failed, state, changed, failed = results(self.module, result_state)
 
         result = dict(
             changed = _changed,
-            failed = False,
+            failed = _failed,
             msg = result_state
         )
 
-        # shutil.rmtree(self.tmp_directory)
+        shutil.rmtree(self.tmp_directory)
 
         return result
 
     def create_vhost(self, data):
         """
         """
-        state = data.get("state", "present")
+        # self.module.log(msg="create_vhost(data)")
+
+        # state = data.get("state", "present")
         enabled = data.get("enabled", True)
         template = data.get("template", None)
         tls = data.get("ssl", None)
-        template = data.get("template", None)
-        tls = data.get("ssl", None)
+        tls_enabled = False
+
+        # self.module.log(msg=f"   state   {state}")
+        # self.module.log(msg=f"   enabled {enabled}")
+        # self.module.log(msg=f"   tls     {tls}")
 
         if tls:
-            tls = tls.get("enabled", False)
+            tls_enabled = tls.get("enabled", False)
+            tls_cert_state = tls.get("state", "missing")
+
+            if tls_enabled and tls_cert_state == "missing":
+                return True, False, "TLS certificate missing"
 
         if not template:
-            if tls:
+            if tls_enabled:
                 template = self.default_https_template
             else:
                 template = self.default_http_template
 
         template = os.path.join(self.template_path, template)
 
-        self.module.log(msg=f"   template {template}")
-
-        file_available, _, file_temporary = self.__file_names(data)
+        file_available, file_enabled, file_temporary = self.__file_names(data)
 
         vhost_data = self.render_template(template, data)
 
-        self.save_vhost(file_available, file_temporary, vhost_data)
+        changed, msg = self.save_vhost(file_available, file_temporary, vhost_data)
 
         if enabled:
-            self.enable_vhost(data)
+            enabled = self.enable_vhost(file_available, file_enabled)
+            if enabled:
+                if changed:
+                    msg += " and enabled."
+                else:
+                    changed = True
+                    msg = "The VHost was successfully enabled."
+        else:
+            disabled = self.disable_vhost(file_enabled)
+            if disabled:
+                if changed:
+                    msg += " and disabled."
+                else:
+                    changed = True
+                    msg = "The VHost was successfuly disabled."
 
+        # self.module.log(msg=f"- changed {changed} - {msg}")
+
+        return False, changed, msg
 
     def render_template(self, vhost_template, data):
         """
@@ -129,7 +183,7 @@ class NginxVHosts(object):
             else:
                 result = None
 
-            self.module.log(msg=f"'{value}' is {result}")
+            # self.module.log(msg=f"'{value}' is {result}")
 
             return result
 
@@ -137,20 +191,19 @@ class NginxVHosts(object):
             """
                 A non-optimal implementation of a regex filter
             """
-            self.module.log(msg=f"regex_replace('{s}', '{find}', '{replace}')")
+            # self.module.log(msg=f"regex_replace('{s}', '{find}', '{replace}')")
 
             result = re.sub(find, replace, s).strip()
-            self.module.log(msg=f"='{result}'")
+            # self.module.log(msg=f"='{result}'")
             return result
 
-        def is_list(value):
-            return isinstance(value, list)
-
-        def is_dict(value):
-            return isinstance(value, dict)
+        def split(value, s=''):
+            if isinstance(value, str):
+                # ignore empty strings
+                return list(filter(None, value.split(s)))
+                # return value.split(s)
 
         if os.path.isfile(vhost_template):
-
             file_path = os.path.os.path.dirname(os.path.realpath(vhost_template))
             file_name = os.path.basename(os.path.realpath(vhost_template))
 
@@ -160,50 +213,36 @@ class NginxVHosts(object):
 
             jinja_environment.filters.update({
                 'bodsch.core.var_type': var_type,
-                'is_list': is_list,
-                'is_dict': is_dict,
+                'split': split,
                 'regex_replace': regex_replace
             })
 
-            # jinja_environment.filters['regex_replace'] = regex_replace
-
             output = jinja_environment.get_template(file_name).render(item=data, nginx_acme=self.acme)
 
-            # self.module.log(output)
+        # self.module.log(msg=f"{output}")
 
         return output
-
 
     def remove_vhost(self, data):
         """
         """
+        self.module.log(msg=f"remove_vhost({data})")
         disabled = False
         removed = False
 
-        name = data.get("name")
-        file_name = data.get("filename", None)
+        file_available, file_enabled, _ = self.__file_names(data)
 
-        if not file_name:
-            file_name = f"{name}.conf"
+        if os.path.islink(file_available) and os.readlink(file_available) == file_enabled:
+            disabled = remove_file(file_available)
 
-        enabled = os.path.join(self.site_enabled, file_name)
-        available = os.path.join(self.site_available, file_name)
-
-        if os.path.islink(available) and os.readlink(available) == enabled:
-            disabled = remove_file(available)
-
-        if os.path.isfile(enabled):
-            removed = remove_file(enabled)
+        if os.path.isfile(file_enabled):
+            removed = remove_file(file_enabled)
 
         return disabled, removed
-
 
     def save_vhost(self, file_name, file_temporary, data):
         """
         """
-        # data_file    = os.path.join(file_name)
-        # tmp_file     = os.path.join(self.tmp_directory, file_name)
-
         with open(file_temporary, "w") as f:
             f.write(data)
 
@@ -211,23 +250,58 @@ class NginxVHosts(object):
         new_checksum = self.checksum.checksum_from_file(file_temporary)
 
         changed = not (new_checksum == old_checksum)
+        new_file = False
+        msg = "The VHost has not been changed"
 
-        self.module.log(msg=f"   file_name {file_name}")
-        self.module.log(msg=f"   file_temporary {file_temporary}")
-        self.module.log(msg=f"   old_checksum {old_checksum}")
-        self.module.log(msg=f"   new_checksum {new_checksum}")
-        self.module.log(msg=f"   changed {changed}")
+        # self.module.log(msg=f"   file_name {file_name}")
+        # self.module.log(msg=f"   file_temporary {file_temporary}")
+        # self.module.log(msg=f"   old_checksum {old_checksum}")
+        # self.module.log(msg=f"   new_checksum {new_checksum}")
+        # self.module.log(msg=f"   changed {changed}")
 
         if changed:
+            new_file = (old_checksum is None)
             shutil.move(file_temporary, file_name)
+            msg = "The VHost was successfully changed"
+
+        if new_file:
+            msg = "The VHost was successfully created"
+
+        return changed, msg
+
+    def enable_vhost(self, file_available, file_enabled):
+        """
+        """
+        # self.module.log(msg=f"enable_vhost({file_available}, {file_enabled})")
+        changed = False
+
+        if os.path.islink(file_enabled) and os.readlink(file_enabled) == file_available:
+            # link exists and is valid
+            pass
+        else:
+            if not os.path.islink(file_enabled):
+                create_link(file_available, file_enabled)
+            else:
+                if os.readlink(file_enabled) != file_available:
+                    self.module.log(msg=f"path '{file_enabled}' is a broken symlink")
+                    create_link(file_available, file_enabled, True)
+                else:
+                    create_link(file_available, file_enabled)
+
+            changed = True
 
         return changed
 
-    def enable_vhost(self, data):
-        return None
+    def disable_vhost(self, file_enabled):
+        """
+        """
+        # self.module.log(msg=f"disable_vhost({file_enabled})")
 
-    def disable_vhost(self, data):
-        return None
+        changed = False
+
+        changed = remove_file(file_enabled)
+
+        return changed
 
     def __file_names(self, data):
         """
@@ -242,12 +316,11 @@ class NginxVHosts(object):
         available = os.path.join(self.site_available, file_name)
         temporary = os.path.join(self.tmp_directory, file_name)
 
-        self.module.log(msg=f"   enabled {enabled}")
-        self.module.log(msg=f"   available {available}")
-        self.module.log(msg=f"   temporary {temporary}")
+        # self.module.log(msg=f"   enabled {enabled}")
+        # self.module.log(msg=f"   available {available}")
+        # self.module.log(msg=f"   temporary {temporary}")
 
         return available, enabled, temporary
-
 
 
 # ===========================================

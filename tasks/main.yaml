@@ -3,16 +3,16 @@
 - name: prepare
   ansible.builtin.include_tasks: prepare.yaml
 
-# - name: install
-#   ansible.builtin.include_tasks: install.yaml
+- name: install
+  ansible.builtin.include_tasks: install.yaml
 
-# - name: configure
-#   ansible.builtin.include_tasks: configure.yaml
+- name: configure
+  ansible.builtin.include_tasks: configure.yaml
 
 - name: vhosts
   ansible.builtin.include_tasks: vhosts/main.yaml
 
-# - name: service
-#   ansible.builtin.include_tasks: service.yaml
+- name: service
+  ansible.builtin.include_tasks: service.yaml
 
 ...

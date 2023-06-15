@@ -1,4 +1,3 @@
-#jinja2: trim_blocks: True, lstrip_blocks: True
 {#
 
 #}
@@ -82,7 +81,7 @@ upstream {{ upstream.name }} {
 
 {%- macro vhost_locations(data) -%}
 
-{% if data | is_dict %}
+{% if data | bodsch.core.var_type == "dict" %}
   {% for k, v in data.items() %}
   location {{ k }} {
     {% if v.options is defined %}
@@ -92,11 +91,12 @@ upstream {{ upstream.name }} {
 
   {% endfor %}
 {% endif %}
-{% if data == "list" %}
+{% if data | bodsch.core.var_type == "list" %}
   {% for l in data %}
   location {{ l.location }} {
     {{ l.options | indent(4) }}
   }
+
   {% endfor %}
 {% endif %}
 

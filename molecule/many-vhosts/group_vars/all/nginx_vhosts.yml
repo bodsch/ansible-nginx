@@ -48,30 +48,13 @@ nginx_vhosts:
   - name: 02.molecule.lan
     filename: 10-02.molecule.lan.conf
     state: present
-    enabled: true
+    enabled: false
 
     listen: 80
     domains:
       - 02.molecule.lan
 
     root_directory: /var/www/02.molecule.lan
-
-  - name: 03.molecule.lan
-    filename: 10-03.molecule.lan.conf
-    state: present
-    enabled: true
-
-    listen: 80
-    domains:
-      - 03.molecule.lan
-  - name: 02.molecule.lan
-    filename: 10-02.molecule.lan.conf
-    state: present
-    enabled: true
-
-    listen: 80
-    domains:
-      - 02.molecule.lan
 
   - name: 03.molecule.lan
     filename: 10-03.molecule.lan.conf
@@ -172,6 +155,24 @@ nginx_vhosts:
     domains:
       - 13.molecule.lan
 
+  - name: 14.molecule.lan
+    filename: 10-14.molecule.lan.conf
+    state: present
+    enabled: true
+
+    listen: 80
+    domains:
+      - 14.molecule.lan
+
+  - name: 15.molecule.lan
+    filename: 10-15.molecule.lan.conf
+    state: present
+    enabled: true
+
+    listen: 80
+    domains:
+      - 15.molecule.lan
+
   - name: 20-www.molecule.lan
     state: present
     enabled: true
@@ -195,5 +196,74 @@ nginx_vhosts:
       ciphers: default
       certificate:     /etc/snakeoil/molecule.lan/molecule.lan.pem
       certificate_key: /etc/snakeoil/molecule.lan/molecule.lan.pem
+
+  - name: 20-foo.molecule.lan
+    filename: 20-foo.molecule.lan.conf
+    state: present
+    enabled: true
+
+    domains:
+      - foo.molecule.lan
+
+    listen: 80
+
+    root:  /var/www/foo.molecule.lan
+
+    logfiles:
+      access:
+        file: /var/log/nginx/foo.molecule.lan/access.log
+        # loglevel: 'json_analytics'
+      error:
+        file: /var/log/nginx/foo.molecule.lan/error.log
+        loglevel: notice
+
+    # list of upstream servers
+    upstreams:
+      - name: paperless
+        servers:
+          - 127.0.0.1:8080   max_fails=3 fail_timeout=30s
+        # strategy: 'ip_hash'
+        keepalive: 32
+      - name: unifi
+        servers:
+          - 127.0.0.1:8090   max_fails=3 fail_timeout=30s
+        # strategy: 'ip_hash'
+        keepalive: 32
+
+    locations:
+      "^~ /":
+        options: |
+          add_header X-Backend "bar";
+
+          proxy_pass         http://paperless/;
+          proxy_set_header   Host              $host;
+          proxy_set_header   X-Real-IP         $remote_addr;
+          proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+          proxy_set_header   X-Forwarded-Proto $scheme;
+
+  - name: 40-www.molecule.lan
+    filename: 40-foo.molecule.lan.conf
+    state: present
+    enabled: true
+
+    domains:
+      - www2.molecule.lan
+      - test.molecule.lan
+
+    # creates also an HTTP vhost only for redirect to HTTPS
+    redirect:
+      from_port: 88
+
+    # https://nginx.org/en/docs/http/ngx_http_core_module.html#listen
+    listen:
+      - 8443 reuseport
+      - 443 ssl http2
+
+    # enable ssl
+    ssl:
+      enabled: true
+      ciphers: default
+      certificate:     /etc/snakeoil/molecule.lan/molecule.lan2.pem
+      certificate_key: /etc/snakeoil/molecule.lan/molecule.lan2.pem
 
 ...
