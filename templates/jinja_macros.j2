@@ -104,14 +104,12 @@ upstream {{ upstream.name }} {
 
 {%- macro vhost_listen(port=80, default=False) -%}
 
-{% if port | bodsch.core.var_type == "string" or port is integer %}
-  listen
-    {{ port }}{% if default %} default_server{% endif %};
+{% if port | bodsch.core.var_type == "string" or port | bodsch.core.var_type == "int" %}
+  listen              {{ port }}{% if default %} default_server{% endif %};
 {% endif %}
 {% if port | bodsch.core.var_type == "list" %}
   {% for l in port %}
-  listen
-    {{ l }}{% if default %} default_server{% endif %};
+  listen              {{ l }}{% if default %} default_server{% endif %};
   {% endfor %}
 {% endif %}
 

@@ -33,13 +33,7 @@ server {
 }
 
 {% endif %}
-{% if _listen | bodsch.core.var_type == "string" %}
-  {% set _listen_port = _listen | default('443 ssl http2') | regex_replace('(http2|ssl|quic|reuseport)','') %}
-{% endif %}
-{% if _listen | bodsch.core.var_type == "list" %}
-  {% set _listen_port = _listen | join(' ') | default('443') | regex_replace('(http2|ssl|quic|reuseport)','') %}
-  {% set _listen_port = _listen_port | split(' ') %}
-{% endif %}
+{% set _listen_port = _listen | validate_listener('(quic|reuseport)','') %}
 server {
 {{ tpl.vhost_server_name(_server_name) | indent(0, first=False) }}
 {{ tpl.vhost_listen(_listen_port) | indent(0, first=False) }}

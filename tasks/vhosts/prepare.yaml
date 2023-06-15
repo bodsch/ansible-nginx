@@ -39,12 +39,12 @@
     get_attributes: false
   register: nginx_template_remote_directory
 
-- name: templates
-  debug:
-    msg:
-      - "{{ nginx_template_ansible_controller.stat.checksum | default('-') }}"
-      - "{{ nginx_template_remote_archive.stat.checksum | default('+') }}"
-      - "{{ nginx_template_remote_directory.stat }}"
+# - name: templates
+#   ansible.builtin.debug:
+#     msg:
+#       - "{{ nginx_template_ansible_controller.stat.checksum | default('-') }}"
+#       - "{{ nginx_template_remote_archive.stat.checksum | default('+') }}"
+#       - "{{ nginx_template_remote_directory.stat }}"
 
 - name: templates for remote system
   when:

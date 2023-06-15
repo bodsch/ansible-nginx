@@ -197,10 +197,9 @@ class NginxVHosts(object):
             """
                 A non-optimal implementation of a regex filter
             """
-            # self.module.log(msg=f"regex_replace('{s}', '{find}', '{replace}')")
-
+            self.module.log(msg=f"regex_replace('{s}', '{find}', '{replace}')")
             result = re.sub(find, replace, s).strip()
-            # self.module.log(msg=f"='{result}'")
+            self.module.log(msg=f"='{result}'")
             return result
 
         def split(value, s=''):
@@ -208,6 +207,21 @@ class NginxVHosts(object):
                 # ignore empty strings
                 return list(filter(None, value.split(s)))
                 # return value.split(s)
+
+        def validate_listener(data, regex='(quic|reuseport)', replace=""):
+            """
+            """
+            result = []
+            self.module.log(msg=f"validate_listener({data}, {regex}, {replace})")
+
+            if isinstance(data, str):
+                result.append(re.sub(regex, replace, data).strip())
+            elif isinstance(data, list):
+                for i in data:
+                    result.append(re.sub(regex, replace, i).strip())
+
+            self.module.log(msg=f"='{result}'")
+            return result
 
         if os.path.isfile(vhost_template):
             file_path = os.path.os.path.dirname(os.path.realpath(vhost_template))
@@ -220,7 +234,8 @@ class NginxVHosts(object):
             jinja_environment.filters.update({
                 'bodsch.core.var_type': var_type,
                 'split': split,
-                'regex_replace': regex_replace
+                'regex_replace': regex_replace,
+                'validate_listener': validate_listener,
             })
 
             output = jinja_environment.get_template(file_name).render(item=data, nginx_acme=self.acme)

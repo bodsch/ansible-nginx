@@ -26,6 +26,7 @@ class FilterModule(object):
             'http_vhosts': self.http_vhosts,
             'changed_vhosts': self.changed_vhosts,
             'certificate_existing': self.certificate_existing,
+            'validate_listener': self.validate_listener,
         }
 
     def vhost_directory(self, data, directory, state="present"):
@@ -147,3 +148,17 @@ class FilterModule(object):
 
         # display.v(f" = result {data}")
         return data
+
+    def validate_listener(self, data, replace='(quic|reuseport)'):
+        """
+        """
+        result = []
+
+        if isinstance(data, str):
+            result.append(re.sub(find, replace, s).strip())
+        if isinstance(data, list):
+            for i in data:
+                result.append(re.sub(find, replace, i).strip())
+
+        display.v(f"  = {result}")
+        return result

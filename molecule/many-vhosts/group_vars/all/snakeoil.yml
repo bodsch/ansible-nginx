@@ -2,13 +2,14 @@
 
 snakeoil_extract_to: /etc/snakeoil
 
-snakeoil_domain: molecule.lan
+snakeoil_domain: docker.local
 
 snakeoil_life_time: 30
 
 snakeoil_alt_names:
   - dns:
-      - molecule.lan
-      - www.molecule.lan
+      - "docker.local"
+      - "www.docker.local"
+      - molecule.docker.local
 
 ...
