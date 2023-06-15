@@ -11,6 +11,125 @@
     nginx_vhosts_root_directories: "{{ nginx_vhosts | vhost_directory(directory='root_directory', state='present') }}"
     nginx_vhosts_http: "{{ nginx_vhosts | http_vhosts(tls=False) }}"
     nginx_vhosts_https: "{{ nginx_vhosts | http_vhosts(tls=True) }}"
+    nginx_templates: "{{ nginx_vhosts | vhost_templates(defaults=nginx_vhost_templates) }}"
+
+- name: find templates archive on ansible controller
+  become: false
+  delegate_to: localhost
+  ansible.builtin.stat:
+    path: "{{ nginx_local_tmp_directory }}/templates/{{ ansible_fqdn }}_templates.tgz"
+    get_md5: false
+    get_mime: false
+    get_attributes: false
+  register: nginx_template_ansible_controller
+
+- name: find templates archive on destination system
+  ansible.builtin.stat:
+    path: "{{ nginx_remote_tmp_directory }}/{{ ansible_fqdn }}/templates.tgz"
+    get_md5: false
+    get_mime: false
+    get_attributes: false
+  register: nginx_template_remote_archive
+
+- name: find templates directory on destination system
+  ansible.builtin.stat:
+    path: "{{ nginx_remote_tmp_directory }}/{{ ansible_fqdn }}"
+    get_md5: false
+    get_mime: false
+    get_attributes: false
+  register: nginx_template_remote_directory
+
+# - name: templates
+#   ansible.builtin.debug:
+#     msg:
+#       - "{{ nginx_template_ansible_controller.stat.checksum | default('-') }}"
+#       - "{{ nginx_template_remote_archive.stat.checksum | default('+') }}"
+#       - "{{ nginx_template_remote_directory.stat }}"
+
+- name: templates for remote system
+  when:
+    - not nginx_template_remote_archive.stat.exists or
+      nginx_template_remote_archive.stat.checksum | default('+') != nginx_template_ansible_controller.stat.checksum | default('-')
+  block:
+    - name: detect vhost templates
+      ansible.builtin.set_fact:
+        _nginx_templates: "{{ query('bodsch.core.file_glob', '.j2') }}"
+      vars:
+        search_path:
+          - ".."
+          - "../.."
+        search_regex: "(vhost|jinja_macros).*"
+
+    - name: transfer vhost templates to destination instance
+      tags:
+        - nginx
+      when:
+        - _nginx_templates is defined
+        - _nginx_templates | count > 0
+      block:
+        - name: create temporary directory on ansible controller
+          become: false
+          delegate_to: localhost
+          ansible.builtin.file:
+            path: "{{ nginx_local_tmp_directory }}/templates/{{ ansible_fqdn }}"
+            state: directory
+            mode: 0750
+
+        - name: copy vhost templates into temporary directory
+          become: false
+          delegate_to: localhost
+          ansible.builtin.copy:
+            src: "{{ item }}"
+            dest: "{{ nginx_local_tmp_directory }}/templates/{{ ansible_fqdn }}/"
+            mode: 0600
+          loop: "{{ _nginx_templates }}"
+          loop_control:
+            label: "{{ item }}"
+
+        - name: compress temporary directory
+          become: false
+          delegate_to: localhost
+          community.general.archive:
+            path: "{{ nginx_local_tmp_directory }}/templates/{{ ansible_fqdn }}"
+            dest: "{{ nginx_local_tmp_directory }}/templates/{{ ansible_fqdn }}_templates.tgz"
+            mode: 0600
+
+        - name: create temporary directory on destination instance
+          become: true
+          ansible.builtin.file:
+            path: "{{ nginx_remote_tmp_directory }}/{{ ansible_fqdn }}"
+            state: directory
+            mode: 0750
+
+        - name: propagate templates.tgz
+          become: true
+          ansible.builtin.copy:
+            src: "{{ nginx_local_tmp_directory }}/templates/{{ ansible_fqdn }}_templates.tgz"
+            dest: "{{ nginx_remote_tmp_directory }}/{{ ansible_fqdn }}/templates.tgz"
+            mode: 0600
+  rescue:
+    - name: remove temporary directory on ansible controller
+      become: false
+      delegate_to: localhost
+      ansible.builtin.file:
+        state: absent
+        path: "{{ nginx_local_tmp_directory }}/templates/{{ ansible_fqdn }}"
+
+    - name: remove temporary directory on destination instance
+      become: true
+      ansible.builtin.file:
+        state: absent
+        path: "{{ nginx_remote_tmp_directory }}/{{ ansible_fqdn }}"
+
+- name: extract {{ ansible_fqdn }}/templates.tgz
+  ansible.builtin.unarchive:
+    src: "{{ nginx_remote_tmp_directory }}/{{ ansible_fqdn }}/templates.tgz"
+    dest: "{{ nginx_remote_tmp_directory }}/"
+    remote_src: true
+  when:
+    - not nginx_template_remote_archive.stat.exists or
+      nginx_template_remote_archive.stat.checksum | default('+') != nginx_template_ansible_controller.stat.checksum | default('-') or
+      not nginx_template_remote_directory.stat.isdir
 
 - name: ensure vhosts root path exists
   ansible.builtin.file:

@@ -1,14 +1,13 @@
-#jinja2: trim_blocks: True, lstrip_blocks: True
 {#
 
 #}
 {% set print = self %}
 
 {%- macro vhost_server_name(data) -%}
-{% if data | bodsch.core.type == "str" %}
+{% if data | bodsch.core.var_type == "string" %}
   server_name
     {{ data }};
-{% elif data | bodsch.core.type == "list" %}
+{% elif data | bodsch.core.var_type == "list" %}
   server_name
     {{ data | join('\n') | indent(4, first=False) }};
 {% endif %}
@@ -82,7 +81,7 @@ upstream {{ upstream.name }} {
 
 {%- macro vhost_locations(data) -%}
 
-{% if data | bodsch.core.type == "dict" %}
+{% if data | bodsch.core.var_type == "dict" %}
   {% for k, v in data.items() %}
   location {{ k }} {
     {% if v.options is defined %}
@@ -92,11 +91,12 @@ upstream {{ upstream.name }} {
 
   {% endfor %}
 {% endif %}
-{% if data == "list" %}
+{% if data | bodsch.core.var_type == "list" %}
   {% for l in data %}
   location {{ l.location }} {
     {{ l.options | indent(4) }}
   }
+
   {% endfor %}
 {% endif %}
 
@@ -104,14 +104,12 @@ upstream {{ upstream.name }} {
 
 {%- macro vhost_listen(port=80, default=False) -%}
 
-{% if port | bodsch.core.type == "str" or port | bodsch.core.type == "int" %}
-  listen
-    {{ port }}{% if default %} default_server{% endif %};
+{% if port | bodsch.core.var_type == "string" or port | bodsch.core.var_type == "int" %}
+  listen              {{ port }}{% if default %} default_server{% endif %};
 {% endif %}
-{% if port | bodsch.core.type == "list" %}
+{% if port | bodsch.core.var_type == "list" %}
   {% for l in port %}
-  listen
-    {{ l }}{% if default %} default_server{% endif %};
+  listen              {{ l }}{% if default %} default_server{% endif %};
   {% endfor %}
 {% endif %}
 

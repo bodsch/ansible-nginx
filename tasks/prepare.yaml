@@ -20,10 +20,6 @@
         - default.yaml
       skip: true
 
-- name: update package cache
-  ansible.builtin.package:
-    update_cache: true
-
 - name: install requirements
   ansible.builtin.package:
     name: "{{ nginx_dependencies }}"

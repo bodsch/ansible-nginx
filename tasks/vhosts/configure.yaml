@@ -1,73 +1,25 @@
 ---
 
 - name: create HTTP vhost configurations
-  ansible.builtin.template:
-    src: "{{ item.template | default( 'vhosts/' ~ nginx_vhost_templates.http ) }}"
-    dest: "/etc/nginx/sites-available/{{ item.filename | default( item.name ~ '.conf' ) }}"
-    force: true
-    owner: root
-    group: root
-    mode: 0644
-  when:
-    - nginx_vhosts_http | default([]) | count > 0
-    - item.state | default('present') == 'present'
-  register: _created_vhost_http
-  loop:
-    "{{ nginx_vhosts_http }}"
-  loop_control:
-    label: "{{ item.filename | default( item.name ~ '.conf') }}"
+  nginx_vhosts:
+    vhosts: "{{ nginx_vhosts_http }}"
+    template:
+      path: "{{ nginx_remote_tmp_directory }}/{{ ansible_fqdn }}"
+      http: "{{ nginx_vhost_templates.http }}"
+      https: "{{ nginx_vhost_templates.https }}"
+    # acme: "{{ nginx_acme }}"
+  notify:
+    - validate config
+    - reload service
 
 - name: create HTTPs vhost configurations
-  ansible.builtin.template:
-    src: "{{ item.template | default( 'vhosts/' ~ nginx_vhost_templates.https ) }}"
-    dest: "/etc/nginx/sites-available/{{ item.filename | default( item.name ~ '.conf' ) }}"
-    force: true
-    owner: root
-    group: root
-    mode: 0644
-  when:
-    - nginx_vhosts_https | default([]) | count > 0
-    - item.state | default('present') == 'present'
-  register: _created_vhost_https
-  loop:
-    "{{ nginx_vhosts_https }}"
-  loop_control:
-    label: "{{ item.filename | default( item.name ~ '.conf') }}"
-
-- name: changed vhosts
-  ansible.builtin.set_fact:
-    _nginx_changed_vhosts: "{{ 'true'
-        if
-          _created_vhost_http | changed_vhosts or
-          _created_vhost_https | changed_vhosts
-        else
-          'false'
-    }}"
-
-- name: trigger handler when vhosts configurations have been changed
-  ansible.builtin.debug:
-    msg: "{{ _nginx_changed_vhosts | bool }}"
-  changed_when: "_nginx_changed_vhosts | default('false') | bool"
-  notify:
-    - validate config
-    - reload service
-
-# ---------------------------------------------------------------------------------------
-
-- name: enable HTTP sites configs
-  nginx_site_handler:
-    enabled: true
-    vhosts: "{{ nginx_vhosts_http }}"
-  register: _activated_vhost_http
-  notify:
-    - validate config
-    - reload service
-
-- name: enable HTTPs sites configs with existing certificates
-  nginx_site_handler:
-    enabled: true
-    vhosts: "{{ nginx_vhosts_https | certificate_existing }}"
-  register: _activated_vhost_https
+  nginx_vhosts:
+    vhosts: "{{ nginx_vhosts_https }}"
+    template:
+      path: "{{ nginx_remote_tmp_directory }}/{{ ansible_fqdn }}"
+      http: "{{ nginx_vhost_templates.http }}"
+      https: "{{ nginx_vhost_templates.https }}"
+    acme: "{{ nginx_acme }}"
   notify:
     - validate config
     - reload service

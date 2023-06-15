@@ -3,9 +3,6 @@
 - name: vhosts prepare
   ansible.builtin.include_tasks: vhosts/prepare.yaml
 
-- name: vhosts remove
-  ansible.builtin.include_tasks: vhosts/remove.yaml
-
 - name: vhosts configure
   ansible.builtin.include_tasks: vhosts/configure.yaml
 
