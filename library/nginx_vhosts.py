@@ -31,6 +31,8 @@ class NginxVHosts(object):
         template = module.params.get("template")
         self.acme = module.params.get("acme")
 
+        self.ignore_missing_certificate = module.params.get("ignore_missing_certificate")
+
         self.default_http_template = template.get("http")
         self.default_https_template = template.get("https")
         self.template_path = template.get("path")
@@ -125,7 +127,11 @@ class NginxVHosts(object):
             tls_cert_state = tls.get("state", "missing")
 
             if tls_enabled and tls_cert_state == "missing":
-                return True, False, "TLS certificate missing"
+
+                if self.ignore_missing_certificate:
+                    return False, False, "[WARNING] TLS certificate missing"
+                else:
+                    return True, False, "[ERROR] TLS certificate missing"
 
         if not template:
             if tls_enabled:
@@ -345,6 +351,11 @@ def main():
         acme = dict(
             required=False,
             type = dict
+        ),
+        ignore_missing_certificate = dict(
+            required = False,
+            type = bool,
+            default = False
         ),
     )
 
