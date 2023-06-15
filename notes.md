@@ -2,7 +2,7 @@
 # before
 
 ## first run
-
+```bash
 Montag 12 Juni 2023  13:42:19 +0200 (0:00:00.634)       0:00:49.855 ***********
 ===============================================================================
 ansible-nginx : create HTTP vhost configurations ----------------------- 21.58s
@@ -25,10 +25,10 @@ ansible-nginx : checking existing domains certificates ------------------ 0.60s
 ansible-nginx : enable HTTP sites configs ------------------------------- 0.54s
 ansible-nginx : remove vhost configurations ----------------------------- 0.54s
 ansible-nginx : remove default site ------------------------------------- 0.53s
-
+```
 
 ## second run
-
+```bash
 Montag 12 Juni 2023  13:45:03 +0200 (0:00:00.678)       0:00:35.180 ***********
 ===============================================================================
 ansible-nginx : create HTTP vhost configurations ----------------------- 15.14s
@@ -51,10 +51,10 @@ ansible-nginx : checking existing domains certificates ------------------ 0.62s
 ansible-nginx : enable HTTP sites configs ------------------------------- 0.56s
 ansible-nginx : remove default site ------------------------------------- 0.56s
 ansible-nginx : enable HTTPs sites configs with existing certificates --- 0.54s
-
+```
 
 ## third run
-
+```bash
 Montag 12 Juni 2023  13:45:58 +0200 (0:00:00.867)       0:00:33.999 ***********
 ===============================================================================
 ansible-nginx : create HTTP vhost configurations ----------------------- 15.12s
@@ -77,11 +77,12 @@ ansible-nginx : remove vhost configurations ----------------------------- 0.56s
 ansible-nginx : enable HTTPs sites configs with existing certificates --- 0.52s
 ansible-nginx : enable HTTP sites configs ------------------------------- 0.50s
 ansible-nginx : validate variables -------------------------------------- 0.10s
+```
 
 # after
 
 ## first run
-
+```bash
 Donnerstag 15 Juni 2023  04:52:49 +0200 (0:00:00.670)       0:00:33.238 *******
 ===============================================================================
 ansible-nginx : install nginx ------------------------------------------- 8.94s
@@ -104,9 +105,10 @@ ansible-nginx : find primary group for user 'www-data' ------------------ 0.65s
 ansible-nginx : checking existing domains certificates ------------------ 0.64s
 ansible-nginx : validate config ----------------------------------------- 0.63s
 ansible-nginx : create HTTPs vhost configurations ----------------------- 0.63s
+```
 
 ## second run
-
+```bash
 Donnerstag 15 Juni 2023  04:53:24 +0200 (0:00:00.897)       0:00:17.047 *******
 ===============================================================================
 ansible-nginx : create nginx sites directories -------------------------- 2.19s
@@ -129,10 +131,10 @@ ansible-nginx : find templates directory on destination system ---------- 0.52s
 ansible-nginx : find templates archive on ansible controller ------------ 0.19s
 ansible-nginx : validate variables -------------------------------------- 0.11s
 ansible-nginx : copy vhost templates into temporary directory ----------- 0.07s
-
+```
 
 ## third run
-
+```bash
 Donnerstag 15 Juni 2023  04:54:06 +0200 (0:00:00.861)       0:00:17.131 *******
 ===============================================================================
 ansible-nginx : create nginx sites directories -------------------------- 2.24s
@@ -155,5 +157,5 @@ ansible-nginx : find templates directory on destination system ---------- 0.53s
 ansible-nginx : find templates archive on ansible controller ------------ 0.19s
 ansible-nginx : validate variables -------------------------------------- 0.11s
 ansible-nginx : copy vhost templates into temporary directory ----------- 0.06s
-
+```
 
