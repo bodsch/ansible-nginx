@@ -263,7 +263,7 @@ nginx_vhosts:
     ssl:
       enabled: true
       ciphers: default
-      certificate:     /etc/snakeoil/molecule.lan/molecule.lan2.pem
-      certificate_key: /etc/snakeoil/molecule.lan/molecule.lan2.pem
+      certificate:     /etc/snakeoil/molecule.lan/molecule.lan.pem
+      certificate_key: /etc/snakeoil/molecule.lan/molecule.lan.pem
 
 ...
