@@ -2,15 +2,15 @@
 
 snakeoil_extract_to: /etc/snakeoil
 
-snakeoil_domain: matrix.lan
+snakeoil_domain: molecule.lan
 
 snakeoil_life_time: 30
 
 snakeoil_alt_names:
   - dns:
-      - matrix.lan
+      - molecule.lan
+      - foo.molecule.lan
       - bar.molecule.lan
-      - molecule.matrix.lan
-      - monitoring.matrix.lan
+      - molecule.molecule.lan
 
 ...
