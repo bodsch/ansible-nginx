@@ -1,10 +1,10 @@
 ---
 
 - name: vhosts prepare
-  ansible.builtin.include_tasks: vhosts/prepare.yaml
+  ansible.builtin.include_tasks: vhosts/prepare.yml
 
 - name: vhosts configure
-  ansible.builtin.include_tasks: vhosts/configure.yaml
+  ansible.builtin.include_tasks: vhosts/configure.yml
 
 - name: flush handlers
   ansible.builtin.meta: flush_handlers

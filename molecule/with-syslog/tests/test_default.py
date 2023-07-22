@@ -1,4 +1,4 @@
-
+# coding: utf-8
 from __future__ import unicode_literals
 
 from ansible.parsing.dataloader import DataLoader
@@ -25,10 +25,11 @@ def pp_json(json_thing, sort=True, indents=2):
 
 
 def base_directory():
-    """ ... """
+    """
+    """
     cwd = os.getcwd()
 
-    if ('group_vars' in os.listdir(cwd)):
+    if 'group_vars' in os.listdir(cwd):
         directory = "../.."
         molecule_directory = "."
     else:
@@ -72,10 +73,14 @@ def get_vars(host):
     elif distribution in ['arch', 'artix']:
         operation_system = f"{distribution}linux"
 
-    file_defaults = f"file={base_dir}/defaults/main.yaml name=role_defaults"
-    file_vars = f"file={base_dir}/vars/main.yaml name=role_vars"
-    file_molecule = f"file={molecule_dir}/group_vars/all/vars.yml name=test_vars"
-    file_distibution = f"file={base_dir}/vars/{operation_system}.yaml name=role_distibution"
+    # print(" -> {} / {}".format(distribution, os))
+    # print(" -> {}".format(base_dir))
+
+    file_defaults      = read_ansible_yaml(f"{base_dir}/defaults/main", "role_defaults")
+    file_vars          = read_ansible_yaml(f"{base_dir}/vars/main", "role_vars")
+    file_distibution   = read_ansible_yaml(f"{base_dir}/vars/{operation_system}", "role_distibution")
+    file_molecule      = read_ansible_yaml(f"{molecule_dir}/group_vars/all/vars", "test_vars")
+    # file_host_molecule = read_ansible_yaml("{}/host_vars/{}/vars".format(base_dir, HOST), "host_vars")
 
     defaults_vars      = host.ansible("include_vars", file_defaults).get("ansible_facts").get("role_defaults")
     vars_vars          = host.ansible("include_vars", file_vars).get("ansible_facts").get("role_vars")
