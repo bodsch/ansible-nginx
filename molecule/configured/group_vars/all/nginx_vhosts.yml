@@ -74,8 +74,8 @@ nginx_vhosts:
     ssl:
       enabled: true
       ciphers: default
-      certificate: /etc/snakeoil/molecule.lan/bar.molecule.lan.pem
-      certificate_key: /etc/snakeoil/molecule.lan/bar.molecule.lan.key
+      certificate: /etc/snakeoil/molecule.lan/molecule.lan.pem
+      certificate_key: /etc/snakeoil/molecule.lan/molecule.lan.key
       dhparam: /etc/snakeoil/molecule.lan/dh.pem
 
   - name: 20-bar.molecule.lan
@@ -100,7 +100,7 @@ nginx_vhosts:
     # enable ssl
     ssl:
       enabled: true
-      certificate:     /etc/snakeoil/molecule.lan/bar.molecule.lan.pem
-      certificate_key: /etc/snakeoil/molecule.lan/bar.molecule.lan.key
+      certificate:     /etc/snakeoil/molecule.lan/molecule.lan.pem
+      certificate_key: /etc/snakeoil/molecule.lan/molecule.lan.key
 
 ...
