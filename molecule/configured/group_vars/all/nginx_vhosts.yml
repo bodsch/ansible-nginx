@@ -10,7 +10,7 @@ nginx_vhosts:
 
   - name: nginx-status
     filename: 00-status.conf
-    template: ssl_vhost.j2
+    template: vhost_status.j2
     state: present  # default: present
     enabled: true   # default: true
     # domain(s)

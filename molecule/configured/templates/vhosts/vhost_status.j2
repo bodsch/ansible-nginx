@@ -9,29 +9,6 @@
 {% set _locations = data.locations | default([]) %}
 {% set _listen = data.listen | default('80') %}
 
-{% if data.name == "default" %}
-server {
-  server_name _;
-
-{{ tpl.vhost_listen(80, True) | indent(0, first=False) }}
-{{ tpl.vhost_logfile(_logfiles, item.name) | indent(0, first=False) }}
-
-  {% if data.root is defined %}
-  root          {{ data.root }};
-  {% endif %}
-  {% if data.index is defined %}
-  index
-    {{ data.index | join('\n') | indent(4, first=False) }};
-  {% endif %}
-
-  return        444;
-}
-
-{% else %}
-  {% if _upstreams | count > 0 %}
-{{ tpl.vhost_upstreams(_upstreams | default({})) }}
-  {% endif %}
-
 server {
 {{ tpl.vhost_server_name(_server_name) }}
 {{ tpl.vhost_listen(_listen) | indent(0, first=False) }}
@@ -52,4 +29,3 @@ server {
 
 {{ tpl.vhost_locations(_locations) | indent(0, first=False) -}}
 }
-{% endif %}
