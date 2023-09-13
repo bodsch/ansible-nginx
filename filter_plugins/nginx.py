@@ -6,7 +6,9 @@
 from __future__ import (absolute_import, division, print_function)
 __metaclass__ = type
 
-# import json
+import os
+import json
+import hashlib
 
 from ansible.utils.display import Display
 
@@ -23,10 +25,11 @@ class FilterModule(object):
             'vhost_directory': self.vhost_directory,
             'vhost_listen': self.vhost_listen,
             'vhost_templates': self.vhost_templates,
+            'vhost_templates_checksum': self.vhost_templates_checksum,
+            'vhost_templates_validate': self.vhost_templates_validate,
             'http_vhosts': self.http_vhosts,
             'changed_vhosts': self.changed_vhosts,
             'certificate_existing': self.certificate_existing,
-            'validate_listener': self.validate_listener,
         }
 
     def vhost_directory(self, data, directory, state="present"):
@@ -58,7 +61,6 @@ class FilterModule(object):
             used in jinja_macros.j2
         """
         # display.v(f"vhost_listen({port}, {default})")
-
         result = []
 
         if (isinstance(port, str) or isinstance(port, int)):
@@ -89,6 +91,43 @@ class FilterModule(object):
         result += list(defaults.values())
 
         display.v(f" = result {result}")
+        return result
+
+    def vhost_templates_checksum(self, data):
+        """
+        """
+        result = {}
+
+        for tpl in data:
+            if os.path.exists(tpl):
+                with open(tpl,"rb") as f:
+                    bytes = f.read()
+                    readable_hash = hashlib.sha256(bytes).hexdigest()
+                    result[tpl] = readable_hash
+
+        # display.v(f" = result {result}")
+        return result
+
+    def vhost_templates_validate(self, data, ansible_local):
+        """
+        """
+        result = {}
+        changed_templates = {}
+
+        for tpl, checksum in data.items():
+            local_checksum = ansible_local.get(tpl, "-")
+
+            if checksum != local_checksum:
+                changed_templates[tpl] = checksum
+
+        changed = len(changed_templates) > 0
+
+        result = {
+            "changed": changed,
+            "templates": changed_templates
+        }
+
+        # display.v(f" = result {result}")
         return result
 
     def http_vhosts(self, data, tls=False):
@@ -142,23 +181,8 @@ class FilterModule(object):
             returns a list of vhosts where the certificate exists.
         """
         # display.v(f"certificate_existing({data})")
-
         if isinstance(data, list):
             data = [x for x in data if x.get("ssl", {}).get("state") == "present"]
 
         # display.v(f" = result {data}")
         return data
-
-    def validate_listener(self, data, replace='(quic|reuseport)'):
-        """
-        """
-        result = []
-
-        if isinstance(data, str):
-            result.append(re.sub(find, replace, s).strip())
-        if isinstance(data, list):
-            for i in data:
-                result.append(re.sub(find, replace, i).strip())
-
-        display.v(f"  = {result}")
-        return result
