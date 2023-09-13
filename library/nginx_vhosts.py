@@ -114,7 +114,7 @@ class NginxVHosts(object):
 
         # state = data.get("state", "present")
         enabled = data.get("enabled", True)
-        template = data.get("template", None)
+        template_file = data.get("template", None)
         tls = data.get("ssl", None)
         tls_enabled = False
 
@@ -133,15 +133,27 @@ class NginxVHosts(object):
                 else:
                     return True, False, "[ERROR] TLS certificate missing"
 
-        if not template:
+        if not template_file:
             if tls_enabled:
-                template = self.default_https_template
+                template_file = self.default_https_template
             else:
-                template = self.default_http_template
+                template_file = self.default_http_template
 
-        template = os.path.join(self.template_path, template)
+        template = os.path.join(self.template_path, template_file)
+
+        self.module.log(msg=f"- template {template}")
+
+        if not os.path.exists(template):
+            """
+            """
+            _error = True
+            _changed = False
+            _msg = f"The template {template_file} does not exist."
+            return _error, _changed, _msg
 
         file_available, file_enabled, file_temporary = self.__file_names(data)
+
+        self.module.log(msg=f"- file_available {file_available} - {file_enabled} - {file_temporary}")
 
         vhost_data = self.render_template(template, data)
 
@@ -337,9 +349,9 @@ class NginxVHosts(object):
         available = os.path.join(self.site_available, file_name)
         temporary = os.path.join(self.tmp_directory, file_name)
 
-        # self.module.log(msg=f"   enabled {enabled}")
-        # self.module.log(msg=f"   available {available}")
-        # self.module.log(msg=f"   temporary {temporary}")
+        self.module.log(msg=f"   enabled {enabled}")
+        self.module.log(msg=f"   available {available}")
+        self.module.log(msg=f"   temporary {temporary}")
 
         return available, enabled, temporary
 
