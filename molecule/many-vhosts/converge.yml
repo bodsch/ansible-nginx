@@ -9,5 +9,5 @@
     NETRC: ''
 
   roles:
-    # - role: snakeoil
+    - role: snakeoil
     - role: ansible-nginx

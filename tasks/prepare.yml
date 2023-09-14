@@ -3,9 +3,7 @@
 - name: do facts module to get latest information
   ansible.builtin.setup:
     gather_subset:
-      - '!all'
-      - '!any'
-      - facter
+      - 'all'
 
 - name: include OS specific configuration ({{ ansible_distribution }} ({{ ansible_os_family }}) {{ ansible_distribution_major_version }})
   ansible.builtin.include_vars: "{{ lookup('first_found', params) }}"

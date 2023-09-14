@@ -12,4 +12,6 @@ snakeoil_alt_names:
       - "www.docker.local"
       - molecule.docker.local
 
+snakeoil_dhparam: 2048
+
 ...
