@@ -1,4 +1,7 @@
 ---
+
+role_name_check: 1
+
 dependency:
   name: galaxy
 
@@ -33,6 +36,7 @@ platforms:
 
 provisioner:
   name: ansible
+  log: true
   ansible_args:
     - --diff
     - -v

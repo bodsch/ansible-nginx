@@ -6,6 +6,8 @@ snakeoil_domain: matrix.lan
 
 snakeoil_life_time: 30
 
+snakeoil_dhparam: 2048
+
 snakeoil_alt_names:
   - dns:
       - matrix.lan

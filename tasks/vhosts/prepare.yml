@@ -41,7 +41,8 @@
 
 - name: templates for remote system
   when:
-    - nginx_templates_changed.changed
+    - nginx_templates_changed.changed or
+      not nginx_template_remote_directory.stat.exists | default('false')
   block:
 
     - name: transfer vhost templates to destination instance
@@ -119,9 +120,10 @@
     dest: "{{ nginx_remote_tmp_directory }}/"
     remote_src: true
   when:
-    - not nginx_template_remote_archive.stat.exists or
-      nginx_templates_changed.changed or
-      not nginx_template_remote_directory.stat.isdir
+    - nginx_template_remote_archive.stat.exists or
+      (nginx_templates_changed.changed or
+      not nginx_template_remote_directory.stat.isdir or
+      not nginx_template_remote_directory.stat.exists)
 
 - name: create custom fact file
   bodsch.core.facts:
