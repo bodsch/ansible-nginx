@@ -16,6 +16,22 @@
       when:
         - getent_group is defined
 
+- name: create nginx cache directories
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: root
+    group: "{{ nginx_group }}"
+    mode: 0750
+  loop: "{{ nginx_http.proxy.cache_path }}"
+  loop_control:
+    label: "{{ item.path | default(omit) }}"
+  when:
+    - nginx_http.proxy.cache_path is defined
+    - item is defined
+    - item.path is defined
+    - item.path | string | length > 0
+
 - name: create nginx sites directories
   ansible.builtin.file:
     path: "/etc/nginx/{{ item }}"

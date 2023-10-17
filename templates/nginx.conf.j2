@@ -4,12 +4,12 @@
 user                  {{ nginx_user }};
 error_log             {{ nginx_global.error_log }};
 worker_processes      {{ nginx_global.worker_processes }};
-
 {% if nginx_global.include_modules %}
+
 include               /etc/nginx/modules-enabled/*.conf;
 {% endif %}
-
 {% if nginx_global.extra_config %}
+
 {{ nginx_global.extra_config }}
 {% endif %}
 
@@ -40,14 +40,32 @@ http {
 
   server_tokens       {{ nginx_http.server_tokens | bool | bodsch.core.config_bool(true_as='on', false_as='off') }};
 {% if nginx_http.proxy.cache_path %}
-  proxy_cache_path    {{ nginx_http.proxy.cache_path }};
-{% endif %}
 
+  {% if nginx_http.proxy.cache_path | bodsch.core.type == "string" %}
+  proxy_cache_path    {{ nginx_http.proxy.cache_path }};
+  {% endif %}
+  {% if nginx_http.proxy.cache_path | bodsch.core.type == "list" %}
+    {% for cache in nginx_http.proxy.cache_path %}
+      {% set cache_options = "levels=1:2 keys_zone=default_cache:10m" %}
+      {% if cache.options is defined %}
+        {% if cache.options | bodsch.core.type == "string" %}
+          {% set cache_options = cache.options %}
+        {% endif %}
+        {% if cache.options | bodsch.core.type == "list" %}
+          {% set cache_options = cache.options | join(' ') %}
+        {% endif %}
+      {% endif %}
+  proxy_cache_path    {{ cache.path }}
+    {{ cache_options }};
+    {% endfor %}
+  {% endif %}
+{% endif %}
 {% if nginx_http.extra_options %}
+
   {{ nginx_http.extra_options | indent(2, False) }}
 {% endif %}
-
 {% if nginx_includes is defined and nginx_includes | count > 0 %}
+
   {% for include in nginx_includes %}
   include {{ include }};
   {% endfor %}

@@ -20,8 +20,24 @@ nginx_http:
     timeout: 65
     requests: 100
   proxy:
-    cache_path: ''
+    cache_path: []
   extra_options: {}
+```
+
+## `proxy.cache_path`
+
+```yaml
+nginx_http:
+  proxy:
+    cache_path:
+      - path: "/var/cache/nginx/studio"
+        options:
+          - levels=1:2
+          - keys_zone=studio_cache:10m
+          - max_size=50m
+          - inactive=60m
+          - use_temp_path=off
+      - path: /var/cache/nginx/preview
 ```
 
 ## `extra_options`
