@@ -40,8 +40,9 @@ nginx_defaults_http:
     timeout: 65
     requests: 100
   proxy:
-    cache_path: ''
+    cache_path: []
   extra_options: {}
+  maps: []
 
 nginx_defaults_gzip:
   enabled: false
