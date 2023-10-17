@@ -46,4 +46,33 @@ nginx_http:
           - use_temp_path=off
       - path: /var/cache/nginx/preview
 
+  maps:
+    - name: http_user_agent
+      description: matched 'http_user_agent'
+      variable: excluded_ua
+      mapping:
+        - source: "~monitoring-plugin"
+          result: 0
+        - source: "default"
+          result: 1
+    - name: remote_addr
+      description: matched against 'remote_addr' and anonymises the corresponding IPs
+      variable: ip_anonym
+      mapping:
+        - source: !unsafe "~(?P<ip>(\\d+)\\.(\\d+))\\.\\d+\\.\\d+"
+          result: "$ip"
+        - source: "~(?P<ip>[^:]+:[^:]+):"
+          result: "$ip"
+        - source: "default"
+          result: "0.0"
+    - name: remote_addr
+      description: matched against 'remote_addr' and anonymises the corresponding IPs
+      variable: remote_addr_anon
+      mapping:
+        - source: "~(?P<ip>\\d+\\.\\d+)\\."
+          result: "$ip.0.0"
+        - source: "~(?P<ip>[^:]+:[^:]+):"
+          result: "$ip::"
+        - source: "default"
+          result: "0.0.0.0"
 ...

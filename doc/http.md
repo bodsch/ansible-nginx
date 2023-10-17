@@ -22,6 +22,7 @@ nginx_http:
   proxy:
     cache_path: []
   extra_options: {}
+  maps: []
 ```
 
 ## `proxy.cache_path`
@@ -69,4 +70,42 @@ nginx_http:
       ~(?P<ip>[^:]+:[^:]+):       $ip::;
       default                     0.0.0.0;
     }
+```
+
+## `maps`
+
+See also nginx documention for the [ngx_http_map_module](http://nginx.org/en/docs/http/ngx_http_map_module.html).
+
+```yaml
+nginx_http:
+
+  maps:
+    - name: http_user_agent
+      description: matched 'http_user_agent'
+      variable: excluded_ua
+      mapping:
+        - source: "~monitoring-plugin"
+          result: 0
+        - source: "default"
+          result: 1
+    - name: remote_addr
+      description: matched against 'remote_addr' and anonymises the corresponding IPs
+      variable: ip_anonym
+      mapping:
+        - source: !unsafe "~(?P<ip>(\\d+)\\.(\\d+))\\.\\d+\\.\\d+"
+          result: "$ip"
+        - source: "~(?P<ip>[^:]+:[^:]+):"
+          result: "$ip"
+        - source: "default"
+          result: "0.0"
+    - name: remote_addr
+      description: matched against 'remote_addr' and anonymises the corresponding IPs
+      variable: remote_addr_anon
+      mapping:
+        - source: "~(?P<ip>\\d+\\.\\d+)\\."
+          result: "$ip.0.0"
+        - source: "~(?P<ip>[^:]+:[^:]+):"
+          result: "$ip::"
+        - source: "default"
+          result: "0.0.0.0"
 ```

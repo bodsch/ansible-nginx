@@ -42,6 +42,7 @@ nginx_defaults_http:
   proxy:
     cache_path: ''
   extra_options: {}
+  maps: []
 
 nginx_defaults_gzip:
   enabled: false
