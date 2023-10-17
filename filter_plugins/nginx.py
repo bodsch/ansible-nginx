@@ -7,7 +7,7 @@ from __future__ import (absolute_import, division, print_function)
 __metaclass__ = type
 
 import os
-import json
+# import json
 import hashlib
 
 from ansible.utils.display import Display
@@ -100,7 +100,7 @@ class FilterModule(object):
 
         for tpl in data:
             if os.path.exists(tpl):
-                with open(tpl,"rb") as f:
+                with open(tpl, "rb") as f:
                     bytes = f.read()
                     readable_hash = hashlib.sha256(bytes).hexdigest()
                     result[tpl] = readable_hash
