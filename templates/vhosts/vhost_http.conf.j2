@@ -41,8 +41,8 @@ server {
   include             {{ inc }};
     {% endfor %}
   {%- endif -%}
-  {% if data.root is defined %}
-  root                {{ data.root }};
+  {% if data.root_directory is defined and data.root_directory | string | length > 0 %}
+  root                {{ data.root_directory }};
   {% endif %}
 
   {% if data.index is defined %}

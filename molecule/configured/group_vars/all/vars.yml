@@ -35,6 +35,11 @@ nginx_logformat:
     # escape: json
 
 nginx_http:
+
+  resolver:
+    address: "172.17.0.1 valid=60s" # version 1.23.1: ipv4=on ipv6=off"
+    timeout: "30s"
+
   proxy:
     cache_path:
       - path: "/var/cache/nginx/studio"

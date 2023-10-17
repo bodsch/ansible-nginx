@@ -1,12 +1,12 @@
 #jinja2: trim_blocks: True, lstrip_blocks: True
 # {{ ansible_managed }}
 
-user                  {{ nginx_user }};
-error_log             {{ nginx_global.error_log }};
-worker_processes      {{ nginx_global.worker_processes }};
+user                            {{ nginx_user }};
+error_log                       {{ nginx_global.error_log }};
+worker_processes                {{ nginx_global.worker_processes }};
 {% if nginx_global.include_modules %}
 
-include               /etc/nginx/modules-enabled/*.conf;
+include                         /etc/nginx/modules-enabled/*.conf;
 {% endif %}
 {% if nginx_global.extra_config %}
 
@@ -14,35 +14,113 @@ include               /etc/nginx/modules-enabled/*.conf;
 {% endif %}
 
 events {
-  worker_connections  {{ nginx_events.worker_connections }};
-  multi_accept        "{{ nginx_events.multi_accept | bool | bodsch.core.config_bool(true_as='on', false_as='off') }}";
+  worker_connections            {{ nginx_events.worker_connections }};
+  multi_accept                  "{{ nginx_events.multi_accept | bool | bodsch.core.config_bool(true_as='on', false_as='off') }}";
 }
 
 http {
-  include             {{ nginx_http.mime_file_path }};
-  default_type        application/octet-stream;
+  include                       {{ nginx_http.mime_file_path }};
+  default_type                  application/octet-stream;
 
-  server_names_hash_bucket_size {{ nginx_http.server_names_hash_bucket_size }};
-
-  client_max_body_size {{ nginx_http.client_max_body_size }};
-
-  include             includes.d/nginx_log.conf;
-  access_log          {{ nginx_http.access_log }};
-{% if nginx_http.rewrite_log | default('false') | bool %}
-  rewrite_log         on;
+{% if nginx_http.server_names.hash_bucket_size is defined and
+      nginx_http.server_names.hash_bucket_size | string | length > 0 %}
+  server_names_hash_bucket_size {{ nginx_http.server_names.hash_bucket_size }};
 {% endif %}
-  sendfile            {{ nginx_http.sendfile | bool | bodsch.core.config_bool(true_as='on', false_as='off') }};
-  tcp_nopush          {{ nginx_http.tcp_nopush | bool | bodsch.core.config_bool(true_as='on', false_as='off') }};
-  tcp_nodelay         {{ nginx_http.tcp_nodelay | bool | bodsch.core.config_bool(true_as='on', false_as='off') }};
-
-  keepalive_timeout   {{ nginx_http.keepalive.timeout }};
-  keepalive_requests  {{ nginx_http.keepalive.requests }};
-
-  server_tokens       {{ nginx_http.server_tokens | bool | bodsch.core.config_bool(true_as='on', false_as='off') }};
+{% if nginx_http.server_names.hash_max_size is defined and
+      nginx_http.server_names.hash_max_size | string | length > 0 %}
+  server_names_hash_max_size    {{ nginx_http.server_names.hash_max_size }};
+{% endif %}
+{% if nginx_http.server_names.in_redirect is defined and
+      nginx_http.server_names.in_redirect | string | length > 0 %}
+  {% if nginx_http.server_names.in_redirect | bodsch.core.type == "bool" %}
+  server_tokens                 {{ nginx_http.server_names.in_redirect | bool | bodsch.core.config_bool(true_as='on', false_as='off') }};
+  {% elif nginx_http.server_names.in_redirect == "build" %}
+  server_tokens                 {{ nginx_http.server_names.in_redirect }}
+  {% endif %}
+{% endif %}
+{% if nginx_http.server_name.in_redirect is defined and
+      nginx_http.server_name.in_redirect | string | length > 0 %}
+  server_name_in_redirect       {{ nginx_http.server_name.in_redirect | bool | bodsch.core.config_bool(true_as='on', false_as='off') }};
+{% endif %}
+{# resolver #}
+{% if nginx_http.resolver.address is defined and
+      nginx_http.resolver.address | string | length > 0 %}
+  resolver                      {{ nginx_http.resolver.address }};
+{% endif %}
+{% if nginx_http.resolver.timeout is defined and
+      nginx_http.resolver.timeout | string | length > 0 %}
+  resolver_timeout              {{ nginx_http.resolver.timeout }};
+{% endif %}
+{# ------------------------------ #}
+{# client #}
+{% if nginx_http.client.max_body_size is defined and
+      nginx_http.client.max_body_size | string | length > 0 %}
+  client_max_body_size          {{ nginx_http.client.max_body_size }};
+{% endif %}
+{% if nginx_http.client.body.buffer_size is defined and
+      nginx_http.client.body.buffer_size | string | length > 0 %}
+  client_body_buffer_size       {{ nginx_http.client.body.buffer_size }};
+{% endif %}
+{% if nginx_http.client.body.in_file_only is defined and
+      nginx_http.client.body.in_file_only | string | length > 0 %}
+  client_body_in_file_only      {{ nginx_http.client.body.in_file_only }};
+{% endif %}
+{% if nginx_http.client.body.in_single_buffer is defined and
+      nginx_http.client.body.in_single_buffer | string | length > 0 %}
+  client_body_in_single_buffer  {{ nginx_http.client.body.in_single_buffer | bool | bodsch.core.config_bool(true_as='on', false_as='off') }};
+{% endif %}
+{% if nginx_http.client.body.temp_path is defined and
+      nginx_http.client.body.temp_path | string | length > 0 %}
+  client_body_temp_path         {{ nginx_http.client.body.temp_path }};
+{% endif %}
+{% if nginx_http.client.body.timeout is defined and
+      nginx_http.client.body.timeout | string | length > 0 %}
+  client_body_timeout           {{ nginx_http.client.body.timeout }};
+{% endif %}
+{% if nginx_http.client.header.buffer_size is defined and
+      nginx_http.client.header.buffer_size | string | length > 0 %}
+  client_header_buffer_size     {{ nginx_http.client.header.buffer_size }};
+{% endif %}
+{% if nginx_http.client.header.timeout is defined and
+      nginx_http.client.header.timeout | string | length > 0 %}
+  client_header_timeout         {{ nginx_http.client.header.timeout }};
+{% endif %}
+{# ------------------------------ #}
+  include                       includes.d/nginx_log.conf;
+  access_log                    {{ nginx_http.access_log }};
+{% if nginx_http.rewrite_log is defined and
+      nginx_http.rewrite_log | string | length > 0 %}
+  rewrite_log                   {{ nginx_http.rewrite_log | bool | bodsch.core.config_bool(true_as='on', false_as='off') }};
+{% endif %}
+  sendfile                      {{ nginx_http.sendfile | bool | bodsch.core.config_bool(true_as='on', false_as='off') }};
+{% if nginx_http.tcp.nopush is defined and
+      nginx_http.tcp.nopush | string | length > 0 %}
+  tcp_nopush                    {{ nginx_http.tcp.nopush | bool | bodsch.core.config_bool(true_as='on', false_as='off') }};
+{% endif %}
+{% if nginx_http.tcp.nodelay is defined and
+      nginx_http.tcp.nodelay | string | length > 0 %}
+  tcp_nodelay                   {{ nginx_http.tcp.nodelay | bool | bodsch.core.config_bool(true_as='on', false_as='off') }};
+{% endif %}
+{% if nginx_http.keepalive.disable is defined and
+      nginx_http.keepalive.disable | string | length > 0 %}
+  keepalive_disable             {{ nginx_http.keepalive.disable }};
+{% endif %}
+{% if nginx_http.keepalive.requests is defined and
+      nginx_http.keepalive.requests | string | length > 0 %}
+  keepalive_requests            {{ nginx_http.keepalive.requests }};
+{% endif %}
+{% if nginx_http.keepalive.time is defined and
+      nginx_http.keepalive.time | string | length > 0 %}
+  keepalive_time                {{ nginx_http.keepalive.time }};
+{% endif %}
+{% if nginx_http.keepalive.timeout is defined and
+      nginx_http.keepalive.timeout | string | length > 0 %}
+  keepalive_timeout             {{ nginx_http.keepalive.timeout }};
+{% endif %}
 {% if nginx_http.proxy.cache_path %}
 
   {% if nginx_http.proxy.cache_path | bodsch.core.type == "string" %}
-  proxy_cache_path    {{ nginx_http.proxy.cache_path }};
+  proxy_cache_path              {{ nginx_http.proxy.cache_path }};
   {% endif %}
   {% if nginx_http.proxy.cache_path | bodsch.core.type == "list" %}
     {% for cache in nginx_http.proxy.cache_path %}
@@ -55,7 +133,7 @@ http {
           {% set cache_options = cache.options | join(' ') %}
         {% endif %}
       {% endif %}
-  proxy_cache_path    {{ cache.path }}
+  proxy_cache_path              {{ cache.path }}
     {{ cache_options }};
     {% endfor %}
   {% endif %}
@@ -83,7 +161,30 @@ http {
     {% endif %}
   {% endfor %}
 {% endif %}
-
+{% if nginx_http.map_hash.max_size is defined and
+      nginx_http.map_hash.max_size | string | length > 0 %}
+  map_hash_max_size             {{ nginx_http.map_hash.max_size }};
+{% endif %}
+{% if nginx_http.map_hash.bucket_size is defined and
+      nginx_http.map_hash.bucket_size | string | length > 0 %}
+  map_hash_bucket_size          {{ nginx_http.map_hash.bucket_size }};
+{% endif %}
+{% if nginx_http.types_hash.max_size is defined and
+      nginx_http.types_hash.max_size | string | length > 0 %}
+  types_hash_max_size           {{ nginx_http.types_hash.max_size }};
+{% endif %}
+{% if nginx_http.types_hash.bucket_size is defined and
+      nginx_http.types_hash.bucket_size | string | length > 0 %}
+  types_hash_bucket_size        {{ nginx_http.types_hash.bucket_size }};
+{% endif %}
+{% if nginx_http.variables_hash.max_size is defined and
+      nginx_http.variables_hash.max_size | string | length > 0 %}
+  variables_hash_max_size       {{ nginx_http.variables_hash.max_size }};
+{% endif %}
+{% if nginx_http.variables_hash.bucket_size is defined and
+      nginx_http.variables_hash.bucket_size | string | length > 0 %}
+  variables_hash_bucket_size  {{ nginx_http.variables_hash.bucket_size }};
+{% endif %}
 {% if nginx_http.extra_options %}
 
   {{ nginx_http.extra_options | indent(2, False) }}

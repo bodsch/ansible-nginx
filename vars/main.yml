@@ -27,22 +27,52 @@ nginx_defaults_events:
   multi_accept: true
 
 nginx_defaults_http:
-  mime_file_path: "{{ nginx_mime_file_path }}"
-  server_names_hash_bucket_size: 64
-  client_max_body_size: "64m"
+  mime_file_path: "{{ nginx_mime_file_path }}"            #
+  client:                                                 #
+    max_body_size: "64m"                                  #
+    body:                                                 #
+      buffer_size: ""                                     #
+      in_file_only: ""                                    #
+      in_single_buffer: ""                                #
+      temp_path: ""                                       #
+      timeout: ""                                         #
+    header:                                               #
+      buffer_size: ""                                     #
+      timeout: ""                                         #
   access_log: "{{ nginx_logging.base_directory }}/access.log main buffer=32k flush=2m"
-  sendfile: true
-  tcp_nopush: true
-  tcp_nodelay: true
-  server_tokens: false
-  rewrite_log: true
-  keepalive:
-    timeout: 65
-    requests: 100
-  proxy:
-    cache_path: []
-  extra_options: {}
-  maps: []
+  resolver:
+    resolvers: []
+    timeout: ""
+  sendfile: true                                          #
+  tcp:
+    nopush: true                                          #
+    nodelay: true                                         #
+  server_tokens: false                                    #
+  server_name:
+    in_redirect: ""                                       #
+  server_names:
+    hash_bucket_size: ""
+    hash_max_size: ""
+    in_redirect: ""
+  rewrite_log: true                                       #
+  keepalive:                                              #
+    disable: ""                                           # Disables keep-alive connections with misbehaving browsers.
+    requests: 100                                         # Sets the maximum number of requests that can be served through one keep-alive connection.
+    time: ""                                              # Limits the maximum time during which requests can be processed through one keep-alive connection.
+    timeout: 65                                           # The first parameter sets a timeout during which a keep-alive client connection will stay open on the server side.
+  proxy:                                                  #
+    cache_path: []                                        #
+  maps: []                                                #
+  map_hash:                                               #
+    max_size: ""                                          #
+    bucket_size: ""                                       #
+  types_hash:                                             #
+    max_size: ""                                          # Sets the maximum size of the types hash tables
+    bucket_size: ""                                       # Sets the bucket size for the types hash tables
+  variables_hash:
+    max_size: ""                                          # Sets the maximum size of the variables hash table.
+    bucket_size: ""                                       # Sets the bucket size for the variables hash table.
+  extra_options: {}                                       #
 
 nginx_defaults_gzip:
   enabled: false
