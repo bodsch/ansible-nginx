@@ -292,7 +292,8 @@ nginx_vhosts:
 
     listen: 80
 
-    root:  /var/www/prometheus.molecule.lan
+    root_directory:  /var/www/prometheus.molecule.lan
+    root_directory_create: true
 
     logfiles:
       access:
