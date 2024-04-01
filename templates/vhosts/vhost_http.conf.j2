@@ -1,4 +1,3 @@
-#jinja2: trim_blocks: True, lstrip_blocks: True
 # {{ ansible_managed }}
 
 {% import 'jinja_macros.j2' as tpl with context %}
@@ -48,6 +47,10 @@ server {
   {% if data.index is defined %}
   index
     {{ data.index | join('\n') | indent(4, first=False) }};
+  {% endif %}
+
+  {% if data.raw is defined %}
+  {{ data.raw | indent(2, first=False) }}
   {% endif %}
 
 {{ tpl.vhost_locations(_locations) | indent(0, first=False) -}}

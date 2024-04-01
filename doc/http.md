@@ -18,7 +18,7 @@ nginx_http:
       timeout: ""                                         #
   access_log: "{{ nginx_logging.base_directory }}/access.log main buffer=32k flush=2m"
   resolver:
-    resolvers: []
+    address: ""
     timeout: ""
   sendfile: true                                          #
   tcp:
@@ -50,9 +50,24 @@ nginx_http:
     max_size: ""                                          # Sets the maximum size of the variables hash table.
     bucket_size: ""                                       # Sets the bucket size for the variables hash table.
   extra_options: {}                                       #
+  includes:
+    - "/etc/nginx/conf.d/*.conf"
+    - "/etc/nginx/sites-enabled/*.conf"
+```
+
+## `resolver`
+
+```yaml
+nginx_http:
+
+  resolver:
+    address: "172.17.0.1 valid=60s" # version 1.23.1: ipv4=on ipv6=off"
+    timeout: "30s"
 ```
 
 ## `proxy.cache_path`
+
+[upstream doku](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cache_path)
 
 ```yaml
 nginx_http:
@@ -84,6 +99,7 @@ nginx_http:
           result: 0
         - source: "default"
           result: 1
+
     - name: remote_addr
       description: matched against 'remote_addr' and anonymises the corresponding IPs
       variable: ip_anonym
@@ -94,6 +110,7 @@ nginx_http:
           result: "$ip"
         - source: "default"
           result: "0.0"
+
     - name: remote_addr
       description: matched against 'remote_addr' and anonymises the corresponding IPs
       variable: remote_addr_anon

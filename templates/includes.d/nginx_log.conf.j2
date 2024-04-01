@@ -1,8 +1,9 @@
 #jinja2: trim_blocks: True, lstrip_blocks: True
 # {{ ansible_managed }}
+
 {% for k,v in nginx_logformat.items() %}
 log_format
-    {{ k }} {% if v.escape is defined %}escape = {{ v.escape  }}{% endif %}
+  {{ k }} {% if v.escape is defined %}escape = {{ v.escape  }}{% endif %}
 
-{{ v.format | indent(6, first=True) }}
+{{ v.format | indent(4, first=True) }}
 {% endfor %}

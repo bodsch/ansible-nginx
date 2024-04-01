@@ -17,14 +17,38 @@ nginx_group: nginx
 nginx_mime_file_path: /etc/nginx/mime.types
 
 nginx_defaults_global:
+  # https://nginx.org/en/docs/ngx_core_module.html
+  daemon: ""                  # true
+  debug_points: ""            #
+  env: []                     #
   error_log: "{{ nginx_logging.base_directory }}/error.log warn"
-  worker_processes: "{{ ansible_processor_vcpus | default(ansible_processor_count) }}"
-  include_modules: true
+  includes:                   #
+    - /etc/nginx/modules-enabled/*.conf
+  load_modules: []            #
+  lock_file: ""               # logs/nginx.lock
+  master_process: ""          # true
+  pcre_jit: ""                # false
+  pid: ""                     # logs/nginx.pid
+  ssl_engine: ""              #
+  thread_pool: {}             # default: { threads=32, max_queue=65536 }
+  timer_resolution: ""        #
+  worker_processes: "auto"    # {{ ansible_processor_vcpus | default(ansible_processor_count) }}"
+  worker_cpu_affinity:  ""    # auto [cpumask]
+  worker_priority: ""         # 0
+  worker_rlimit_core: ""      #
+  worker_rlimit_nofile: ""    #
+  worker_shutdown_timeout: "" #
+  working_directory: ""       #
   extra_config: {}
 
 nginx_defaults_events:
-  worker_connections: 1024
+  accept_mutex: ""            # false
+  accept_mutex_delay: ""      # 500ms
+  worker_connections: 1024    # 512
   multi_accept: true
+  use: ""
+  worker_aio_requests: ""     # 32
+  debug_connection: []        #
 
 nginx_defaults_http:
   mime_file_path: "{{ nginx_mime_file_path }}"            #
@@ -73,6 +97,9 @@ nginx_defaults_http:
     max_size: ""                                          # Sets the maximum size of the variables hash table.
     bucket_size: ""                                       # Sets the bucket size for the variables hash table.
   extra_options: {}                                       #
+  includes:
+    - "/etc/nginx/conf.d/*.conf"
+    - "/etc/nginx/sites-enabled/*.conf"
 
 nginx_defaults_gzip:
   enabled: false
@@ -186,8 +213,8 @@ nginx_defaults_ssl:
       - "!PSK"
   ssl_prefer_server_ciphers: true
   ssl_session_cache: shared:SSL:10m
-  ssl_stapling: true
-  ssl_stapling_verify: true
+  ssl_stapling: false
+  ssl_stapling_verify: false
 
 nginx_defaults_logformat:
   main:

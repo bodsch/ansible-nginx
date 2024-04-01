@@ -4,9 +4,12 @@
 user                            {{ nginx_user }};
 error_log                       {{ nginx_global.error_log }};
 worker_processes                {{ nginx_global.worker_processes }};
-{% if nginx_global.include_modules %}
+{% if nginx_global.includes is defined and
+      nginx_global.includes | count > 0 %}
 
-include                         /etc/nginx/modules-enabled/*.conf;
+  {% for inc in nginx_global.includes %}
+include                         {{ inc }};
+  {% endfor %}
 {% endif %}
 {% if nginx_global.extra_config %}
 
@@ -15,7 +18,7 @@ include                         /etc/nginx/modules-enabled/*.conf;
 
 events {
   worker_connections            {{ nginx_events.worker_connections }};
-  multi_accept                  "{{ nginx_events.multi_accept | bool | bodsch.core.config_bool(true_as='on', false_as='off') }}";
+  multi_accept                  {{ nginx_events.multi_accept | bool | bodsch.core.config_bool(true_as='on', false_as='off') }};
 }
 
 http {
@@ -30,26 +33,21 @@ http {
       nginx_http.server_names.hash_max_size | string | length > 0 %}
   server_names_hash_max_size    {{ nginx_http.server_names.hash_max_size }};
 {% endif %}
-{% if nginx_http.server_names.in_redirect is defined and
-      nginx_http.server_names.in_redirect | string | length > 0 %}
-  {% if nginx_http.server_names.in_redirect | bodsch.core.type == "bool" %}
-  server_tokens                 {{ nginx_http.server_names.in_redirect | bool | bodsch.core.config_bool(true_as='on', false_as='off') }};
-  {% elif nginx_http.server_names.in_redirect == "build" %}
-  server_tokens                 {{ nginx_http.server_names.in_redirect }}
-  {% endif %}
+{% if nginx_http.server_tokens is defined and
+      nginx_http.server_tokens | string | length > 0 %}
+  server_tokens                 {{ nginx_http.server_tokens | bool | bodsch.core.config_bool(true_as='on', false_as='off') }};
 {% endif %}
 {% if nginx_http.server_name.in_redirect is defined and
       nginx_http.server_name.in_redirect | string | length > 0 %}
   server_name_in_redirect       {{ nginx_http.server_name.in_redirect | bool | bodsch.core.config_bool(true_as='on', false_as='off') }};
 {% endif %}
-{# resolver #}
-{% if nginx_http.resolver.address is defined and
-      nginx_http.resolver.address | string | length > 0 %}
+{# resolver: https://nginx.org/en/docs/http/ngx_http_core_module.html#resolver #}
+{% if nginx_http.resolver is defined and
+      nginx_http.resolver.address | default('') | string | length > 0 %}
   resolver                      {{ nginx_http.resolver.address }};
-{% endif %}
-{% if nginx_http.resolver.timeout is defined and
-      nginx_http.resolver.timeout | string | length > 0 %}
+  {% if nginx_http.resolver.timeout | default('') | string | length > 0 %}
   resolver_timeout              {{ nginx_http.resolver.timeout }};
+  {% endif %}
 {% endif %}
 {# ------------------------------ #}
 {# client #}
@@ -86,7 +84,7 @@ http {
   client_header_timeout         {{ nginx_http.client.header.timeout }};
 {% endif %}
 {# ------------------------------ #}
-  include                       includes.d/nginx_log.conf;
+  include                       /etc/nginx/includes.d/nginx_log.conf;
   access_log                    {{ nginx_http.access_log }};
 {% if nginx_http.rewrite_log is defined and
       nginx_http.rewrite_log | string | length > 0 %}
@@ -117,7 +115,9 @@ http {
       nginx_http.keepalive.timeout | string | length > 0 %}
   keepalive_timeout             {{ nginx_http.keepalive.timeout }};
 {% endif %}
-{% if nginx_http.proxy.cache_path %}
+{# https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cache_path #}
+{% if nginx_http.proxy.cache_path is defined and
+      nginx_http.proxy.cache_path | string | length > 0 %}
 
   {% if nginx_http.proxy.cache_path | bodsch.core.type == "string" %}
   proxy_cache_path              {{ nginx_http.proxy.cache_path }};
@@ -138,6 +138,7 @@ http {
     {% endfor %}
   {% endif %}
 {% endif %}
+{# https://nginx.org/en/docs/http/ngx_http_map_module.html #}
 {% if nginx_http.maps is defined and
       nginx_http.maps | bodsch.core.type == "list" %}
 
@@ -185,14 +186,17 @@ http {
       nginx_http.variables_hash.bucket_size | string | length > 0 %}
   variables_hash_bucket_size  {{ nginx_http.variables_hash.bucket_size }};
 {% endif %}
-{% if nginx_http.extra_options %}
+{% if nginx_http.includes is defined and
+      nginx_http.includes | count > 0 %}
+
+  {% for inc in nginx_http.includes %}
+  include {{ inc }};
+  {% endfor %}
+{% endif %}
+{% if nginx_http.extra_options is defined and
+      nginx_http.extra_options | bodsch.core.type == "dict" and
+      nginx_http.extra_options | count > 0 %}
 
   {{ nginx_http.extra_options | indent(2, False) }}
-{% endif %}
-{% if nginx_includes is defined and nginx_includes | count > 0 %}
-
-  {% for include in nginx_includes %}
-  include {{ include }};
-  {% endfor %}
 {% endif %}
 }

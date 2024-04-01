@@ -10,7 +10,7 @@ nginx_vhosts:
 
   - name: nginx-status
     filename: 00-status.conf
-    template: vhost_status.j2
+    # template: vhost_status.j2
     state: present  # default: present
     enabled: true   # default: true
     # domain(s)
@@ -55,7 +55,7 @@ nginx_vhosts:
     logfiles:
       access:
         file: /var/log/nginx/monitoring.molecule.lan/access.log
-        loglevel: 'json_combined'
+        loglevel: 'json_full if=$excluded_ua'
       error:
         file: /var/log/nginx/monitoring.molecule.lan/error.log
         loglevel: notice
@@ -69,7 +69,8 @@ nginx_vhosts:
       - foo.molecule.lan
 
     # Specify which port you want to listen to with clear HTTP, or leave undefined for 80
-    listen: 9443
+    listen:
+      - 9443
 
     # enable ssl
     ssl:
@@ -78,6 +79,11 @@ nginx_vhosts:
       certificate: /etc/snakeoil/molecule.lan/molecule.lan.pem
       certificate_key: /etc/snakeoil/molecule.lan/molecule.lan.key
       dhparam: /etc/snakeoil/molecule.lan/dh.pem
+
+    raw: |
+      if ($badagent) {
+        return 403;
+      }
 
   - name: 20-bar.molecule.lan
     state: present
@@ -101,7 +107,18 @@ nginx_vhosts:
     # enable ssl
     ssl:
       enabled: true
+      ciphers: strong
       certificate:     /etc/snakeoil/molecule.lan/molecule.lan.pem
       certificate_key: /etc/snakeoil/molecule.lan/molecule.lan.key
+      dhparam: /etc/snakeoil/molecule.lan/dh.pem
+
+    raw: |
+      if ($badagent) {
+        return 403;
+      }
+
+      if ($host != bar.molecule.lan) {
+        return 301 https://bar.molecule.lan$request_uri;
+      }
 
 ...
