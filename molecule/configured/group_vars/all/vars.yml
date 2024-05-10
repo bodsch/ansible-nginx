@@ -83,6 +83,11 @@ nginx_logformat:
 
 nginx_http:
 
+  includes:
+    - includes.d/useragent.rules
+    - includes.d/proxy_cache.rules
+    - sites-enabled/*.conf
+
   resolver:
     address: "172.17.0.1 valid=60s" # version 1.23.1: ipv4=on ipv6=off"
     timeout: "30s"
@@ -99,6 +104,33 @@ nginx_http:
       - path: /var/cache/nginx/preview
 
   maps:
+    - name: http_user_agent
+      description: matched against 'http_user_agent' for bad user agents
+      variable: badagent
+      mapping:
+        - source: default
+          result: 0
+        - source: ~*malicious
+          result: 1
+        - source: ~*backdoor
+          result: 1
+        - source: ~*netcrawler
+          result: 1
+        - source: ~Antivirx
+          result: 1
+        - source: ~Arian
+          result: 1
+        - source: ~webbandit
+          result: 1
+        - source: ~cyberscan
+          result: 1
+        - source: ~*paloaltonetworks.com
+          result: 1
+        - source: ~Googlebot
+          result: 1
+        - source: ~Download Demon
+          result: 1
+
     - name: http_user_agent
       description: matched 'http_user_agent' to exclude some user agents from logging
       variable: excluded_ua
@@ -130,26 +162,4 @@ nginx_http:
         - source: "default"
           result: "0.0.0.0"
 
-    - name: http_user_agent
-      description: matched against 'http_user_agent' for bad user agents
-      variable: badagent
-      mapping:
-        - source: "~*malicious"
-          result: 1
-        - source: "~*backdoor"
-          result: 1
-        - source: "~*netcrawler"
-          result: 1
-        - source: "~Antivirx"
-          result: 1
-        - source: "~Arian"
-          result: 1
-        - source: "~webbandit"
-          result: 1
-        - source: "~cyberscan"
-          result: 1
-        - source: "~*paloaltonetworks.com"
-          result: 1
-        - source: default
-          result: 0
 ...

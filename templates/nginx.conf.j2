@@ -115,53 +115,7 @@ http {
       nginx_http.keepalive.timeout | string | length > 0 %}
   keepalive_timeout             {{ nginx_http.keepalive.timeout }};
 {% endif %}
-{# https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cache_path #}
-{% if nginx_http.proxy.cache_path is defined and
-      nginx_http.proxy.cache_path | string | length > 0 %}
 
-  {% if nginx_http.proxy.cache_path | bodsch.core.type == "string" %}
-  proxy_cache_path              {{ nginx_http.proxy.cache_path }};
-  {% endif %}
-  {% if nginx_http.proxy.cache_path | bodsch.core.type == "list" %}
-    {% for cache in nginx_http.proxy.cache_path %}
-      {% set cache_options = "levels=1:2 keys_zone=default_cache:10m" %}
-      {% if cache.options is defined %}
-        {% if cache.options | bodsch.core.type == "string" %}
-          {% set cache_options = cache.options %}
-        {% endif %}
-        {% if cache.options | bodsch.core.type == "list" %}
-          {% set cache_options = cache.options | join(' ') %}
-        {% endif %}
-      {% endif %}
-  proxy_cache_path              {{ cache.path }}
-    {{ cache_options }};
-    {% endfor %}
-  {% endif %}
-{% endif %}
-{# https://nginx.org/en/docs/http/ngx_http_map_module.html #}
-{% if nginx_http.maps is defined and
-      nginx_http.maps | bodsch.core.type == "list" %}
-
-  {% for m in nginx_http.maps %}
-    {% set _mappings = m.get("mapping") %}
-    {% if _mappings is defined and
-          _mappings | bodsch.core.type == "list" and
-          _mappings | count > 0 %}
-      {% if m.description is defined and
-            m.description | string | length > 0 %}
-  # {{ m.description }}
-      {% endif %}
-  map ${{ m.name }} ${{ m.variable }} {
-    {% for m in _mappings %}
-    {{ "%-35s %s;" | format(
-      '"' + m.source + '"',
-      m.result
-    ) }}
-    {% endfor %}
-  }
-    {% endif %}
-  {% endfor %}
-{% endif %}
 {% if nginx_http.map_hash.max_size is defined and
       nginx_http.map_hash.max_size | string | length > 0 %}
   map_hash_max_size             {{ nginx_http.map_hash.max_size }};

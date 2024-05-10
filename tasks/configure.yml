@@ -110,6 +110,28 @@
     - validate config
     - reload service
 
+- name: create useragent.rules configuration
+  ansible.builtin.template:
+    src: includes.d/useragent.rules.j2
+    dest: /etc/nginx/includes.d/useragent.rules
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - validate config
+    - reload service
+
+- name: create proxy_cache.rules configuration
+  ansible.builtin.template:
+    src: includes.d/proxy_cache.rules.j2
+    dest: /etc/nginx/includes.d/proxy_cache.rules
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - validate config
+    - reload service
+
 - name: create custom includes
   become: true
   ansible.builtin.template:

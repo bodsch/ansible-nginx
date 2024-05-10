@@ -71,6 +71,7 @@ nginx_http:
 
 ```yaml
 nginx_http:
+
   proxy:
     cache_path:
       - path: "/var/cache/nginx/studio"
