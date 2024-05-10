@@ -35,6 +35,9 @@ nginx_logformat:
     # escape: json
 
 nginx_http:
+  includes:
+    - includes.d/useragent.rules
+
   proxy:
     cache_path:
       - path: "/var/cache/nginx/studio"
@@ -48,6 +51,33 @@ nginx_http:
 
   maps:
     - name: http_user_agent
+      description: matched against 'http_user_agent'
+      variable: badagent
+      mapping:
+        - source: default
+          result: 0
+        - source: ~*malicious
+          result: 1
+        - source: ~*backdoor
+          result: 1
+        - source: ~*netcrawler
+          result: 1
+        - source: ~Antivirx
+          result: 1
+        - source: ~Arian
+          result: 1
+        - source: ~webbandit
+          result: 1
+        - source: ~cyberscan
+          result: 1
+        - source: ~*paloaltonetworks.com
+          result: 1
+        - source: ~Googlebot
+          result: 1
+        - source: ~Download Demon
+          result: 1
+
+    - name: http_user_agent
       description: matched 'http_user_agent'
       variable: excluded_ua
       mapping:
@@ -55,6 +85,7 @@ nginx_http:
           result: 0
         - source: "default"
           result: 1
+
     - name: remote_addr
       description: matched against 'remote_addr' and anonymises the corresponding IPs
       variable: ip_anonym
@@ -65,6 +96,7 @@ nginx_http:
           result: "$ip"
         - source: "default"
           result: "0.0"
+
     - name: remote_addr
       description: matched against 'remote_addr' and anonymises the corresponding IPs
       variable: remote_addr_anon
