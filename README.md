@@ -66,16 +66,13 @@ nginx_ssl: {}
 
 nginx_custom_includes: {}
 
-nginx_includes:
-  - "/etc/nginx/conf.d/*.conf"
-  - "/etc/nginx/sites-enabled/*.conf"
-
-nginx_vhosts: {}
+nginx_vhosts: []
 ```
 
 - [`nginx_acme`](doc/acme.md)
 - [`nginx_custom_includes`](doc/custom_includes.md)
 - [`nginx_global`](doc/global.md)
+- [`nginx_events`](doc/events.md)
 - [`nginx_gzip`](doc/gzip.md)
 - [`nginx_http`](doc/http.md)
 - [`nginx_logformat`](doc/logformat.md)

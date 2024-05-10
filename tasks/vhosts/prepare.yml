@@ -34,7 +34,7 @@
 - name: find templates directory on destination system
   ansible.builtin.stat:
     path: "{{ nginx_remote_tmp_directory }}/{{ ansible_fqdn }}"
-    get_md5: false
+    get_checksum: false
     get_mime: false
     get_attributes: false
   register: nginx_template_remote_directory
@@ -109,7 +109,7 @@
 - name: find templates archive on destination system
   ansible.builtin.stat:
     path: "{{ nginx_remote_tmp_directory }}/{{ ansible_fqdn }}/templates.tgz"
-    get_md5: false
+    get_checksum: false
     get_mime: false
     get_attributes: false
   register: nginx_template_remote_archive

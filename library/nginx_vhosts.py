@@ -209,9 +209,9 @@ class NginxVHosts(object):
             """
                 A non-optimal implementation of a regex filter
             """
-            self.module.log(msg=f"regex_replace('{s}', '{find}', '{replace}')")
+            # self.module.log(msg=f"regex_replace('{s}', '{find}', '{replace}')")
             result = re.sub(find, replace, s).strip()
-            self.module.log(msg=f"='{result}'")
+            # self.module.log(msg=f"='{result}'")
             return result
 
         def split(value, s=''):
@@ -224,15 +224,15 @@ class NginxVHosts(object):
             """
             """
             result = []
-            self.module.log(msg=f"validate_listener({data}, {regex}, {replace})")
+            # self.module.log(msg=f"validate_listener({data}, {regex}, {replace})")
 
             if isinstance(data, str):
                 result.append(re.sub(regex, replace, data).strip())
             elif isinstance(data, list):
                 for i in data:
-                    result.append(re.sub(regex, replace, i).strip())
+                    result.append(re.sub(regex, replace, str(i)).strip())
 
-            self.module.log(msg=f"='{result}'")
+            # self.module.log(msg=f"='{result}'")
             return result
 
         if os.path.isfile(vhost_template):
@@ -245,6 +245,7 @@ class NginxVHosts(object):
 
             jinja_environment.filters.update({
                 'bodsch.core.var_type': var_type,
+                'bodsch.core.type': var_type,
                 'split': split,
                 'regex_replace': regex_replace,
                 'validate_listener': validate_listener,

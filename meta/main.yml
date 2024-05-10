@@ -2,6 +2,7 @@
 
 galaxy_info:
   role_name: nginx
+  namespace: bodsch
 
   author: Bodo Schulz
   description: installs and configure nginx

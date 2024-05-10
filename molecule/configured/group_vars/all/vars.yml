@@ -4,7 +4,7 @@ nginx_gzip:
   enabled: true
 
 nginx_custom_includes:
-  prometheus.conf: |
+  basic_auth_monitoring.conf: |
     # https://nginx.org/en/docs/http/ngx_http_core_module.html#satisfy
     satisfy any;
     # Die IP des HAProxy
@@ -19,6 +19,12 @@ nginx_custom_includes:
     auth_basic_user_file "{{ htpasswd_credentials_path }}/.monitoring-passwdfile";
 
 nginx_logformat:
+  main:
+    format: |
+      '[$time_local]: $remote_addr - $remote_user - "$request" '
+       '$status $body_bytes_sent "$http_referer" '
+       '"$http_user_agent" "$http_x_forwarded_for"';
+
   json_combined:
     format: |
       '{'
@@ -32,11 +38,59 @@ nginx_logformat:
         '"http_referrer": "$http_referer",'
         '"http_user_agent": "$http_user_agent"'
       '}';
-    # escape: json
+  json_full:
+    format: |
+      '{'
+        '"msec": "$msec", '                                         # request unixtime in seconds with a milliseconds resolution
+        '"connection": "$connection", '                             # connection serial number
+        '"connection_requests": "$connection_requests", '           # number of requests made in connection
+        '"pid": "$pid", '                                           # process pid
+        '"request_id": "$request_id", '                             # the unique request id
+        '"request_length": "$request_length", '                     # request length (including headers and body)
+        '"remote_addr": "$remote_addr", '                           # client IP
+        '"remote_user": "$remote_user", '                           # client HTTP username
+        '"remote_port": "$remote_port", '                           # client port
+        '"time_local": "$time_local", '
+        '"time_iso8601": "$time_iso8601", '                         # local time in the ISO 8601 standard format
+        '"request": "$request", '                                   # full path no arguments if the request
+        '"request_uri": "$request_uri", '                           # full path and arguments if the request
+        '"args": "$args", '                                         # args
+        '"status": "$status", '                                     # response status code
+        '"body_bytes_sent": "$body_bytes_sent", '                   # the number of body bytes exclude headers sent to a client
+        '"bytes_sent": "$bytes_sent", '                             # the number of bytes sent to a client
+        '"http_referer": "$http_referer", '                         # HTTP referer
+        '"http_user_agent": "$http_user_agent", '                   # user agent
+        '"http_x_forwarded_for": "$http_x_forwarded_for", '         # http_x_forwarded_for
+        '"http_x_forwarded_proto": "$http_x_forwarded_proto", '     # http_x_forwarded_proto
+        '"http_host": "$http_host", '                               # the request Host: header
+        '"server_name": "$server_name", '                           # the name of the vhost serving the request
+        '"request_time": "$request_time", '                         # request processing time in seconds with msec resolution
+        '"upstream": "$upstream_addr", '                            # upstream backend server for proxied requests
+        '"upstream_connect_time": "$upstream_connect_time", '       # upstream handshake time incl. TLS
+        '"upstream_header_time": "$upstream_header_time", '         # time spent receiving upstream headers
+        '"upstream_response_time": "$upstream_response_time", '     # time spend receiving upstream body
+        '"upstream_response_length": "$upstream_response_length", ' # upstream response length
+        '"upstream_cache_status": "$upstream_cache_status", '       # cache HIT/MISS where applicable
+        '"ssl_protocol": "$ssl_protocol", '                         # TLS protocol
+        '"ssl_cipher": "$ssl_cipher", '                             # TLS cipher
+        '"scheme": "$scheme", '                                     # http or https
+        '"request_method": "$request_method", '                     # request method
+        '"server_protocol": "$server_protocol", '                   # request protocol, like HTTP/1.1 or HTTP/2.0
+        '"pipe": "$pipe", '                                         # "p" if request was pipelined, "." otherwise
+        '"gzip_ratio": "$gzip_ratio", '
+        '"http_cf_ray": "$http_cf_ray"'
+      '}';
 
 nginx_http:
+
   includes:
     - includes.d/useragent.rules
+    - includes.d/proxy_cache.rules
+    - sites-enabled/*.conf
+
+  resolver:
+    address: "172.17.0.1 valid=60s" # version 1.23.1: ipv4=on ipv6=off"
+    timeout: "30s"
 
   proxy:
     cache_path:
@@ -51,7 +105,7 @@ nginx_http:
 
   maps:
     - name: http_user_agent
-      description: matched against 'http_user_agent'
+      description: matched against 'http_user_agent' for bad user agents
       variable: badagent
       mapping:
         - source: default
@@ -78,7 +132,7 @@ nginx_http:
           result: 1
 
     - name: http_user_agent
-      description: matched 'http_user_agent'
+      description: matched 'http_user_agent' to exclude some user agents from logging
       variable: excluded_ua
       mapping:
         - source: "~monitoring-plugin"
@@ -107,4 +161,5 @@ nginx_http:
           result: "$ip::"
         - source: "default"
           result: "0.0.0.0"
+
 ...

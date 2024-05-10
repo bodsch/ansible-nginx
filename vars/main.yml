@@ -17,32 +17,89 @@ nginx_group: nginx
 nginx_mime_file_path: /etc/nginx/mime.types
 
 nginx_defaults_global:
+  # https://nginx.org/en/docs/ngx_core_module.html
+  daemon: ""                  # true
+  debug_points: ""            #
+  env: []                     #
   error_log: "{{ nginx_logging.base_directory }}/error.log warn"
-  worker_processes: "{{ ansible_processor_vcpus | default(ansible_processor_count) }}"
-  include_modules: true
+  includes:                   #
+    - /etc/nginx/modules-enabled/*.conf
+  load_modules: []            #
+  lock_file: ""               # logs/nginx.lock
+  master_process: ""          # true
+  pcre_jit: ""                # false
+  pid: ""                     # logs/nginx.pid
+  ssl_engine: ""              #
+  thread_pool: {}             # default: { threads=32, max_queue=65536 }
+  timer_resolution: ""        #
+  worker_processes: "auto"    # {{ ansible_processor_vcpus | default(ansible_processor_count) }}"
+  worker_cpu_affinity:  ""    # auto [cpumask]
+  worker_priority: ""         # 0
+  worker_rlimit_core: ""      #
+  worker_rlimit_nofile: ""    #
+  worker_shutdown_timeout: "" #
+  working_directory: ""       #
   extra_config: {}
 
 nginx_defaults_events:
-  worker_connections: 1024
+  accept_mutex: ""            # false
+  accept_mutex_delay: ""      # 500ms
+  worker_connections: 1024    # 512
   multi_accept: true
+  use: ""
+  worker_aio_requests: ""     # 32
+  debug_connection: []        #
 
 nginx_defaults_http:
-  mime_file_path: "{{ nginx_mime_file_path }}"
-  server_names_hash_bucket_size: 64
-  client_max_body_size: "64m"
+  mime_file_path: "{{ nginx_mime_file_path }}"            #
+  client:                                                 #
+    max_body_size: "64m"                                  #
+    body:                                                 #
+      buffer_size: ""                                     #
+      in_file_only: ""                                    #
+      in_single_buffer: ""                                #
+      temp_path: ""                                       #
+      timeout: ""                                         #
+    header:                                               #
+      buffer_size: ""                                     #
+      timeout: ""                                         #
   access_log: "{{ nginx_logging.base_directory }}/access.log main buffer=32k flush=2m"
-  sendfile: true
-  tcp_nopush: true
-  tcp_nodelay: true
-  server_tokens: false
-  rewrite_log: true
-  keepalive:
-    timeout: 65
-    requests: 100
-  proxy:
-    cache_path: []
-  extra_options: {}
-  maps: []
+  resolver:
+    resolvers: []
+    timeout: ""
+  sendfile: true                                          #
+  tcp:
+    nopush: true                                          #
+    nodelay: true                                         #
+  server_tokens: false                                    #
+  server_name:
+    in_redirect: ""                                       #
+  server_names:
+    hash_bucket_size: ""
+    hash_max_size: ""
+    in_redirect: ""
+  rewrite_log: true                                       #
+  keepalive:                                              #
+    disable: ""                                           # Disables keep-alive connections with misbehaving browsers.
+    requests: 100                                         # Sets the maximum number of requests that can be served through one keep-alive connection.
+    time: ""                                              # Limits the maximum time during which requests can be processed through one keep-alive connection.
+    timeout: 65                                           # The first parameter sets a timeout during which a keep-alive client connection will stay open on the server side.
+  proxy:                                                  #
+    cache_path: []                                        #
+  maps: []                                                #
+  map_hash:                                               #
+    max_size: ""                                          #
+    bucket_size: ""                                       #
+  types_hash:                                             #
+    max_size: ""                                          # Sets the maximum size of the types hash tables
+    bucket_size: ""                                       # Sets the bucket size for the types hash tables
+  variables_hash:
+    max_size: ""                                          # Sets the maximum size of the variables hash table.
+    bucket_size: ""                                       # Sets the bucket size for the variables hash table.
+  extra_options: {}                                       #
+  includes:
+    - "/etc/nginx/conf.d/*.conf"
+    - "/etc/nginx/sites-enabled/*.conf"
 
 nginx_defaults_gzip:
   enabled: false
@@ -156,8 +213,8 @@ nginx_defaults_ssl:
       - "!PSK"
   ssl_prefer_server_ciphers: true
   ssl_session_cache: shared:SSL:10m
-  ssl_stapling: true
-  ssl_stapling_verify: true
+  ssl_stapling: false
+  ssl_stapling_verify: false
 
 nginx_defaults_logformat:
   main:

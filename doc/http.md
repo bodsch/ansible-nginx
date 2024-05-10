@@ -2,33 +2,76 @@
 
 Configures the `http {}` block of the nginx.
 
-Via `extra_options` it is possible to integrate own extensions "hands-free".
+```yaml
+nginx_http:
+  mime_file_path: "{{ nginx_mime_file_path }}"            #
+  client:                                                 #
+    max_body_size: "64m"                                  #
+    body:                                                 #
+      buffer_size: ""                                     #
+      in_file_only: ""                                    #
+      in_single_buffer: ""                                #
+      temp_path: ""                                       #
+      timeout: ""                                         #
+    header:                                               #
+      buffer_size: ""                                     #
+      timeout: ""                                         #
+  access_log: "{{ nginx_logging.base_directory }}/access.log main buffer=32k flush=2m"
+  resolver:
+    address: ""
+    timeout: ""
+  sendfile: true                                          #
+  tcp:
+    nopush: true                                          #
+    nodelay: true                                         #
+  server_tokens: false                                    #
+  server_name:
+    in_redirect: ""                                       #
+  server_names:
+    hash_bucket_size: ""
+    hash_max_size: ""
+    in_redirect: ""
+  rewrite_log: true                                       #
+  keepalive:                                              #
+    disable: ""                                           # Disables keep-alive connections with misbehaving browsers.
+    requests: ""                                          # Sets the maximum number of requests that can be served through one keep-alive connection.
+    time: ""                                              # Limits the maximum time during which requests can be processed through one keep-alive connection.
+    timeout: ""                                           # The first parameter sets a timeout during which a keep-alive client connection will stay open on the server side.
+  proxy:                                                  #
+    cache_path: []                                        #
+  maps: []                                                #
+  map_hash:                                               #
+    max_size: ""                                          #
+    bucket_size: ""                                       #
+  types_hash:                                             #
+    max_size: ""                                          # Sets the maximum size of the types hash tables
+    bucket_size: ""                                       # Sets the bucket size for the types hash tables
+  variables_hash:
+    max_size: ""                                          # Sets the maximum size of the variables hash table.
+    bucket_size: ""                                       # Sets the bucket size for the variables hash table.
+  extra_options: {}                                       #
+  includes:
+    - "/etc/nginx/conf.d/*.conf"
+    - "/etc/nginx/sites-enabled/*.conf"
+```
 
+## `resolver`
 
 ```yaml
 nginx_http:
-  mime_file_path: "{{ nginx_mime_file_path }}"
-  server_names_hash_bucket_size: 64
-  client_max_body_size: "64m"
-  access_log: "{{ nginx_logging.base_directory }}/access.log main buffer=32k flush=2m"
-  sendfile: true
-  tcp_nopush: true
-  tcp_nodelay: true
-  server_tokens: false
-  rewrite_log: true
-  keepalive:
-    timeout: 65
-    requests: 100
-  proxy:
-    cache_path: []
-  extra_options: {}
-  maps: []
+
+  resolver:
+    address: "172.17.0.1 valid=60s" # version 1.23.1: ipv4=on ipv6=off"
+    timeout: "30s"
 ```
 
 ## `proxy.cache_path`
 
+[upstream doku](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cache_path)
+
 ```yaml
 nginx_http:
+
   proxy:
     cache_path:
       - path: "/var/cache/nginx/studio"
@@ -39,37 +82,6 @@ nginx_http:
           - inactive=60m
           - use_temp_path=off
       - path: /var/cache/nginx/preview
-```
-
-## `extra_options`
-
-```yaml
-nginx_http:
-
-  extra_options: |
-    types_hash_max_size    1024;
-    types_hash_bucket_size 512;
-
-    map_hash_max_size      128;
-    map_hash_bucket_size   128;
-
-    map $http_user_agent $excluded_ua {
-      # ~Googlebot        0;
-      ~monitoring-plugin 0;
-      default            1;
-    }
-
-    map $remote_addr $ip_anonym {
-       "~(?P<ip>(\d+)\.(\d+))\.\d+\.\d+" $ip;
-       "~(?P<ip>[^:]+:[^:]+):"           $ip;
-       default 0.0;
-    }
-
-    map $remote_addr $remote_addr_anon {
-      ~(?P<ip>\d+\.\d+)\.         $ip.0.0;
-      ~(?P<ip>[^:]+:[^:]+):       $ip::;
-      default                     0.0.0.0;
-    }
 ```
 
 ## `maps`
@@ -88,6 +100,7 @@ nginx_http:
           result: 0
         - source: "default"
           result: 1
+
     - name: remote_addr
       description: matched against 'remote_addr' and anonymises the corresponding IPs
       variable: ip_anonym
@@ -98,6 +111,7 @@ nginx_http:
           result: "$ip"
         - source: "default"
           result: "0.0"
+
     - name: remote_addr
       description: matched against 'remote_addr' and anonymises the corresponding IPs
       variable: remote_addr_anon
@@ -108,4 +122,16 @@ nginx_http:
           result: "$ip::"
         - source: "default"
           result: "0.0.0.0"
+```
+
+## `extra_options`
+
+Via `extra_options` it is possible to integrate own extensions "hands-free".
+
+```yaml
+nginx_http:
+
+  extra_options: |
+    satisfy any;
+    directio 10m;
 ```

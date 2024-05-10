@@ -2,9 +2,7 @@
 
 The central place to manage VHosts.
 
-`nginx_vhosts` is designed as a dictionary.
-
-This means that each entry is unique, but can be redefined via a `combine()`.
+`nginx_vhosts` is designed as a **list**.
 
 A simple example:
 
@@ -21,7 +19,8 @@ nginx_vhosts:
       - localhost
 
     # listen
-    listen: 127.0.0.1:8088
+    listen:
+      - 127.0.0.1:8088
 
     # locations
     locations:
@@ -31,6 +30,11 @@ nginx_vhosts:
           access_log off;
           allow 127.0.0.1;
           deny all;
+
+    raw: |
+      if ($badagent) {
+        return 403;
+      }
 ```
 
 ## `state` / `enabled`
@@ -42,7 +46,7 @@ In this way, VHost definitions can also be deactivated or removed.
 
 ## `filename`
 
-If `filename` is not defined, the identifier of the dictionary is automatically chosen as the file name.
+If `filename` is not defined, the name of the entry is automatically chosen as the file name.
 
 ## `domains`
 
@@ -67,11 +71,11 @@ nginx_vhosts:
 
 ## `logfiles`
 
-Individual log files are created for each VHost.
+Individual log files are created for each VHost.  
 If these are not explicitly configured, a few log files for access and error messages are defined under `/var/log/nginx`.
 
 This then corresponds to the following scheme:
-`/var/log/nginx/$key_access.log` or `/var/log/nginx/$key_error.log`.
+`/var/log/nginx/$name_access.log` or `/var/log/nginx/$name_error.log`.
 
 Own definitions can be made via the parameter `logfiles`:
 
@@ -88,6 +92,19 @@ nginx_vhosts:
       error:
         file: /var/log/nginx/bar.molecule.lan/error.log
         loglevel: notice
+
+    ...
+    
+  - name: foo.molecule.lan
+    ...
+
+    logfiles:
+      access:
+        file: /var/log/nginx/foo.molecule.lan/access.log
+        loglevel: 'json_full if=$excluded_ua'
+      error:
+        file: /var/log/nginx/foo.molecule.lan/error.log
+        loglevel: error
 
     ...
 ```
@@ -226,6 +243,7 @@ nginx_vhosts:
       ciphers: default
       certificate: /etc/letsencrypt/live/bar.molecule.lan/fullchain.pem
       certificate_key: /etc/letsencrypt/live/bar.molecule.lan/privkey.pem
+      dhparam: /etc/letsencrypt/live/bar.molecule.lan/dh.pem
     ...
 ```
 
@@ -292,7 +310,8 @@ nginx_vhosts:
 
     listen: 80
 
-    root:  /var/www/prometheus.molecule.lan
+    root_directory:  /var/www/prometheus.molecule.lan
+    root_directory_create: true
 
     logfiles:
       access:
@@ -338,6 +357,7 @@ nginx_vhosts:
       - 443 ssl http2
 
     logfiles:
+      # log for syslogger
       access:
         syslog:
           server: 127.0.0.1:514
