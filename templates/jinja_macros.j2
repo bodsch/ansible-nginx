@@ -103,14 +103,23 @@ upstream {{ upstream.name }} {
 {%- endmacro -%}
 
 {%- macro vhost_listen(port=80, default=False) -%}
-
+{% set support_http2 = False %}
 {% if port | bodsch.core.var_type == "string" or port | bodsch.core.var_type == "int" %}
   listen              {{ port }}{% if default %} default_server{% endif %};
 {% endif %}
+{% if nginx_version is defined and nginx_version | version_compare('1.25', '>') %}
+  {% set support_http2 = True %}
+{% endif %}
 {% if port | bodsch.core.var_type == "list" %}
   {% for l in port %}
+    {% if support_http2 %}
+      {% set l = l | regex_replace("http2", "") %}
+    {% endif %}
   listen              {{ l }}{% if default %} default_server{% endif %};
   {% endfor %}
+  {% if support_http2 %}
+  http2               on;
+  {% endif %}
 {% endif %}
 
 {%- endmacro -%}

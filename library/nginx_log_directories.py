@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
 # (c) 2021-2022, Bodo Schulz <bodo@boone-schulz.de>
@@ -35,7 +35,6 @@ class NginxLogDirectories(object):
 
         if isinstance(self.vhosts, dict):
             for vhost, values in self.vhosts.items():
-                # self.module.log(msg=f" - {vhost}")
                 logfiles = values.get("logfiles", {})
 
                 if logfiles:
@@ -59,8 +58,6 @@ class NginxLogDirectories(object):
             access_log = [os.path.dirname(x.get("file")) for x in access_logs if x.get("file")]
             error_logs = [x.get("logfiles").get("error", {}) for x in logfiles]
             error_log  = [os.path.dirname(x.get("file")) for x in error_logs if x.get("file")]
-            # self.module.log(msg=f" access log: {access_log}")
-            # self.module.log(msg=f" error log : {error_log}")
             unique_dirs = list(set(access_log + error_log))
 
         for d in unique_dirs:
@@ -96,20 +93,6 @@ class NginxLogDirectories(object):
         )
 
         return result
-
-        # # define changed for the running tasks
-        # # migrate a list of dict into dict
-        # combined_d = {key: value for d in result_state for key, value in d.items()}
-        # # find all changed and define our variable
-        # changed = (len({k: v for k, v in combined_d.items() if v.get('state')}) > 0)
-        #
-        # result = dict(
-        #     changed = changed,
-        #     failed = False,
-        #     state = result_state
-        # )
-        #
-        # return result
 
 
 # ===========================================

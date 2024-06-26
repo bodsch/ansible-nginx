@@ -132,6 +132,9 @@
       templates: "{{ _nginx_templates }}"
       templates_checksums: "{{ nginx_templates_checksums }}"
 
+- name: gathering facts now
+  ansible.builtin.setup:
+
 - name: ensure vhosts root path exists
   ansible.builtin.file:
     path: "{{ item }}"

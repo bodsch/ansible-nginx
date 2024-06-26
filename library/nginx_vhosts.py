@@ -1,13 +1,14 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-# (c) 2021-2022, Bodo Schulz <bodo@boone-schulz.de>
+# (c) 2021-2024, Bodo Schulz <bodo@boone-schulz.de>
 # Apache (see LICENSE or https://opensource.org/licenses/Apache-2.0)
 
 from __future__ import absolute_import, division, print_function
 import os
 import shutil
 import re
+import json
 
 from ansible.module_utils.basic import AnsibleModule
 from jinja2 import Environment, FileSystemLoader
@@ -37,6 +38,9 @@ class NginxVHosts(object):
         self.default_https_template = template.get("https")
         self.template_path = template.get("path")
 
+        self.facts_directory = "/etc/ansible/facts.d"
+        self.facts_file = os.path.join(self.facts_directory, "nginx.fact")
+
         self.site_enabled = "/etc/nginx/sites-enabled"
         self.site_available = "/etc/nginx/sites-available"
         self.tmp_directory = os.path.join("/run/.ansible", f"nginx_vhosts.{str(os.getpid())}")
@@ -44,11 +48,26 @@ class NginxVHosts(object):
     def run(self):
         """
         """
+        nginx_facts = dict()
+        self.nginx_version = "0.0.0"
+
         self.checksum = Checksum(self.module)
 
         create_directory(directory=self.tmp_directory, mode="0750")
 
         result_state = []
+
+        # read facts
+        if os.path.exists(self.facts_file):
+            rc, out, err = self._exec([self.facts_file])
+
+            nginx_facts = out
+
+        if len(nginx_facts) > 0:
+            if isinstance(nginx_facts, str):
+                nginx_facts = json.loads(nginx_facts)
+
+                self.nginx_version = nginx_facts.get("version", "0.0.0")
 
         if isinstance(self.vhosts, list):
             for vhost in self.vhosts:
@@ -118,10 +137,6 @@ class NginxVHosts(object):
         tls = data.get("ssl", None)
         tls_enabled = False
 
-        # self.module.log(msg=f"   state   {state}")
-        # self.module.log(msg=f"   enabled {enabled}")
-        # self.module.log(msg=f"   tls     {tls}")
-
         if tls:
             tls_enabled = tls.get("enabled", False)
             tls_cert_state = tls.get("state", "missing")
@@ -140,8 +155,7 @@ class NginxVHosts(object):
                 template_file = self.default_http_template
 
         template = os.path.join(self.template_path, template_file)
-
-        self.module.log(msg=f"- template {template}")
+        # self.module.log(msg=f"- template {template}")
 
         if not os.path.exists(template):
             """
@@ -153,7 +167,7 @@ class NginxVHosts(object):
 
         file_available, file_enabled, file_temporary = self.__file_names(data)
 
-        self.module.log(msg=f"- file_available {file_available} - {file_enabled} - {file_temporary}")
+        # self.module.log(msg=f"- file_available {file_available} - {file_enabled} - {file_temporary}")
 
         vhost_data = self.render_template(template, data)
 
@@ -175,8 +189,6 @@ class NginxVHosts(object):
                 else:
                     changed = True
                     msg = "The VHost was successfuly disabled."
-
-        # self.module.log(msg=f"- changed {changed} - {msg}")
 
         return False, changed, msg
 
@@ -235,6 +247,43 @@ class NginxVHosts(object):
             # self.module.log(msg=f"='{result}'")
             return result
 
+        def version_compare(value, version, compare_operator='eq'):
+            ''' Perform a version comparison on a value '''
+            from packaging.version import Version
+            import operator
+            from ansible import errors
+            from ansible.module_utils.common.text.converters import to_native, to_text
+
+            op_map = {
+                '==': 'eq', '=': 'eq', 'eq': 'eq',
+                '<': 'lt', 'lt': 'lt',
+                '<=': 'le', 'le': 'le',
+                '>': 'gt', 'gt': 'gt',
+                '>=': 'ge', 'ge': 'ge',
+                '!=': 'ne', '<>': 'ne', 'ne': 'ne'
+            }
+
+            if not value:
+                raise errors.AnsibleFilterError("Input version value cannot be empty")
+
+            if not version:
+                raise errors.AnsibleFilterError("Version parameter to compare against cannot be empty")
+
+            if compare_operator in op_map:
+                compare_operator = op_map[compare_operator]
+            else:
+                valid_compare = ", ".join(map(repr, op_map))
+
+                raise errors.AnsibleFilterError(
+                    f'Invalid operator type ({compare_operator}). Must be one of {valid_compare}')
+
+            try:
+                method = getattr(operator, compare_operator)
+                return method(Version(to_text(value)), Version(to_text(version)))
+
+            except Exception as e:
+                raise errors.AnsibleFilterError(f'Version comparison failed: {to_native(e)}')
+
         if os.path.isfile(vhost_template):
             file_path = os.path.os.path.dirname(os.path.realpath(vhost_template))
             file_name = os.path.basename(os.path.realpath(vhost_template))
@@ -249,11 +298,13 @@ class NginxVHosts(object):
                 'split': split,
                 'regex_replace': regex_replace,
                 'validate_listener': validate_listener,
+                'version_compare': version_compare,
             })
 
-            output = jinja_environment.get_template(file_name).render(item=data, nginx_acme=self.acme)
-
-        # self.module.log(msg=f"{output}")
+            output = jinja_environment.get_template(file_name).render(
+                item=data,
+                nginx_acme=self.acme,
+                nginx_version=self.nginx_version)
 
         return output
 
@@ -350,12 +401,24 @@ class NginxVHosts(object):
         available = os.path.join(self.site_available, file_name)
         temporary = os.path.join(self.tmp_directory, file_name)
 
-        self.module.log(msg=f"   enabled {enabled}")
-        self.module.log(msg=f"   available {available}")
-        self.module.log(msg=f"   temporary {temporary}")
+        # self.module.log(msg=f"   enabled {enabled}")
+        # self.module.log(msg=f"   available {available}")
+        # self.module.log(msg=f"   temporary {temporary}")
 
         return available, enabled, temporary
 
+    def _exec(self, cmd, check=False):
+        """
+          execute shell commands
+        """
+        rc, out, err = self.module.run_command(cmd, check_rc=check)
+
+        if rc != 0:
+            self.module.log(msg=f"  rc : '{rc}'")
+            self.module.log(msg=f"  out: '{out}'")
+            self.module.log(msg=f"  err: '{err}'")
+
+        return (rc, out, err)
 
 # ===========================================
 # Module execution.

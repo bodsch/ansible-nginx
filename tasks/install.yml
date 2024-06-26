@@ -5,4 +5,21 @@
     name: "{{ nginx_packages }}"
     state: present
 
+- name: nginx version
+  nginx_version:
+  register: _nginx_version
+
+- name: define nginx version
+  ansible.builtin.set_fact:
+    nginx_version: "{{ _nginx_version.version }}"
+
+- name: create custom fact file
+  bodsch.core.facts:
+    name: nginx
+    facts:
+      version: "{{ nginx_version }}"
+
+- name: gathering facts now
+  ansible.builtin.setup:
+
 ...
