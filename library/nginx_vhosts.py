@@ -249,9 +249,9 @@ class NginxVHosts(object):
 
         def version_compare(value, version, compare_operator='eq'):
             ''' Perform a version comparison on a value '''
-            from packaging.version import Version
             import operator
-            from ansible import errors
+            from packaging.version import Version
+            # from ansible import errors
             from ansible.module_utils.common.text.converters import to_native, to_text
 
             op_map = {
@@ -264,17 +264,17 @@ class NginxVHosts(object):
             }
 
             if not value:
-                raise errors.AnsibleFilterError("Input version value cannot be empty")
+                raise ("Input version value cannot be empty")
 
             if not version:
-                raise errors.AnsibleFilterError("Version parameter to compare against cannot be empty")
+                raise ("Version parameter to compare against cannot be empty")
 
             if compare_operator in op_map:
                 compare_operator = op_map[compare_operator]
             else:
                 valid_compare = ", ".join(map(repr, op_map))
 
-                raise errors.AnsibleFilterError(
+                raise (
                     f'Invalid operator type ({compare_operator}). Must be one of {valid_compare}')
 
             try:
@@ -282,7 +282,7 @@ class NginxVHosts(object):
                 return method(Version(to_text(value)), Version(to_text(version)))
 
             except Exception as e:
-                raise errors.AnsibleFilterError(f'Version comparison failed: {to_native(e)}')
+                raise (f'Version comparison failed: {to_native(e)}')
 
         if os.path.isfile(vhost_template):
             file_path = os.path.os.path.dirname(os.path.realpath(vhost_template))

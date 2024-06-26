@@ -13,13 +13,13 @@
   ansible.builtin.set_fact:
     nginx_version: "{{ _nginx_version.version }}"
 
-- name: create custom fact file
-  bodsch.core.facts:
-    name: nginx
-    facts:
-      version: "{{ nginx_version }}"
-
-- name: gathering facts now
-  ansible.builtin.setup:
+# - name: create custom fact file
+#   bodsch.core.facts:
+#     name: nginx
+#     facts:
+#       version: "{{ nginx_version }}"
+#
+# - name: gathering facts now
+#   ansible.builtin.setup:
 
 ...

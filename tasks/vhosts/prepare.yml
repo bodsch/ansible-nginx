@@ -131,6 +131,7 @@
     facts:
       templates: "{{ _nginx_templates }}"
       templates_checksums: "{{ nginx_templates_checksums }}"
+      version: "{{ nginx_version }}"
 
 - name: gathering facts now
   ansible.builtin.setup:

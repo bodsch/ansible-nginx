@@ -24,16 +24,16 @@ class NginxVersion(object):
     def run(self):
         """
         """
-        version = "unknown"
+        version = "0.0.0"
 
         args_list = [
             self.nginx_bin,
-            "-version"
+            "-v"
         ]
 
         rc, out, err = self.__exec(args_list)
 
-        pattern = re.compile(r"nginx version: nginx/(?P<version>.*)", flags=re.MULTILINE | re.DOTALL)
+        pattern = re.compile(r".*nginx/(?P<version>[0-9.]+).*", flags=re.MULTILINE | re.DOTALL)
         re_result = re.search(pattern, err.strip())
 
         if re_result:
@@ -55,12 +55,12 @@ class NginxVersion(object):
             commands,
             check_rc=check_rc)
 
-        # self.module.log(msg=f"cmd: '{commands}'")
-        # self.module.log(msg=f"  rc : '{rc}'")
-        # self.module.log(msg=f"  out: '{out}'")
-        # self.module.log(msg=f"  err: '{err}'")
-        # for line in err.splitlines():
-        #     self.module.log(msg=f"   {line}")
+        self.module.log(msg=f"cmd: '{commands}'")
+        self.module.log(msg=f"  rc : '{rc}'")
+        self.module.log(msg=f"  out: '{out}'")
+        self.module.log(msg=f"  err: '{err}'")
+        for line in err.splitlines():
+            self.module.log(msg=f"   {line}")
 
         return rc, out, err
 
