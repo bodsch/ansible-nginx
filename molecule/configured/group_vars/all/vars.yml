@@ -94,6 +94,20 @@ nginx_http:
 
   proxy:
     cache_path:
+      - path: /var/cache/nginx/live
+        options:
+          - levels=1:2
+          - keys_zone=live_cache:10m
+          - max_size=50m
+          - inactive=60m
+          - use_temp_path=off
+      - path: /var/cache/nginx/preview
+        options:
+          - levels=1:2
+          - keys_zone=preview_cache:10m
+          - max_size=50m
+          - inactive=60m
+          - use_temp_path=off
       - path: "/var/cache/nginx/studio"
         options:
           - levels=1:2
@@ -101,7 +115,6 @@ nginx_http:
           - max_size=50m
           - inactive=60m
           - use_temp_path=off
-      - path: /var/cache/nginx/preview
 
   maps:
     - name: http_user_agent
