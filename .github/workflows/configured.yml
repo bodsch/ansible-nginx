@@ -1,6 +1,6 @@
 ---
 
-name: nginx with simple configuration
+name: nginx with some configurations
 
 on:
   workflow_dispatch:
@@ -19,7 +19,7 @@ env:
   ANSIBLE_FORCE_COLOR: '1'
 
 jobs:
-  debian:
+  configured:
     name: "${{ matrix.image }} / ansible: ${{ matrix.ansible-version }}, scenario: ${{ matrix.scenario }}"
     runs-on: ubuntu-20.04
     if: ${{ github.event_name == 'schedule' || github.event.workflow_run.conclusion == 'success' }}
@@ -29,11 +29,103 @@ jobs:
         image:
           - debian:12
         python_version:
-          - "3.11.3"
+          - "3.11"
         ansible-version:
-          - '6.7'
+          - '8.5'
         scenario:
           - configured
+    steps:
+      - name: check out the codebase.
+        uses: actions/checkout@v4
+        with:
+          path: 'ansible-nginx'
+          ref: ${{ github.event.workflow_run.head_branch }}
+
+      - name: 🐍 set up python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "${{ matrix.python_version }}"
+
+      - name: install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r test-requirements.txt
+
+      - name: force reinstall of community.docker
+        run: |
+          mkdir -p /home/runner/.ansible/collections
+          ansible-galaxy collection install community.docker --force
+
+      - name: test with tox
+        run: |
+          make \
+            test \
+            -e TOX_SCENARIO="${{ matrix.scenario }}" \
+            -e TOX_ANSIBLE="ansible_${{ matrix.ansible-version }}" \
+            -e DISTRIBUTION="${{ matrix.image }}"
+
+  many_vhosts:
+    name: "${{ matrix.image }} / ansible: ${{ matrix.ansible-version }}, scenario: ${{ matrix.scenario }}"
+    runs-on: ubuntu-20.04
+    needs:
+      - configured
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          - debian:12
+        python_version:
+          - "3.11"
+        ansible-version:
+          - '8.5'
+        scenario:
+          - many-vhosts
+    steps:
+      - name: check out the codebase.
+        uses: actions/checkout@v4
+        with:
+          path: 'ansible-nginx'
+          ref: ${{ github.event.workflow_run.head_branch }}
+
+      - name: 🐍 set up python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "${{ matrix.python_version }}"
+
+      - name: install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r test-requirements.txt
+
+      - name: force reinstall of community.docker
+        run: |
+          mkdir -p /home/runner/.ansible/collections
+          ansible-galaxy collection install community.docker --force
+
+      - name: test with tox
+        run: |
+          make \
+            test \
+            -e TOX_SCENARIO="${{ matrix.scenario }}" \
+            -e TOX_ANSIBLE="ansible_${{ matrix.ansible-version }}" \
+            -e DISTRIBUTION="${{ matrix.image }}"
+
+  syslog_integration:
+    name: "${{ matrix.image }} / ansible: ${{ matrix.ansible-version }}, scenario: ${{ matrix.scenario }}"
+    runs-on: ubuntu-20.04
+    needs:
+      - configured
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          - debian:12
+        python_version:
+          - "3.11"
+        ansible-version:
+          - '8.5'
+        scenario:
+          - with-syslog
     steps:
       - name: check out the codebase.
         uses: actions/checkout@v4
