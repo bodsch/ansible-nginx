@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-# (c) 2021-2022, Bodo Schulz <bodo@boone-schulz.de>
+# (c) 2021-2024, Bodo Schulz <bodo@boone-schulz.de>
 # Apache (see LICENSE or https://opensource.org/licenses/Apache-2.0)
 
 from __future__ import absolute_import, division, print_function
@@ -57,7 +57,7 @@ class NginxLogDirectories(object):
             access_logs = [x.get("logfiles").get("access", {}) for x in logfiles]
             access_log = [os.path.dirname(x.get("file")) for x in access_logs if x.get("file")]
             error_logs = [x.get("logfiles").get("error", {}) for x in logfiles]
-            error_log  = [os.path.dirname(x.get("file")) for x in error_logs if x.get("file")]
+            error_log = [os.path.dirname(x.get("file")) for x in error_logs if x.get("file")]
             unique_dirs = list(set(access_log + error_log))
 
         for d in unique_dirs:
@@ -87,9 +87,9 @@ class NginxLogDirectories(object):
         _state, _changed, _failed, state, changed, failed = results(self.module, result_state)
 
         result = dict(
-            changed = _changed,
-            failed = False,
-            state = result_state
+            changed=_changed,
+            failed=False,
+            state=result_state
         )
 
         return result

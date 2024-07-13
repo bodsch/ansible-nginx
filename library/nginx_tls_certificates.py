@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-# (c) 2021-2022, Bodo Schulz <bodo@boone-schulz.de>
+# (c) 2021-2024, Bodo Schulz <bodo@boone-schulz.de>
 # Apache (see LICENSE or https://opensource.org/licenses/Apache-2.0)
 
 from __future__ import absolute_import, division, print_function
@@ -49,7 +49,7 @@ class NginxTLSCerts(object):
             data = [x for x in self.vhosts if x.get("ssl", {}).get("enabled")]
 
             cert = [x.get("ssl", {}).get("certificate") for x in data if x.get("ssl", {}).get("enabled")]
-            key  = [x.get("ssl", {}).get("certificate_key") for x in data if x.get("ssl", {}).get("enabled")]
+            key = [x.get("ssl", {}).get("certificate_key") for x in data if x.get("ssl", {}).get("enabled")]
 
             unique_files = list(set(cert + key))
 
@@ -65,15 +65,15 @@ class NginxTLSCerts(object):
         vhosts = self.append_tls_state(missing, present)
 
         result = dict(
-            failed = False,
-            missing_certs = missing,
-            present_certs = present,
-            https_vhosts = vhosts
+            failed=False,
+            missing_certs=missing,
+            present_certs=present,
+            https_vhosts=vhosts
         )
 
         return result
 
-    def append_tls_state(self, missing = [], present = []):
+    def append_tls_state(self, missing=[], present=[]):
         """
         """
         data = self.vhosts

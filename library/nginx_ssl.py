@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-# (c) 2021-2022, Bodo Schulz <bodo@boone-schulz.de>
+# (c) 2021-2024, Bodo Schulz <bodo@boone-schulz.de>
 # Apache (see LICENSE or https://opensource.org/licenses/Apache-2.0)
 
 from __future__ import absolute_import, division, print_function
@@ -63,8 +63,8 @@ class NginxSsl(object):
 
         if not changed:
             return dict(
-                changed = False,
-                msg = "The ssl configuration has not been changed."
+                changed=False,
+                msg="The ssl configuration has not been changed."
             )
 
         if isinstance(self.ssl_config, dict):
@@ -113,9 +113,9 @@ class NginxSsl(object):
         _state, _changed, _failed, state, changed, failed = results(self.module, result_state)
 
         result = dict(
-            changed = _changed,
-            failed = _failed,
-            result = result_state
+            changed=_changed,
+            failed=_failed,
+            result=result_state
         )
 
         return result
@@ -151,7 +151,7 @@ class NginxSsl(object):
         else:
             tpl = TPL_CIPHERS
 
-        tm = Template(tpl, trim_blocks=True, lstrip_blocks = True)
+        tm = Template(tpl, trim_blocks=True, lstrip_blocks=True)
         d = tm.render(item=data)
 
         with open(file_name, "w") as f:
@@ -176,9 +176,9 @@ def main():
             required=True,
             type="dict"
         ),
-        dest = dict(
+        dest=dict(
             required=False,
-            default = "/etc/nginx/includes.d"
+            default="/etc/nginx/includes.d"
         )
     )
 

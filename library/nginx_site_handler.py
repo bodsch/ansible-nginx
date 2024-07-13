@@ -1,7 +1,7 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-# (c) 2021-2022, Bodo Schulz <bodo@boone-schulz.de>
+# (c) 2021-2024, Bodo Schulz <bodo@boone-schulz.de>
 # Apache (see LICENSE or https://opensource.org/licenses/Apache-2.0)
 
 from __future__ import absolute_import, division, print_function
@@ -20,7 +20,7 @@ class NginxSiteHandler(object):
         """
         """
         self.module = module
-        self.state  = module.params.get("state")
+        self.state = module.params.get("state")
         self.enabled = module.params.get("enabled")
         self.vhosts = module.params.get("vhosts")
 
@@ -51,7 +51,7 @@ class NginxSiteHandler(object):
                     if changed:
                         res = {}
                         res[vhost] = dict(
-                            state = f"vhost {vhost} successfuly disabled"
+                            state=f"vhost {vhost} successfuly disabled"
                         )
                         result_state.append(res)
 
@@ -61,7 +61,7 @@ class NginxSiteHandler(object):
                     if changed:
                         res = {}
                         res[vhost] = dict(
-                            state = f"vhost {vhost} successfuly enabled"
+                            state=f"vhost {vhost} successfuly enabled"
                         )
                         result_state.append(res)
 
@@ -71,7 +71,7 @@ class NginxSiteHandler(object):
                     if changed:
                         res = {}
                         res[vhost] = dict(
-                            state = f"vhost {vhost} successfuly disabled and removed"
+                            state=f"vhost {vhost} successfuly disabled and removed"
                         )
                         result_state.append(res)
 
@@ -91,7 +91,7 @@ class NginxSiteHandler(object):
                     if changed:
                         res = {}
                         res[name] = dict(
-                            state = f"vhost {name} successfuly disabled"
+                            state=f"vhost {name} successfuly disabled"
                         )
                         result_state.append(res)
 
@@ -101,7 +101,7 @@ class NginxSiteHandler(object):
                     if changed:
                         res = {}
                         res[name] = dict(
-                            state = f"vhost {name} successfuly enabled"
+                            state=f"vhost {name} successfuly enabled"
                         )
                         result_state.append(res)
 
@@ -111,7 +111,7 @@ class NginxSiteHandler(object):
                     if changed:
                         res = {}
                         res[name] = dict(
-                            state = f"vhost {name} successfuly disabled and removed"
+                            state=f"vhost {name} successfuly disabled and removed"
                         )
                         result_state.append(res)
 
@@ -119,9 +119,9 @@ class NginxSiteHandler(object):
         _state, _changed, _failed, state, changed, failed = results(self.module, result_state)
 
         result = dict(
-            changed = _changed,
-            failed = False,
-            state = result_state
+            changed=_changed,
+            failed=False,
+            state=result_state
         )
 
         return result
@@ -183,25 +183,25 @@ class NginxSiteHandler(object):
 def main():
 
     args = dict(
-        state = dict(
-            required = False,
-            default = "present",
-            choices = [
+        state=dict(
+            required=False,
+            default="present",
+            choices=[
                 "absent",
                 "present"
             ]
         ),
-        enabled = dict(
-            required = False,
+        enabled=dict(
+            required=False,
             type="bool"
         ),
         vhosts=dict(
             required=True,
             type="raw"
         ),
-        site_path = dict(
-            required = False,
-            default = ""
+        site_path=dict(
+            required=False,
+            default=""
         ),
     )
 

@@ -117,9 +117,9 @@ class NginxVHosts(object):
         _state, _changed, _failed, state, changed, failed = results(self.module, result_state)
 
         result = dict(
-            changed = _changed,
-            failed = _failed,
-            msg = result_state
+            changed=_changed,
+            failed=_failed,
+            msg=result_state
         )
 
         shutil.rmtree(self.tmp_directory)
@@ -431,22 +431,22 @@ def main():
             required=True,
             type="list"
         ),
-        template = dict(
+        template=dict(
             required=True,
             type="dict"
         ),
-        dest = dict(
+        dest=dict(
             required=False,
-            default = "/etc/nginx/sites-available"
+            default="/etc/nginx/sites-available"
         ),
-        acme = dict(
+        acme=dict(
             required=False,
-            type = dict
+            type=dict
         ),
-        ignore_missing_certificate = dict(
-            required = False,
-            type = bool,
-            default = False
+        ignore_missing_certificate=dict(
+            required=False,
+            type=bool,
+            default=False
         ),
     )
 

@@ -40,10 +40,10 @@ class NginxVersion(object):
             version = re_result.group("version")
 
         result = dict(
-            changed = False,
-            failed = False,
-            rc = rc,
-            version = version
+            changed=False,
+            failed=False,
+            rc=rc,
+            version=version
         )
 
         return result
