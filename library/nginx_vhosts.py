@@ -222,7 +222,7 @@ class NginxVHosts(object):
                 A non-optimal implementation of a regex filter
             """
             # self.module.log(msg=f"regex_replace('{s}', '{find}', '{replace}')")
-            result = re.sub(find, replace, s).strip()
+            result = re.sub(str(find), str(replace), str(s)).strip()
             # self.module.log(msg=f"='{result}'")
             return result
 
