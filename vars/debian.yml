@@ -2,8 +2,12 @@
 
 nginx_packages:
   - nginx
+  - python3-packaging
 
 nginx_user: www-data
 nginx_group: www-data
 
 ...
+
+
+# packaging
