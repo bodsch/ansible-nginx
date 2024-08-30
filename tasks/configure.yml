@@ -86,7 +86,7 @@
     mode: 0644
   notify:
     - validate config
-    - reload service
+    - reload nginx
 
 - name: create ssl configuration
   nginx_ssl:
@@ -97,7 +97,7 @@
     - nginx_ssl.enabled | default('false') | bool
   notify:
     - validate config
-    - reload service
+    - reload nginx
 
 - name: create logformat configuration
   ansible.builtin.template:
@@ -108,7 +108,7 @@
     mode: 0644
   notify:
     - validate config
-    - reload service
+    - reload nginx
 
 - name: create useragent.rules configuration
   ansible.builtin.template:
@@ -119,7 +119,7 @@
     mode: 0644
   notify:
     - validate config
-    - reload service
+    - reload nginx
 
 - name: create proxy_cache.rules configuration
   ansible.builtin.template:
@@ -130,7 +130,7 @@
     mode: 0644
   notify:
     - validate config
-    - reload service
+    - reload nginx
 
 - name: create custom includes
   become: true
@@ -144,7 +144,7 @@
     label: "{{ item.key }}"
   notify:
     - validate config
-    - reload service
+    - reload nginx
 
 - name: create nginx main configuration
   ansible.builtin.template:
@@ -156,6 +156,6 @@
     backup: true
   notify:
     - validate config
-    - reload service
+    - reload nginx
 
 ...

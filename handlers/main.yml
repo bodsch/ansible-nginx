@@ -19,12 +19,12 @@
   changed_when: _validate.rc != 0
   failed_when: _validate.rc != 0
 
-- name: reload service
+- name: reload nginx
   ansible.builtin.service:
     name: nginx
     state: reloaded
 
-- name: restart service
+- name: restart nginx
   ansible.builtin.service:
     name: nginx
     state: restarted

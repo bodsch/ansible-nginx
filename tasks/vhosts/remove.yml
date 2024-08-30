@@ -8,7 +8,7 @@
   notify:
     - de-activated vhosts
     - validate config
-    - reload service
+    - reload nginx
 
 - name: remove vhost configurations
   nginx_site_handler:
@@ -18,7 +18,7 @@
   notify:
     - removed vhost
     - validate config
-    - reload service
+    - reload nginx
 
 # TODO remove log directory, or logfile
 

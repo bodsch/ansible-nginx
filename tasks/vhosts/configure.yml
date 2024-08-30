@@ -10,7 +10,7 @@
     # acme: "{{ nginx_acme }}"
   notify:
     - validate config
-    - reload service
+    - reload nginx
 
 - name: create HTTPs vhost configurations
   nginx_vhosts:
@@ -22,6 +22,6 @@
     acme: "{{ nginx_acme }}"
   notify:
     - validate config
-    - reload service
+    - reload nginx
 
 ...
