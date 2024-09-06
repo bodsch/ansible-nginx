@@ -21,7 +21,7 @@ env:
 jobs:
   configured:
     name: "${{ matrix.scenario }} / ${{ matrix.ansible-version }} / ${{ matrix.python_version }}"
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     if: ${{ github.event_name == 'schedule' || github.event.workflow_run.conclusion == 'success' }}
     strategy:
       fail-fast: false
@@ -66,7 +66,7 @@ jobs:
 
   many_vhosts:
     name: "${{ matrix.scenario }} / ${{ matrix.ansible-version }} / ${{ matrix.python_version }}"
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs:
       - configured
     strategy:
@@ -112,7 +112,7 @@ jobs:
 
   syslog_integration:
     name: "${{ matrix.scenario }} / ${{ matrix.ansible-version }} / ${{ matrix.python_version }}"
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs:
       - configured
     strategy:
