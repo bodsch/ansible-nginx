@@ -131,10 +131,8 @@ nginx_defaults_ssl:
   ssl_session_timeout: 5m
   # Enable all TLS versions (TLSv1.3 is required for QUIC).
   ssl_protocols:
-    # - TLSv1.1
     - TLSv1.2
     - TLSv1.3
-  # ssl_ciphers: 'EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH'
   ssl_ciphers:
     strong:
       - ECDHE-ECDSA-AES128-GCM-SHA256
@@ -145,6 +143,14 @@ nginx_defaults_ssl:
       - ECDHE-RSA-CHACHA20-POLY1305
       - DHE-RSA-AES128-GCM-SHA256
       - DHE-RSA-AES256-GCM-SHA384
+      - "!aNULL"
+      - "!eNULL"
+      - "!EXPORT"
+      - "!DES"
+      - "!RC4"
+      - "!3DES"
+      - "!MD5"
+      - "!PSK"
     intermediate:
       - ECDHE-ECDSA-AES128-GCM-SHA256
       - ECDHE-RSA-AES128-GCM-SHA256
@@ -154,6 +160,14 @@ nginx_defaults_ssl:
       - ECDHE-RSA-CHACHA20-POLY1305
       - DHE-RSA-AES128-GCM-SHA256
       - DHE-RSA-AES256-GCM-SHA384
+      - "!aNULL"
+      - "!eNULL"
+      - "!EXPORT"
+      - "!DES"
+      - "!RC4"
+      - "!3DES"
+      - "!MD5"
+      - "!PSK"
     old:
       - ECDHE-ECDSA-AES128-GCM-SHA256
       - ECDHE-RSA-AES128-GCM-SHA256
