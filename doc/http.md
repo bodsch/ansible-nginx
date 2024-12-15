@@ -50,6 +50,9 @@ nginx_http:
     max_size: ""                                          # Sets the maximum size of the variables hash table.
     bucket_size: ""                                       # Sets the bucket size for the variables hash table.
   extra_options: {}                                       #
+  global:
+    deny: []
+    allow: []
   includes:
     - "/etc/nginx/conf.d/*.conf"
     - "/etc/nginx/sites-enabled/*.conf"
@@ -123,6 +126,26 @@ nginx_http:
         - source: "default"
           result: "0.0.0.0"
 ```
+
+
+## `global`
+
+```yaml
+  global:
+    deny:
+      - description: "paoalto"
+        values:
+          - "205.210.31.205"
+          - "162.216.149.197"
+      - description: "censys"
+        values:
+          - "167.94.146.63"
+    allow:
+      - description: "localhost"
+        values:
+          - "127.0.1.1"
+```
+
 
 ## `extra_options`
 
