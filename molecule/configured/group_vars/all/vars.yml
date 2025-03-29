@@ -88,7 +88,7 @@ nginx_http:
 
   includes:
     - includes.d/useragent.rules
-    - includes.d/proxy_cache.rules
+    - includes.d/proxy.rules
     - sites-enabled/*.conf
 
   resolver:
@@ -96,6 +96,9 @@ nginx_http:
     timeout: "30s"
 
   proxy:
+    headers_hash:
+      max_size: 512
+      bucket_size: 64
     cache_path:
       - path: /var/cache/nginx/live
         options:
@@ -184,8 +187,7 @@ nginx_http:
         values:
           - "205.210.31.205"
           - "162.216.149.197"
-      - description: "censys"
-        values:
+      - values:
           - "167.94.146.63"
       - description: "internal"
         values:
@@ -194,4 +196,38 @@ nginx_http:
       - description: "localhost"
         values:
           - "127.0.1.1"
+
+  limits:
+    # https://nginx.org/en/docs/http/ngx_http_limit_conn_module.html
+    conn:
+      conn:
+        - limit_conn_by_addr    50
+        - limit_conn_by_servers 2000
+      conn_status: 429
+      conn_log_level: notice
+      conn_dry_run: true
+      conn_zone:
+        - $binary_remote_addr zone=conn_limit_per_ip:10m
+        - $binary_remote_addr zone=limit_conn_by_addr:20m
+        - $server_name        zone=limit_conn_by_servers:10m
+      zone: ""
+    # https://nginx.org/en/docs/http/ngx_http_limit_req_module.html
+    req:
+      req:
+        - zone=req_zone    burst=10 delay=15
+        - zone=req_zone_wl burst=20 nodelay
+      req_dry_run: true
+      req_log_level: notice
+      req_status: 429
+      req_zone:
+        - $binary_remote_addr zone=req_zone:10m     rate=10r/s
+        - $binary_remote_addr zone=req_zone_wl:10m  rate=15r/s
+
+  extra_options: |-
+    proxy_buffering        off;
+    proxy_set_header       X-Real-IP $remote_addr;
+    proxy_set_header       X-Scheme $scheme;
+    proxy_set_header       X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header       Host $http_host;
+
 ...

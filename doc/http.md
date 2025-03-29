@@ -17,6 +17,22 @@ nginx_http:
       buffer_size: ""                                     #
       timeout: ""                                         #
   access_log: "{{ nginx_logging.base_directory }}/access.log main buffer=32k flush=2m"
+  limits:                                                 #
+    # https://nginx.org/en/docs/http/ngx_http_limit_conn_module.html
+    conn:
+      conn: []                                            #                  # limit_conn zone number;
+      conn_status: ""                                     # 503              # limit_conn_status code;
+      conn_log_level: ""                                  # error            # limit_conn_log_level info | notice | warn | error;
+      conn_dry_run: ""                                    # false            # limit_conn_dry_run on | off;
+      conn_zone: []                                       #                  # limit_conn_zone key zone=name:size;
+      zone: ""                                            #                  # limit_zone name $variable size;
+    # https://nginx.org/en/docs/http/ngx_http_limit_req_module.html
+    req:                                                  #                  #
+      req: []                                             #                  # limit_req zone=name [burst=number] [nodelay | delay=number];
+      req_dry_run: ""                                     #                  # limit_req_dry_run on | off;
+      req_log_level: ""                                   #                  # limit_req_log_level info | notice | warn | error;
+      req_status: ""                                      #                  # limit_req_status code;
+      req_zone: []                                        #                  # limit_req_zone key zone=name:size rate=rate [sync];  
   resolver:
     address: ""
     timeout: ""
@@ -38,7 +54,26 @@ nginx_http:
     time: ""                                              # Limits the maximum time during which requests can be processed through one keep-alive connection.
     timeout: ""                                           # The first parameter sets a timeout during which a keep-alive client connection will stay open on the server side.
   proxy:                                                  #
+    bind: ""                                              #
+    buffer_size: ""                                       #
+    buffering: ""
+    buffers: ""
+    cache: ""
+    cache_background_update: ""
     cache_path: []                                        #
+    cache_purge: ""                                       #
+    cache_revalidate: ""
+    cache_use_stale: ""
+    cache_methods: []                                     #
+    cache_key: ""                                         #
+    headers_hash:                                         #
+      max_size: ""                                        #
+      bucket_size: ""                                     #
+    hide_header: []                                       #
+    http_version: "1.1"                                   #
+    ignore_client_abort: ""                               #
+    ignore_headers: []                                    #
+    limit_rate: ""                                        #
   maps: []                                                #
   map_hash:                                               #
     max_size: ""                                          #

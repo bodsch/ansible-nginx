@@ -1,0 +1,114 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+# {{ ansible_managed }}
+
+{% if nginx_http.proxy is defined %}
+  {% if nginx_http.proxy.bind is defined and
+        nginx_http.proxy.bind | string | length > 0 %}
+  proxy_bind                      {{ nginx_http.proxy.bind }};
+  {% endif %}
+  {% if nginx_http.proxy.buffer_size is defined and
+        nginx_http.proxy.buffer_size | string | length > 0 %}
+  proxy_buffer_size               {{ nginx_http.proxy.buffer_size }};
+  {% endif %}
+  {% if nginx_http.proxy.buffering is defined and
+        nginx_http.proxy.buffering | string | length > 0 %}
+  proxy_buffering                 {{ nginx_http.proxy.buffering | bool | bodsch.core.config_bool(true_as='on', false_as='off') }};
+  {% endif %}
+  {% if nginx_http.proxy.buffers is defined and
+        nginx_http.proxy.buffers | string | length > 0 %}
+  proxy_buffers                   {{ nginx_http.proxy.buffers }};
+  {% endif %}
+  {% if nginx_http.proxy.cache is defined and
+        nginx_http.proxy.cache | string | length > 0 %}
+    {% if nginx_http.proxy.cache | bodsch.core.type == "bool" and
+          not nginx_http.proxy.cache %}
+  proxy_cache                     off;
+    {% else %}
+  proxy_cache                     {{ nginx_http.proxy.cache }};
+    {% endif %}
+  {% endif %}
+  {% if nginx_http.proxy.cache_background_update is defined and
+        nginx_http.proxy.cache_background_update | string | length > 0 %}
+  proxy_cache_background_update     {{ nginx_http.proxy.cache_background_update | bool | bodsch.core.config_bool(true_as='on', false_as='off') }};
+  {% endif %}
+  {# https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cache_path #}
+  {% if nginx_http.proxy.cache_path is defined and
+        nginx_http.proxy.cache_path | string | length > 0 %}
+
+    {% if nginx_http.proxy.cache_path | bodsch.core.type == "string" %}
+  proxy_cache_path                {{ nginx_http.proxy.cache_path }};
+    {% endif %}
+    {% if nginx_http.proxy.cache_path | bodsch.core.type == "list" %}
+      {% for cache in nginx_http.proxy.cache_path %}
+        {% set cache_options = "levels=1:2 keys_zone=default_cache:10m" %}
+        {% if cache.options is defined %}
+          {% if cache.options | bodsch.core.type == "string" %}
+            {% set cache_options = cache.options %}
+          {% endif %}
+          {% if cache.options | bodsch.core.type == "list" %}
+            {% set cache_options = cache.options | join(' ') %}
+          {% endif %}
+        {% endif %}
+  proxy_cache_path                {{ cache.path }}
+      {{ cache_options }};
+      {% endfor %}
+    {% endif %}
+  {% endif %}
+  {% if nginx_http.proxy.cache_purge is defined and
+        nginx_http.proxy.cache_purge | string | length > 0 %}
+  proxy_cache_purge               {{ nginx_http.proxy.cache_purge }};
+  {% endif %}
+  {% if nginx_http.proxy.cache_revalidate is defined and
+        nginx_http.proxy.cache_revalidate | string | length > 0 %}
+  proxy_cache_revalidate          {{ nginx_http.proxy.cache_revalidate | bool | bodsch.core.config_bool(true_as='on', false_as='off') }};
+  {% endif %}
+  {% if nginx_http.proxy.cache_use_stale is defined and
+        nginx_http.proxy.cache_use_stale | string | length > 0 %}
+    {% if nginx_http.proxy.cache | bodsch.core.type == "bool" and
+          not nginx_http.proxy.cache %}
+  proxy_cache_use_stale           off;
+    {% else %}
+    {#  error | timeout | invalid_header | updating | http_500 | http_502 | http_503 | http_504 | http_403 | http_404 | http_429 | off ...; #}
+  proxy_cache_use_stale           {{ nginx_http.proxy.cache_use_stale }};
+    {% endif %}
+  {% endif %}
+  {% if nginx_http.proxy.cache_methods is defined and
+        nginx_http.proxy.cache_methods | bodsch.core.type == "list" and
+        nginx_http.proxy.cache_methods | count > 0 %}
+  proxy_cache_revalidate          {{ nginx_http.proxy.cache_methods | join(' ') }};
+  {% endif %}
+  {% if nginx_http.proxy.cache_key is defined and
+        nginx_http.proxy.cache_key | string | length > 0 %}
+  proxy_cache_key                 {{ nginx_http.proxy.cache_key }};
+  {% endif %}
+  {% if nginx_http.proxy.headers_hash.max_size is defined and
+        nginx_http.proxy.headers_hash.max_size | string | length > 0 %}
+  proxy_headers_hash_max_size     {{ nginx_http.proxy.headers_hash.max_size }};
+  {% endif %}
+  {% if nginx_http.proxy.headers_hash.bucket_size is defined and
+        nginx_http.proxy.headers_hash.bucket_size | string | length > 0 %}
+  proxy_headers_hash_bucket_size  {{ nginx_http.proxy.headers_hash.bucket_size }};
+  {% endif %}
+  {% if nginx_http.proxy.hide_header is defined and
+        nginx_http.proxy.hide_header | bodsch.core.type == "list" and
+        nginx_http.proxy.hide_header | count > 0 %}
+  proxy_hide_header               "{{ nginx_http.proxy.hide_header | join('","') }}";
+  {% endif %}
+  {% if nginx_http.proxy.http_version is defined and
+        nginx_http.proxy.http_version | string | length > 0 %}
+  proxy_http_version              {{ nginx_http.proxy.http_version }};
+  {% endif %}
+  {% if nginx_http.proxy.ignore_client_abort is defined and
+        nginx_http.proxy.ignore_client_abort | string | length > 0 %}
+  proxy_ignore_client_abort       {{ nginx_http.proxy.ignore_client_abort | bool | bodsch.core.config_bool(true_as='on', false_as='off') }};
+  {% endif %}
+  {% if nginx_http.proxy.ignore_headers is defined and
+        nginx_http.proxy.ignore_headers | bodsch.core.type == "list" and
+        nginx_http.proxy.ignore_headers | count > 0 %}
+  proxy_ignore_headers            "{{ nginx_http.proxy.ignore_headers | join('","') }}";
+  {% endif %}
+  {% if nginx_http.proxy.limit_rate is defined and
+        nginx_http.proxy.limit_rate | string | length > 0 %}
+  proxy_limit_rate                {{ nginx_http.proxy.limit_rate }};
+  {% endif %}
+{% endif %}

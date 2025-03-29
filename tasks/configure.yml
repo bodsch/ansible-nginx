@@ -121,16 +121,43 @@
     - validate config
     - reload nginx
 
-- name: create proxy_cache.rules configuration
+- name: create proxy.rules configuration
   ansible.builtin.template:
-    src: includes.d/proxy_cache.rules.j2
-    dest: /etc/nginx/includes.d/proxy_cache.rules
+    src: includes.d/proxy.rules.j2
+    dest: /etc/nginx/includes.d/proxy.rules
     owner: root
     group: root
     mode: 0644
   notify:
     - validate config
     - reload nginx
+
+- name: create proxy.rules configuration
+  ansible.builtin.template:
+    src: includes.d/proxy.rules.j2
+    dest: /etc/nginx/includes.d/proxy.rules
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - validate config
+    - reload nginx
+
+- name: remove obsolete proxy_cache.rules
+  ansible.builtin.file:
+    name: /etc/nginx/includes.d/proxy_cache.rules
+    state: absent
+
+# - name: create proxy_cache.rules configuration
+#   ansible.builtin.template:
+#     src: includes.d/proxy_cache.rules.j2
+#     dest: /etc/nginx/includes.d/proxy_cache.rules
+#     owner: root
+#     group: root
+#     mode: 0644
+#   notify:
+#     - validate config
+#     - reload nginx
 
 - name: create custom includes
   become: true
