@@ -17,6 +17,7 @@ nginx_http:
       buffer_size: ""                                     #
       timeout: ""                                         #
   access_log: "{{ nginx_logging.base_directory }}/access.log main buffer=32k flush=2m"
+  open_log_file_cache: ""                                 # example: 'max=1000 inactive=20s valid=1m min_uses=2'
   limits:                                                 #
     # https://nginx.org/en/docs/http/ngx_http_limit_conn_module.html
     conn:
@@ -34,8 +35,8 @@ nginx_http:
       req_status: ""                                      #                  # limit_req_status code;
       req_zone: []                                        #                  # limit_req_zone key zone=name:size rate=rate [sync];  
   resolver:
-    address: ""
-    timeout: ""
+    address: ""                                           # 127.0.0.1 [::1]:5353 valid=30s [ipv4=on|off] [ipv6=on|off]
+    timeout: ""                                           # 5s
   sendfile: true                                          #
   tcp:
     nopush: true                                          #
@@ -74,6 +75,7 @@ nginx_http:
     ignore_client_abort: ""                               #
     ignore_headers: []                                    #
     limit_rate: ""                                        #
+    set_headers: {}                                       #
   maps: []                                                #
   map_hash:                                               #
     max_size: ""                                          #
@@ -99,7 +101,7 @@ nginx_http:
 nginx_http:
 
   resolver:
-    address: "172.17.0.1 valid=60s" # version 1.23.1: ipv4=on ipv6=off"
+    address: "172.17.0.1 141.1.1.1 valid=60s" # version 1.23.1: ipv4=on ipv6=off"
     timeout: "30s"
 ```
 
@@ -160,12 +162,41 @@ nginx_http:
           result: "$ip::"
         - source: "default"
           result: "0.0.0.0"
+
+    - name: http_user_agent
+      description: matched against 'http_user_agent' for bad user agents
+      variable: badagent
+      mapping:
+        - source: default
+          result: 0
+        - source: ~*malicious
+          result: 1
+        - source: ~*backdoor
+          result: 1
+        - source: ~*netcrawler
+          result: 1
+        - source: ~Antivirx
+          result: 1
+        - source: ~Arian
+          result: 1
+        - source: ~webbandit
+          result: 1
+        - source: ~cyberscan
+          result: 1
+        - source: ~*paloaltonetworks.com
+          result: 1
+        - source: ~Googlebot
+          result: 1
+        - source: ~Download Demon
+          result: 1
 ```
 
 
 ## `global`
 
 ```yaml
+nginx_http:
+
   global:
     deny:
       - description: "paoalto"
@@ -181,6 +212,37 @@ nginx_http:
           - "127.0.1.1"
 ```
 
+## `limits`
+
+```yaml
+nginx_http:
+
+  limits:
+    # https://nginx.org/en/docs/http/ngx_http_limit_conn_module.html
+    conn:
+      conn:
+        - limit_conn_by_addr    50
+        - limit_conn_by_servers 2000
+      conn_status: 429
+      conn_log_level: notice
+      conn_dry_run: true
+      conn_zone:
+        - $binary_remote_addr zone=conn_limit_per_ip:10m
+        - $binary_remote_addr zone=limit_conn_by_addr:20m
+        - $server_name        zone=limit_conn_by_servers:10m
+      zone: ""
+    # https://nginx.org/en/docs/http/ngx_http_limit_req_module.html
+    req:
+      req:
+        - zone=req_zone    burst=10 delay=15
+        - zone=req_zone_wl burst=20 nodelay
+      req_dry_run: true
+      req_log_level: notice
+      req_status: 429
+      req_zone:
+        - $binary_remote_addr zone=req_zone:10m     rate=10r/s
+        - $binary_remote_addr zone=req_zone_wl:10m  rate=15r/s
+```
 
 ## `extra_options`
 

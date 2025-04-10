@@ -18,37 +18,37 @@ nginx_mime_file_path: /etc/nginx/mime.types
 
 nginx_defaults_global:
   # https://nginx.org/en/docs/ngx_core_module.html
-  daemon: ""                  # true
-  debug_points: ""            #
-  env: []                     #
+  daemon: ""                                              # true
+  debug_points: ""                                        #
+  env: []                                                 #
   error_log: "{{ nginx_logging.base_directory }}/error.log warn"
-  includes:                   #
+  includes:                                               #
     - /etc/nginx/modules-enabled/*.conf
-  load_modules: []            #
-  lock_file: ""               # logs/nginx.lock
-  master_process: ""          # true
-  pcre_jit: ""                # false
-  pid: ""                     # logs/nginx.pid
-  ssl_engine: ""              #
-  thread_pool: {}             # default: { threads=32, max_queue=65536 }
-  timer_resolution: ""        #
-  worker_processes: "auto"    # {{ ansible_processor_vcpus | default(ansible_processor_count) }}"
-  worker_cpu_affinity:  ""    # auto [cpumask]
-  worker_priority: ""         # 0
-  worker_rlimit_core: ""      #
-  worker_rlimit_nofile: ""    #
-  worker_shutdown_timeout: "" #
-  working_directory: ""       #
+  load_modules: []                                        #
+  lock_file: ""                                           # logs/nginx.lock
+  master_process: ""                                      # true
+  pcre_jit: ""                                            # false
+  pid: ""                                                 # logs/nginx.pid
+  ssl_engine: ""                                          #
+  thread_pool: {}                                         # default: { threads=32, max_queue=65536 }
+  timer_resolution: ""                                    #
+  worker_processes: "auto"                                # {{ ansible_processor_vcpus | default(ansible_processor_count) }}"
+  worker_cpu_affinity:  ""                                # auto [cpumask]
+  worker_priority: ""                                     # 0
+  worker_rlimit_core: ""                                  #
+  worker_rlimit_nofile: ""                                #
+  worker_shutdown_timeout: ""                             #
+  working_directory: ""                                   #
   extra_config: {}
 
 nginx_defaults_events:
-  accept_mutex: ""            # false
-  accept_mutex_delay: ""      # 500ms
-  worker_connections: 1024    # 512
+  accept_mutex: ""                                        # false
+  accept_mutex_delay: ""                                  # 500ms
+  worker_connections: 1024                                # 512
   multi_accept: true
   use: ""
-  worker_aio_requests: ""     # 32
-  debug_connection: []        #
+  worker_aio_requests: ""                                 # 32
+  debug_connection: []                                    #
 
 nginx_defaults_http:
   mime_file_path: "{{ nginx_mime_file_path }}"            #
@@ -64,6 +64,15 @@ nginx_defaults_http:
       buffer_size: ""                                     #
       timeout: ""                                         #
   access_log: "{{ nginx_logging.base_directory }}/access.log main buffer=32k flush=2m"
+  # access_log:
+  #   base_directory: "{{ nginx_logging.base_directory }}"
+  #   file_name: "access.log"
+  #   format: main
+  #   buffer: 32k
+  #   flush: 2m
+  #   gzip: false
+  #   condition: ""
+  open_log_file_cache: ""                                 # example: 'max=1000 inactive=20s valid=1m min_uses=2'
   limits:                                                 #
     # https://nginx.org/en/docs/http/ngx_http_limit_conn_module.html
     conn:
@@ -81,8 +90,8 @@ nginx_defaults_http:
       req_status: ""                                      #                  # limit_req_status code;
       req_zone: []                                        #                  # limit_req_zone key zone=name:size rate=rate [sync];
   resolver:
-    resolvers: []
-    timeout: ""
+    address: ""                                           # 127.0.0.1 [::1]:5353 valid=30s [ipv4=on|off] [ipv6=on|off]
+    timeout: ""                                           # 5s
   sendfile: true                                          #
   tcp:
     nopush: true                                          #
@@ -121,6 +130,7 @@ nginx_defaults_http:
     ignore_client_abort: ""                               #
     ignore_headers: []                                    #
     limit_rate: ""                                        #
+    set_headers: {}                                       #
   maps: []                                                #
   map_hash:                                               #
     max_size: ""                                          #
@@ -133,8 +143,9 @@ nginx_defaults_http:
     bucket_size: ""                                       # Sets the bucket size for the variables hash table.
   extra_options: {}                                       #
   includes:
-    - "/etc/nginx/conf.d/*.conf"
-    - "/etc/nginx/sites-enabled/*.conf"
+    - "conf.d/*.conf"
+    - "includes.d/*.rules"
+    - "sites-enabled/*.conf"
 
 nginx_defaults_gzip:
   enabled: false

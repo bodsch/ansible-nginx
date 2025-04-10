@@ -39,6 +39,6 @@ Via `extra_options` it is possible to integrate own extensions "hands-free".
 ```yaml
 nginx_global:
 
-  extra_config:
+  extra_config: ""
 
 ```

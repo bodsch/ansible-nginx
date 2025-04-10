@@ -89,13 +89,18 @@ nginx_http:
   includes:
     - includes.d/useragent.rules
     - includes.d/proxy.rules
+    - includes.d/limits.rules
+    - includes.d/global.rules
     - sites-enabled/*.conf
 
   resolver:
-    address: "172.17.0.1 valid=60s" # version 1.23.1: ipv4=on ipv6=off"
+    address: "172.17.0.1 141.1.1.1 valid=60s" # version 1.23.1: ipv4=on ipv6=off"
     timeout: "30s"
 
+  open_log_file_cache: max=100 inactive=20s valid=1m min_uses=2
+
   proxy:
+    buffering: false
     headers_hash:
       max_size: 512
       bucket_size: 64
@@ -121,6 +126,11 @@ nginx_http:
           - max_size=50m
           - inactive=60m
           - use_temp_path=off
+    set_headers:
+      X-Real-IP: $remote_addr
+      X-Scheme: $scheme
+      X-Forwarded-For: $proxy_add_x_forwarded_for
+      Host: $http_host
 
   maps:
     - name: http_user_agent
@@ -223,11 +233,11 @@ nginx_http:
         - $binary_remote_addr zone=req_zone:10m     rate=10r/s
         - $binary_remote_addr zone=req_zone_wl:10m  rate=15r/s
 
-  extra_options: |-
-    proxy_buffering        off;
-    proxy_set_header       X-Real-IP $remote_addr;
-    proxy_set_header       X-Scheme $scheme;
-    proxy_set_header       X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header       Host $http_host;
+  extra_options: ""
+  #   proxy_buffering        off;
+  #   proxy_set_header       X-Real-IP $remote_addr;
+  #   proxy_set_header       X-Scheme $scheme;
+  #   proxy_set_header       X-Forwarded-For $proxy_add_x_forwarded_for;
+  #   proxy_set_header       Host $http_host;
 
 ...

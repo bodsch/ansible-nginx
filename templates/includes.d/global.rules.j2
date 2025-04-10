@@ -1,0 +1,38 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+# {{ ansible_managed }}
+{# ------------------------------ #}
+{% if nginx_http.global.deny is defined and
+      nginx_http.global.deny | count > 0 %}
+
+# deny rules
+  {% for k in nginx_http.global.deny %}
+    {% set _description = k.get('description', None) %}
+    {% set _values = k.get('values', []) %}
+    {% if _description %}
+# for {{ _description }}
+    {% endif %}
+    {% if _values and _values | count > 0 %}
+      {% for v in _values %}
+deny                          {{ v }};
+      {% endfor %}
+    {% endif %}
+  {% endfor %}
+{% endif %}
+{# ------------------------------ #}
+{% if nginx_http.global.allow is defined and
+      nginx_http.global.allow | count > 0 %}
+
+# allow rules
+  {% for k in nginx_http.global.allow %}
+    {% set _description = k.get('description', None) %}
+    {% set _values = k.get('values', []) %}
+    {% if _description %}
+# for {{ _description }}
+    {% endif %}
+    {% if _values and _values | count > 0 %}
+      {% for v in _values %}
+allow                         {{ v }};
+      {% endfor %}
+    {% endif %}
+  {% endfor %}
+{% endif %}

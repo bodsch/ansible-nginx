@@ -1,9 +1,20 @@
 #jinja2: trim_blocks: True, lstrip_blocks: True
 # {{ ansible_managed }}
 
+{% if nginx_http.open_log_file_cache is defined and
+      nginx_http.open_log_file_cache | string | length > 0 %}
+open_log_file_cache           {{ nginx_http.open_log_file_cache }};
+{% endif %}
+{% if nginx_http.rewrite_log is defined and
+      nginx_http.rewrite_log | string | length > 0 %}
+rewrite_log                   {{ nginx_http.rewrite_log | bool | bodsch.core.config_bool(true_as='on', false_as='off') }};
+{% endif %}
+
 {% for k,v in nginx_logformat.items() %}
 log_format
   {{ k }} {% if v.escape is defined %}escape = {{ v.escape  }}{% endif %}
 
 {{ v.format | indent(4, first=True) }}
 {% endfor %}
+
+access_log                    {{ nginx_http.access_log }};

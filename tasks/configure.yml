@@ -132,10 +132,21 @@
     - validate config
     - reload nginx
 
-- name: create proxy.rules configuration
+- name: create global.rules configuration
   ansible.builtin.template:
-    src: includes.d/proxy.rules.j2
-    dest: /etc/nginx/includes.d/proxy.rules
+    src: includes.d/global.rules.j2
+    dest: /etc/nginx/includes.d/global.rules
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - validate config
+    - reload nginx
+
+- name: create limits.rules configuration
+  ansible.builtin.template:
+    src: includes.d/limits.rules.j2
+    dest: /etc/nginx/includes.d/limits.rules
     owner: root
     group: root
     mode: 0644

@@ -1,0 +1,64 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+# {{ ansible_managed }}
+
+{% if nginx_http.limits is defined %}
+  {% if nginx_http.limits.conn is defined and
+        nginx_http.limits.conn | count > 0 %}
+    {% if nginx_http.limits.conn.conn is defined and
+          nginx_http.limits.conn.conn | count > 0 %}
+      {% for c in nginx_http.limits.conn.conn %}
+limit_conn                    {{ c }};
+      {% endfor %}
+    {% endif %}
+    {% if nginx_http.limits.conn.conn_status is defined and
+          nginx_http.limits.conn.conn_status | string | length > 0 %}
+limit_conn_status             {{ nginx_http.limits.conn.conn_status }};
+    {% endif %}
+    {% if nginx_http.limits.conn.conn_log_level is defined and
+          nginx_http.limits.conn.conn_log_level | string | length > 0 %}
+limit_conn_log_level          {{ nginx_http.limits.conn.conn_log_level }};
+    {% endif %}
+    {% if nginx_http.limits.conn.conn_dry_run is defined and
+          nginx_http.limits.conn.conn_dry_run | string | length > 0 %}
+limit_conn_dry_run            {{ nginx_http.limits.conn.conn_dry_run | bool | bodsch.core.config_bool(true_as='on', false_as='off') }};
+    {% endif %}
+    {% if nginx_http.limits.conn.conn_zone is defined and
+          nginx_http.limits.conn.conn_zone | string | length > 0 %}
+      {% for c in nginx_http.limits.conn.conn_zone %}
+limit_conn_zone               {{ c }};
+      {% endfor %}
+    {% endif %}
+    {% if nginx_http.limits.conn.zone is defined and
+          nginx_http.limits.conn.zone | string | length > 0 %}
+limit_zone                    {{ nginx_http.limits.conn.zone }};
+    {% endif %}
+  {% endif %}
+  {% if nginx_http.limits.req is defined and
+        nginx_http.limits.req | count > 0 %}
+
+    {% if nginx_http.limits.req.req is defined and
+          nginx_http.limits.req.req | count > 0 %}
+      {% for c in nginx_http.limits.req.req %}
+limit_req                     {{ c }};
+      {% endfor %}
+    {% endif %}
+    {% if nginx_http.limits.req.req_status is defined and
+          nginx_http.limits.req.req_status | string | length > 0 %}
+limit_req_status              {{ nginx_http.limits.req.req_status }};
+    {% endif %}
+    {% if nginx_http.limits.req.req_log_level is defined and
+          nginx_http.limits.req.req_log_level | string | length > 0 %}
+limit_req_log_level           {{ nginx_http.limits.req.req_log_level }};
+    {% endif %}
+    {% if nginx_http.limits.req.req_dry_run is defined and
+          nginx_http.limits.req.req_dry_run | string | length > 0 %}
+limit_req_dry_run             {{ nginx_http.limits.req.req_dry_run | bool | bodsch.core.config_bool(true_as='on', false_as='off') }};
+    {% endif %}
+    {% if nginx_http.limits.req.req_zone is defined and
+          nginx_http.limits.req.req_zone | string | length > 0 %}
+      {% for c in nginx_http.limits.req.req_zone %}
+limit_req_zone                {{ c }};
+      {% endfor %}
+    {% endif %}
+  {% endif %}
+{% endif %}

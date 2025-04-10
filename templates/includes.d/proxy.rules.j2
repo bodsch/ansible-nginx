@@ -107,6 +107,13 @@
         nginx_http.proxy.ignore_headers | count > 0 %}
   proxy_ignore_headers            "{{ nginx_http.proxy.ignore_headers | join('","') }}";
   {% endif %}
+  {% if nginx_http.proxy.set_headers is defined and
+        nginx_http.proxy.set_headers | bodsch.core.type == "dict" and
+        nginx_http.proxy.set_headers | count > 0 %}
+    {% for k, v in nginx_http.proxy.set_headers.items() %}
+  proxy_set_header                {{ k.ljust(18) }}  {{ v }};
+    {% endfor %}
+  {% endif %}
   {% if nginx_http.proxy.limit_rate is defined and
         nginx_http.proxy.limit_rate | string | length > 0 %}
   proxy_limit_rate                {{ nginx_http.proxy.limit_rate }};
