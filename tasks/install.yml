@@ -13,13 +13,16 @@
   ansible.builtin.set_fact:
     nginx_version: "{{ _nginx_version.version }}"
 
-# - name: create custom fact file
-#   bodsch.core.facts:
-#     name: nginx
-#     facts:
-#       version: "{{ nginx_version }}"
+- name: extra modules
+  when:
+    - nginx_extra_modules | default([]) | count > 0
+  block:
+#     - name: verify extra modules
 #
-# - name: gathering facts now
-#   ansible.builtin.setup:
-
+#
+#
+    - name: install extra modules
+      ansible.builtin.package:
+        name: "{{ nginx_extra_modules }}"
+        state: present
 ...

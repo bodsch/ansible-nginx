@@ -1,7 +1,11 @@
 ---
 
 nginx_gzip:
-  enabled: true
+  enabled: false
+
+nginx_extra_modules:
+  - "{{ 'libnginx-mod-http-geoip' if ansible_os_family | lower == 'debian' else 'nginx-mainline-mod-geoip' }}"
+  - "{{ 'geoip-database' if ansible_os_family | lower == 'debian' else '' }}"
 
 nginx_custom_includes:
   basic_auth_monitoring.conf: |
@@ -44,49 +48,64 @@ nginx_logformat:
   json_full:
     format: |
       '{'
-        '"msec": "$msec", '                                         # request unixtime in seconds with a milliseconds resolution
-        '"connection": "$connection", '                             # connection serial number
-        '"connection_requests": "$connection_requests", '           # number of requests made in connection
-        '"pid": "$pid", '                                           # process pid
-        '"request_id": "$request_id", '                             # the unique request id
-        '"request_length": "$request_length", '                     # request length (including headers and body)
-        '"remote_addr": "$remote_addr", '                           # client IP
-        '"remote_user": "$remote_user", '                           # client HTTP username
-        '"remote_port": "$remote_port", '                           # client port
+        '"msec": "$msec", '                                           # request unixtime in seconds with a milliseconds resolution
+        '"connection": "$connection", '                               # connection serial number
+        '"connection_requests": "$connection_requests", '             # number of requests made in connection
+        '"pid": "$pid", '                                             # process pid
+        '"request_id": "$request_id", '                               # the unique request id
+        '"request_length": "$request_length", '                       # request length (including headers and body)
+        '"remote_addr": "$remote_addr", '                             # client IP
+        '"remote_user": "$remote_user", '                             # client HTTP username
+        '"remote_port": "$remote_port", '                             # client port
         '"time_local": "$time_local", '
-        '"time_iso8601": "$time_iso8601", '                         # local time in the ISO 8601 standard format
-        '"request": "$request", '                                   # full path no arguments if the request
-        '"request_uri": "$request_uri", '                           # full path and arguments if the request
-        '"args": "$args", '                                         # args
-        '"status": "$status", '                                     # response status code
-        '"body_bytes_sent": "$body_bytes_sent", '                   # the number of body bytes exclude headers sent to a client
-        '"bytes_sent": "$bytes_sent", '                             # the number of bytes sent to a client
-        '"http_referer": "$http_referer", '                         # HTTP referer
-        '"http_user_agent": "$http_user_agent", '                   # user agent
-        '"http_x_forwarded_for": "$http_x_forwarded_for", '         # http_x_forwarded_for
-        '"http_x_forwarded_proto": "$http_x_forwarded_proto", '     # http_x_forwarded_proto
-        '"http_host": "$http_host", '                               # the request Host: header
-        '"server_name": "$server_name", '                           # the name of the vhost serving the request
-        '"request_time": "$request_time", '                         # request processing time in seconds with msec resolution
-        '"upstream": "$upstream_addr", '                            # upstream backend server for proxied requests
-        '"upstream_connect_time": "$upstream_connect_time", '       # upstream handshake time incl. TLS
-        '"upstream_header_time": "$upstream_header_time", '         # time spent receiving upstream headers
-        '"upstream_response_time": "$upstream_response_time", '     # time spend receiving upstream body
-        '"upstream_response_length": "$upstream_response_length", ' # upstream response length
-        '"upstream_cache_status": "$upstream_cache_status", '       # cache HIT/MISS where applicable
-        '"ssl_protocol": "$ssl_protocol", '                         # TLS protocol
-        '"ssl_cipher": "$ssl_cipher", '                             # TLS cipher
-        '"scheme": "$scheme", '                                     # http or https
-        '"request_method": "$request_method", '                     # request method
-        '"server_protocol": "$server_protocol", '                   # request protocol, like HTTP/1.1 or HTTP/2.0
-        '"pipe": "$pipe", '                                         # "p" if request was pipelined, "." otherwise
+        '"time_iso8601": "$time_iso8601", '                           # local time in the ISO 8601 standard format
+        '"request": "$request", '                                     # full path no arguments if the request
+        '"request_uri": "$request_uri", '                             # full path and arguments if the request
+        '"args": "$args", '                                           # args
+        '"status": "$status", '                                       # response status code
+        '"body_bytes_sent": "$body_bytes_sent", '                     # the number of body bytes exclude headers sent to a client
+        '"bytes_sent": "$bytes_sent", '                               # the number of bytes sent to a client
+        '"http_referer": "$http_referer", '                           # HTTP referer
+        '"http_user_agent": "$http_user_agent", '                     # user agent
+        '"http_x_forwarded_for": "$http_x_forwarded_for", '           # http_x_forwarded_for
+        '"http_x_forwarded_proto": "$http_x_forwarded_proto", '       # http_x_forwarded_proto
+        '"http_host": "$http_host", '                                 # the request Host: header
+        '"server_name": "$server_name", '                             # the name of the vhost serving the request
+        '"request_time": "$request_time", '                           # request processing time in seconds with msec resolution
+        '"upstream": "$upstream_addr", '                              # upstream backend server for proxied requests
+        '"upstream_connect_time": "$upstream_connect_time", '         # upstream handshake time incl. TLS
+        '"upstream_header_time": "$upstream_header_time", '           # time spent receiving upstream headers
+        '"upstream_response_time": "$upstream_response_time", '       # time spend receiving upstream body
+        '"upstream_response_length": "$upstream_response_length", '   # upstream response length
+        '"upstream_cache_status": "$upstream_cache_status", '         # cache HIT/MISS where applicable
+        '"ssl_protocol": "$ssl_protocol", '                           # TLS protocol
+        '"ssl_cipher": "$ssl_cipher", '                               # TLS cipher
+        '"scheme": "$scheme", '                                       # http or https
+        '"request_method": "$request_method", '                       # request method
+        '"server_protocol": "$server_protocol", '                     # request protocol, like HTTP/1.1 or HTTP/2.0
+        '"pipe": "$pipe", '                                           # "p" if request was pipelined, "." otherwise
         '"gzip_ratio": "$gzip_ratio", '
-        '"http_cf_ray": "$http_cf_ray"'
+        '"http_cf_ray": "$http_cf_ray",'
+        '"geoip_city_continent_code": "$geoip_city_continent_code", ' # two-letter continent code, for example, “EU”, “NA”.
+        '"geoip_country_code": "$geoip_country_code", '               # two-letter country code, for example, RU, US.
+        '"geoip_city_country_name": "$geoip_city_country_name", '     # the name of the country, for example, Russian Federation, United States - if available.
+        '"geoip_city_code": "$geoip_city", '                          # the name of the city, for example, Moscow, Washington, Lisbon, etc. - if available.
+        '"geoip_region_name": "$geoip_region_name", '                 # country region name (region, territory, state, province, federal land and the like), for example, “Moscow City”, “District of Columbia”.
+        '"geoip_city": "$geoip_city", '                               # city name, for example, “Moscow”, “Washington”.
+        '"geoip_dma_code": "$geoip_dma_code", '                       # DMA region code in US (also known as “metro code”), according to the geotargeting in Google AdWords API.
+        '"geoip_latitude": "$geoip_latitude", '                       # latitude - if available.
+        '"geoip_longitude": "$geoip_longitude"'                       # longitude - if available.
       '}';
+
+nginx_global:
+  extra_config: ""
+  #  # to enable geip mobule
+  #  load_module modules/ngx_http_geoip_module.so;
 
 nginx_http:
 
   includes:
+    - includes.d/geoip.conf
     - includes.d/useragent.rules
     - includes.d/proxy.rules
     - includes.d/limits.rules
@@ -191,6 +210,21 @@ nginx_http:
         - source: "default"
           result: "0.0.0.0"
 
+    - name: geoip_country_code
+      description: GeoBlock ...
+      variable: allowed_country
+      mapping:
+        - source: IN
+          result: "no"
+        - source: HK
+          result: "no"
+        - source: US
+          result: "no"
+        - source: UK
+          result: "no"
+        - source: "default"
+          result: "yes"
+
   global:
     deny:
       - description: "paoalto"
@@ -233,11 +267,19 @@ nginx_http:
         - $binary_remote_addr zone=req_zone:10m     rate=10r/s
         - $binary_remote_addr zone=req_zone_wl:10m  rate=15r/s
 
-  extra_options: ""
-  #   proxy_buffering        off;
-  #   proxy_set_header       X-Real-IP $remote_addr;
-  #   proxy_set_header       X-Scheme $scheme;
-  #   proxy_set_header       X-Forwarded-For $proxy_add_x_forwarded_for;
-  #   proxy_set_header       Host $http_host;
+  geoip:
+    country: "/usr/share/GeoIP/GeoIP.dat"
+    city: "/usr/share/GeoIP/GeoIPCity.dat"
+
+#     org: ""
+#     proxy: ""
+#     proxy_recursive: ""
+#
+#   extra_options: |
+#     # SET the path to the .dat file used for determining the visitor's country from$
+#     geoip_country /usr/share/GeoIP/GeoIP.dat;
+#
+#     # SET the path to the .dat file used for determining the visitor's country from$
+#     geoip_city /usr/share/GeoIP/GeoIPCity.dat;
 
 ...

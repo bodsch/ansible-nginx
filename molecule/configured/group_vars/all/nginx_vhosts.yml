@@ -85,6 +85,12 @@ nginx_vhosts:
         return 403;
       }
 
+      if ($allowed_country = no) {
+        return 444;
+      }
+      # add_header X-Country                            $geoip_country_code;
+
+
   - name: 20-bar.molecule.lan
     state: present
     enabled: true
