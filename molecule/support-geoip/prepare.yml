@@ -47,5 +47,6 @@
 
   roles:
     - role: bodsch.core.snakeoil
+    - role: geoip
 
 ...
