@@ -1,0 +1,28 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+# {{ ansible_managed }}
+
+{% if nginx_http.geoip is defined %}
+  {% set geoip = nginx_http.geoip %}
+  {% if geoip.country is defined and geoip.country | string | length > 0 %}
+geoip_country                 {{ geoip.country }};
+  {% endif %}
+  {% if geoip.city is defined and geoip.city | string | length > 0 %}
+geoip_city                    {{ geoip.city }};
+  {% endif %}
+  {% if geoip.org is defined and geoip.org | string | length > 0 %}
+geoip_org                     {{ geoip.org }};
+  {% endif %}
+  {% if geoip.proxy is defined and geoip.proxy | string | length > 0 %}
+geoip_proxy                   {{ geoip.proxy }};
+  {% endif %}
+  {% if geoip.proxy_recursive is defined and geoip.proxy_recursive | string | length > 0 %}
+geoip_proxy_recursive         {{ geoip.proxy_recursive | bool | bodsch.core.config_bool(true_as='on', false_as='off') }};
+  {% endif %}
+{% endif %}
+{#
+geoip_country file;
+geoip_city file;
+geoip_org file;
+geoip_proxy address | CIDR;
+geoip_proxy_recursive on | off;
+#}

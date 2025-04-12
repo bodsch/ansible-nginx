@@ -73,6 +73,12 @@ nginx_defaults_http:
   #   gzip: false
   #   condition: ""
   open_log_file_cache: ""                                 # example: 'max=1000 inactive=20s valid=1m min_uses=2'
+  geoip:                                                  # https://nginx.org/en/docs/http/ngx_http_geoip_module.html
+    country: ""                                           # geoip_country file;
+    city: ""                                              # geoip_city file;
+    org: ""                                               # geoip_org file;
+    proxy: ""                                             # geoip_proxy address | CIDR;
+    proxy_recursive: ""                                   # geoip_proxy_recursive on | off;
   limits:                                                 #
     # https://nginx.org/en/docs/http/ngx_http_limit_conn_module.html
     conn:

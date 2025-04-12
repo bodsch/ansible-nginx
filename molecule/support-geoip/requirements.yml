@@ -4,4 +4,8 @@
   src: bodsch.htpasswd
   version: 1.1.5
 
+- name: geoip
+  src: bodsch.geoip
+  version: 1.0.0
+
 ...

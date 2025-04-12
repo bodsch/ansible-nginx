@@ -1,0 +1,130 @@
+---
+
+nginx_vhosts:
+
+  - name: default
+    description: |
+      simply a default vhost
+    ssl:
+      enabled: false
+
+  - name: nginx-status
+    filename: 00-status.conf
+    # template: vhost_status.j2
+    state: present  # default: present
+    enabled: true   # default: true
+    # domain(s)
+    domains:
+      - localhost
+    # listen
+    listen:
+      - 127.0.0.1:8088
+
+    root_directory: /var/www/
+
+    # locations
+    locations:
+      "/nginx_status":
+        options: |
+          stub_status on;
+          access_log off;
+          allow 127.0.0.1;
+          deny all;
+
+  - name: monitoring.molecule.lan
+    filename: 10-monitoring.molecule.lan.conf
+    state: present
+    enabled: false
+
+    domains:
+      - monitoring.molecule.lan
+
+    listen: 80
+
+    upstreams:
+      - name: grafana
+        servers:
+          - 127.0.0.1:3000
+      - name: prometheus
+        servers:
+          - 127.0.0.1:9090
+
+    root_directory: /var/www/monitoring.molecule.lan
+    root_directory_create: true
+
+    logfiles:
+      access:
+        file: /var/log/nginx/monitoring.molecule.lan/access.log
+        loglevel: 'json_full if=$excluded_ua'
+      error:
+        file: /var/log/nginx/monitoring.molecule.lan/error.log
+        loglevel: notice
+
+  - name: foo.molecule.lan
+    filename: 15-foo.molecule.lan.conf
+    state: present
+    enabled: true
+
+    domains:
+      - foo.molecule.lan
+
+    # Specify which port you want to listen to with clear HTTP, or leave undefined for 80
+    listen:
+      - 9443
+
+    # enable ssl
+    ssl:
+      enabled: true
+      ciphers: default
+      certificate: /etc/snakeoil/molecule.lan/molecule.lan.pem
+      certificate_key: /etc/snakeoil/molecule.lan/molecule.lan.key
+      dhparam: /etc/snakeoil/molecule.lan/dh.pem
+
+    raw: |
+      if ($badagent) {
+        return 403;
+      }
+
+      if ($allowed_country = no) {
+        return 444;
+      }
+      # add_header X-Country                            $geoip_country_code;
+
+
+  - name: 20-bar.molecule.lan
+    state: present
+    enabled: true
+
+    domains:
+      - bar.molecule.lan
+      - ruf.molecule.lan
+      - slo.molecule.lan
+      - zup.molecule.lan
+
+    # creates also an HTTP vhost only for redirect to HTTPS
+    redirect:
+      from_port: 80
+
+    # https://nginx.org/en/docs/http/ngx_http_core_module.html#listen
+    listen:
+      - 8443 reuseport
+      - 443 ssl http2
+
+    # enable ssl
+    ssl:
+      enabled: true
+      ciphers: strong
+      certificate:     /etc/snakeoil/molecule.lan/molecule.lan.pem
+      certificate_key: /etc/snakeoil/molecule.lan/molecule.lan.key
+      dhparam: /etc/snakeoil/molecule.lan/dh.pem
+
+    raw: |
+      if ($badagent) {
+        return 403;
+      }
+
+      if ($host != bar.molecule.lan) {
+        return 301 https://bar.molecule.lan$request_uri;
+      }
+
+...

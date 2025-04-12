@@ -18,6 +18,12 @@ nginx_http:
       timeout: ""                                         #
   access_log: "{{ nginx_logging.base_directory }}/access.log main buffer=32k flush=2m"
   open_log_file_cache: ""                                 # example: 'max=1000 inactive=20s valid=1m min_uses=2'
+  geoip:                                                  # https://nginx.org/en/docs/http/ngx_http_geoip_module.html
+    country: ""                                           # geoip_country file;
+    city: ""                                              # geoip_city file;
+    org: ""                                               # geoip_org file;
+    proxy: ""                                             # geoip_proxy address | CIDR;
+    proxy_recursive: ""                                   # geoip_proxy_recursive on | off;  
   limits:                                                 #
     # https://nginx.org/en/docs/http/ngx_http_limit_conn_module.html
     conn:
@@ -243,6 +249,35 @@ nginx_http:
         - $binary_remote_addr zone=req_zone:10m     rate=10r/s
         - $binary_remote_addr zone=req_zone_wl:10m  rate=15r/s
 ```
+
+## `geoip`
+
+**ATTENTION!**
+
+Debian (12?) no longer provides full geoip support.  
+The `geoip-database-extra` package has been removed, therefore no GeoIP-City data can be provided.
+
+As an alternative you can use my [geoip role](https://github.com/bodsch/ansible-geoip).
+
+```yaml
+
+nginx_extra_modules:
+  - "{{ 'libnginx-mod-http-geoip' if ansible_os_family | lower == 'debian' else 'nginx-mainline-mod-geoip' }}"
+
+nginx_http:
+
+  # https://nginx.org/en/docs/http/ngx_http_geoip_module.html
+  geoip:
+    # SET the path to the .dat file used for determining the visitor's country from$
+    country: "/usr/share/GeoIP/GeoIP-Country.dat"
+    # SET the path to the .dat file used for determining the visitor's country from$
+    city: "/usr/share/GeoIP/GeoIP-City.dat"
+```
+
+With GeoIP support you still have logging parameters available.
+
+I have a corresponding [example configuration](https://github.com/bodsch/ansible-nginx/blob/main/molecule/configured/group_vars/all/vars.yml#L89-L97) here.
+
 
 ## `extra_options`
 

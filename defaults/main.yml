@@ -14,6 +14,10 @@ nginx_vhost_templates:
 nginx_logging:
   base_directory: /var/log/nginx
 
+nginx_extra_modules: []
+  # - nginx-mainline-mod-geoip (archlinux)
+  # - libnginx-mod-http-geoip (debian)
+
 nginx_global: {}
 
 nginx_events:
