@@ -1,0 +1,7 @@
+---
+
+- name: geoip
+  src: bodsch.geoip
+  version: 2.0.0
+
+...

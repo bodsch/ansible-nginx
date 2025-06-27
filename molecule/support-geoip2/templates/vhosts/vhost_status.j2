@@ -1,0 +1,31 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+# {{ ansible_managed }}
+
+{% import 'jinja_macros.j2' as tpl with context %}
+{% set data = item %}
+{% set _server_name = data.domains | default('_') %}
+{% set _upstreams = data.upstreams | default({}) %}
+{% set _logfiles = data.logfiles | default({}) %}
+{% set _locations = data.locations | default([]) %}
+{% set _listen = data.listen | default('80') %}
+
+server {
+{{ tpl.vhost_server_name(_server_name) }}
+{{ tpl.vhost_listen(_listen) | indent(0, first=False) }}
+{{ tpl.vhost_logfile(_logfiles, item.name) | indent(0, first=False) }}
+  {% if data.includes is defined %}
+    {% for inc in data.includes %}
+  include             {{ inc }};
+    {% endfor %}
+  {%- endif -%}
+  {% if data.root is defined %}
+  root                {{ data.root }};
+  {% endif %}
+
+  {% if data.index is defined %}
+  index
+    {{ data.index | join('\n') | indent(4, first=False) }};
+  {% endif %}
+
+{{ tpl.vhost_locations(_locations) | indent(0, first=False) -}}
+}

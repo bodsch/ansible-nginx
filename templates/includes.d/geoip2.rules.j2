@@ -1,0 +1,28 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+# {{ ansible_managed }}
+
+{% if nginx_http.geoip2 is defined %}
+  {% set geoip2 = nginx_http.geoip2 %}
+# geoip2 support
+  {% if geoip2.city is defined and geoip2.city | count > 0 %}
+geoip2 {{ geoip2.city.database | default('/usr/share/GeoIP/GeoLite2-City.mmdb') }} {
+  auto_reload {{ geoip2.city.auto_reload | default('5m') }};
+
+  $geoip2_continent_code   continent code;
+  $geoip2_country_iso      country iso_code;
+  $geoip2_country_name     country names en;
+  $geoip2_subdivision_name subdivisions 0 names en;
+  $geoip2_city_name        city names en;
+  $geoip2_dma_code         location metro_code;
+  $geoip2_latitude         location latitude;
+  $geoip2_longitude        location longitude;
+}
+  {% endif %}
+{% endif %}
+{#
+geoip_country file;
+geoip_city file;
+geoip_org file;
+geoip_proxy address | CIDR;
+geoip_proxy_recursive on | off;
+#}

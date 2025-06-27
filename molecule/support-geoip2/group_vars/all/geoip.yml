@@ -1,0 +1,14 @@
+---
+
+geoip_legacy: false
+geoip_force: true
+
+geoip_maxmind:
+  account_id: "{{ vault__account_id | default('1111111') }}"
+  license_key: "{{ vault__license_key | default('XXXXX_sdfmsdkfnklsdnfkjasndkjasndbfjkbasdf_yyy') }}"
+  edition_ids:
+    - GeoLite2-ASN
+    - GeoLite2-City
+    - GeoLite2-Country
+
+...

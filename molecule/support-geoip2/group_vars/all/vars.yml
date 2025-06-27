@@ -1,0 +1,275 @@
+---
+
+nginx_gzip:
+  enabled: false
+
+nginx_extra_modules:
+  - "{{ 'libnginx-mod-http-geoip2' if ansible_os_family | lower == 'debian' else 'ngx_http_geoip2_module' }}"
+
+nginx_custom_includes: {}
+
+nginx_logformat:
+  main:
+    format: |
+      '[$time_local]: $remote_addr - $remote_user - "$request" '
+       '$status $body_bytes_sent "$http_referer" '
+       '"$http_user_agent" "$http_x_forwarded_for"';
+
+  json_combined:
+    format: |
+      '{'
+        '"time_local": "$time_local",'
+        '"remote_addr": "$remote_addr",'
+        '"remote_user": "$remote_user",'
+        '"request": "$request",'
+        '"status": "$status",'
+        '"body_bytes_sent": "$body_bytes_sent",'
+        '"request_time": "$request_time",'
+        '"http_referrer": "$http_referer",'
+        '"http_user_agent": "$http_user_agent"'
+      '}';
+  json_full:
+    format: |
+      '{'
+        '"msec": "$msec", '                                           # request unixtime in seconds with a milliseconds resolution
+        '"connection": "$connection", '                               # connection serial number
+        '"connection_requests": "$connection_requests", '             # number of requests made in connection
+        '"pid": "$pid", '                                             # process pid
+        '"request_id": "$request_id", '                               # the unique request id
+        '"request_length": "$request_length", '                       # request length (including headers and body)
+        '"remote_addr": "$remote_addr", '                             # client IP
+        '"remote_user": "$remote_user", '                             # client HTTP username
+        '"remote_port": "$remote_port", '                             # client port
+        '"time_local": "$time_local", '
+        '"time_iso8601": "$time_iso8601", '                           # local time in the ISO 8601 standard format
+        '"request": "$request", '                                     # full path no arguments if the request
+        '"request_uri": "$request_uri", '                             # full path and arguments if the request
+        '"args": "$args", '                                           # args
+        '"status": "$status", '                                       # response status code
+        '"body_bytes_sent": "$body_bytes_sent", '                     # the number of body bytes exclude headers sent to a client
+        '"bytes_sent": "$bytes_sent", '                               # the number of bytes sent to a client
+        '"http_referer": "$http_referer", '                           # HTTP referer
+        '"http_user_agent": "$http_user_agent", '                     # user agent
+        '"http_x_forwarded_for": "$http_x_forwarded_for", '           # http_x_forwarded_for
+        '"http_x_forwarded_proto": "$http_x_forwarded_proto", '       # http_x_forwarded_proto
+        '"http_host": "$http_host", '                                 # the request Host: header
+        '"server_name": "$server_name", '                             # the name of the vhost serving the request
+        '"request_time": "$request_time", '                           # request processing time in seconds with msec resolution
+        '"upstream": "$upstream_addr", '                              # upstream backend server for proxied requests
+        '"upstream_connect_time": "$upstream_connect_time", '         # upstream handshake time incl. TLS
+        '"upstream_header_time": "$upstream_header_time", '           # time spent receiving upstream headers
+        '"upstream_response_time": "$upstream_response_time", '       # time spend receiving upstream body
+        '"upstream_response_length": "$upstream_response_length", '   # upstream response length
+        '"upstream_cache_status": "$upstream_cache_status", '         # cache HIT/MISS where applicable
+        '"ssl_protocol": "$ssl_protocol", '                           # TLS protocol
+        '"ssl_cipher": "$ssl_cipher", '                               # TLS cipher
+        '"scheme": "$scheme", '                                       # http or https
+        '"request_method": "$request_method", '                       # request method
+        '"server_protocol": "$server_protocol", '                     # request protocol, like HTTP/1.1 or HTTP/2.0
+        '"pipe": "$pipe", '                                           # "p" if request was pipelined, "." otherwise
+        '"gzip_ratio": "$gzip_ratio", '
+        '"http_cf_ray": "$http_cf_ray"'
+      '}';
+
+  geoip_json:
+    format: |
+      '{'
+        '"time_iso8601":"$time_iso8601",'
+        '"remote_addr":"$remote_addr",'
+        '"request":"$request",'
+        '"status":"$status",'
+        '"body_bytes_sent":"$body_bytes_sent",'
+        '"http_user_agent":"$http_user_agent",'
+        '"geoip_country_code":"$geoip2_country_iso",'
+        '"geoip_country_name":"$geoip2_country_name",'
+        '"geoip_region_name":"$geoip2_subdivision_name",'
+        '"geoip_city":"$geoip2_city_name",'
+        '"geoip_continent_code":"$geoip2_continent_code",'
+        '"geoip_dma_code":"$geoip2_dma_code",'
+        '"geoip_latitude":"$geoip2_latitude",'
+        '"geoip_longitude":"$geoip2_longitude"'
+      '}';
+
+nginx_global:
+  extra_config: ""
+  #  # to enable geip mobule
+  #  load_module modules/ngx_http_geoip_module.so;
+
+nginx_http:
+
+  includes:
+    - includes.d/geoip2.rules
+    - includes.d/useragent.rules
+    - includes.d/proxy.rules
+    - includes.d/limits.rules
+    - includes.d/global.rules
+    - sites-enabled/*.conf
+
+  resolver:
+    address: "172.17.0.1 141.1.1.1 valid=60s" # version 1.23.1: ipv4=on ipv6=off"
+    timeout: "30s"
+
+  open_log_file_cache: max=100 inactive=20s valid=1m min_uses=2
+
+  proxy:
+    buffering: false
+    headers_hash:
+      max_size: 512
+      bucket_size: 64
+    cache_path:
+      - path: /var/cache/nginx/live
+        options:
+          - levels=1:2
+          - keys_zone=live_cache:10m
+          - max_size=50m
+          - inactive=60m
+          - use_temp_path=off
+      - path: /var/cache/nginx/preview
+        options:
+          - levels=1:2
+          - keys_zone=preview_cache:10m
+          - max_size=50m
+          - inactive=60m
+          - use_temp_path=off
+      - path: "/var/cache/nginx/studio"
+        options:
+          - levels=1:2
+          - keys_zone=studio_cache:10m
+          - max_size=50m
+          - inactive=60m
+          - use_temp_path=off
+    set_headers:
+      X-Real-IP: $remote_addr
+      X-Scheme: $scheme
+      X-Forwarded-For: $proxy_add_x_forwarded_for
+      Host: $http_host
+
+  maps:
+    - name: http_user_agent
+      description: matched against 'http_user_agent' for bad user agents
+      variable: badagent
+      mapping:
+        - source: default
+          result: 0
+        - source: ~*malicious
+          result: 1
+        - source: ~*backdoor
+          result: 1
+        - source: ~*netcrawler
+          result: 1
+        - source: ~Antivirx
+          result: 1
+        - source: ~Arian
+          result: 1
+        - source: ~webbandit
+          result: 1
+        - source: ~cyberscan
+          result: 1
+        - source: ~*paloaltonetworks.com
+          result: 1
+        - source: ~Googlebot
+          result: 1
+        - source: ~Download Demon
+          result: 1
+
+    - name: http_user_agent
+      description: matched 'http_user_agent' to exclude some user agents from logging
+      variable: excluded_ua
+      mapping:
+        - source: "~monitoring-plugin"
+          result: 0
+        - source: "default"
+          result: 1
+
+    - name: remote_addr
+      description: matched against 'remote_addr' and anonymises the corresponding IPs
+      variable: ip_anonym
+      mapping:
+        - source: !unsafe "~(?P<ip>(\\d+)\\.(\\d+))\\.\\d+\\.\\d+"
+          result: "$ip"
+        - source: "~(?P<ip>[^:]+:[^:]+):"
+          result: "$ip"
+        - source: "default"
+          result: "0.0"
+
+    - name: remote_addr
+      description: matched against 'remote_addr' and anonymises the corresponding IPs
+      variable: remote_addr_anon
+      mapping:
+        - source: "~(?P<ip>\\d+\\.\\d+)\\."
+          result: "$ip.0.0"
+        - source: "~(?P<ip>[^:]+:[^:]+):"
+          result: "$ip::"
+        - source: "default"
+          result: "0.0.0.0"
+
+    - name: geoip2_country_iso
+      description: GeoBlock ...
+      variable: allowed_country
+      mapping:
+        - source: IN
+          result: "no"
+        - source: HK
+          result: "no"
+        - source: US
+          result: "no"
+        - source: UK
+          result: "no"
+        - source: "default"
+          result: "yes"
+
+  global:
+    deny:
+      - description: "paoalto"
+        values:
+          - "205.210.31.205"
+          - "162.216.149.197"
+      - values:
+          - "167.94.146.63"
+      - description: "internal"
+        values:
+          - "192.168.10.0"
+    allow:
+      - description: "localhost"
+        values:
+          - "127.0.1.1"
+
+  limits:
+    # https://nginx.org/en/docs/http/ngx_http_limit_conn_module.html
+    conn:
+      conn:
+        - limit_conn_by_addr    50
+        - limit_conn_by_servers 2000
+      conn_status: 429
+      conn_log_level: notice
+      conn_dry_run: true
+      conn_zone:
+        - $binary_remote_addr zone=conn_limit_per_ip:10m
+        - $binary_remote_addr zone=limit_conn_by_addr:20m
+        - $server_name        zone=limit_conn_by_servers:10m
+      zone: ""
+    # https://nginx.org/en/docs/http/ngx_http_limit_req_module.html
+    req:
+      req:
+        - zone=req_zone    burst=10 delay=15
+        - zone=req_zone_wl burst=20 nodelay
+      req_dry_run: true
+      req_log_level: notice
+      req_status: 429
+      req_zone:
+        - $binary_remote_addr zone=req_zone:10m     rate=10r/s
+        - $binary_remote_addr zone=req_zone_wl:10m  rate=15r/s
+
+  # geoip:
+  #   # SET the path to the .dat file used for determining the visitor's country from$
+  #   country: "/usr/share/GeoIP/GeoIP-Country.dat"
+  #   # SET the path to the .dat file used for determining the visitor's country from$
+  #   city: "/usr/share/GeoIP/GeoIP-City.dat"
+
+  geoip2:
+    city:
+      database: /usr/share/GeoIP/GeoLite2-City.mmdb
+      auto_reload: 5m
+
+
+...
