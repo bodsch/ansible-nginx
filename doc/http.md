@@ -278,6 +278,43 @@ With GeoIP support you still have logging parameters available.
 
 I have a corresponding [example configuration](https://github.com/bodsch/ansible-nginx/blob/main/molecule/configured/group_vars/all/vars.yml#L89-L97) here.
 
+## `geoip2`
+
+In the meantime, I have integrated geoip2 support.  
+Both in the [geoip role](https://github.com/bodsch/ansible-geoip) and here in nginx.
+
+```yaml
+
+nginx_extra_modules:
+  - "{{ 'libnginx-mod-http-geoip2' if ansible_os_family | lower == 'debian' else 'ngx_http_geoip2_module' }}"
+
+nginx_http:
+
+  includes:
+    - includes.d/geoip2.rules
+
+  maps:
+    - name: geoip2_country_iso
+      description: GeoBlock ...
+      variable: allowed_country
+      mapping:
+        - source: IN
+          result: "no"
+        - source: HK
+          result: "no"
+        - source: US
+          result: "no"
+        - source: UK
+          result: "no"
+        - source: "default"
+          result: "yes"
+
+  geoip2:
+    city:
+      database: /usr/share/GeoIP/GeoLite2-City.mmdb
+      auto_reload: 5m
+```
+
 
 ## `extra_options`
 
