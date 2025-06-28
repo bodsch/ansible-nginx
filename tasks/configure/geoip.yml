@@ -1,0 +1,47 @@
+---
+
+- name: remove geoip configuration
+  ansible.builtin.file:
+    name: /etc/nginx/includes.d/geoip.conf
+    state: absent
+  when:
+    - nginx_http.geoip | default({}) | count == 0
+  notify:
+    - validate config
+    - reload nginx
+
+- name: remove geoip2 configuration
+  ansible.builtin.file:
+    name: /etc/nginx/includes.d/geoip2.conf
+    state: absent
+  when:
+    - nginx_http.geoip2 | default({}) | count == 0
+  notify:
+    - validate config
+    - reload nginx
+
+- name: create geoip configuration
+  ansible.builtin.template:
+    src: includes.d/geoip.conf.j2
+    dest: /etc/nginx/includes.d/geoip.conf
+    owner: root
+    group: root
+    mode: 0644
+  when:
+    - nginx_http.geoip | default({}) | count > 0
+  notify:
+    - validate config
+    - reload nginx
+
+- name: create geoip.rules configuration
+  ansible.builtin.template:
+    src: includes.d/geoip2.rules.j2
+    dest: /etc/nginx/includes.d/geoip2.rules
+    owner: root
+    group: root
+    mode: 0644
+  when:
+    - nginx_http.geoip2 | default({}) | count > 0
+  notify:
+    - validate config
+    - reload nginx
