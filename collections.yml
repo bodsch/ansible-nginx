@@ -2,4 +2,6 @@
 
 collections:
   - name: bodsch.core
-    version: ">=2.2.0"
+    version: ">=2.7.0"
+  - name: bodsch.certs
+    version: ">=0.9.0"
