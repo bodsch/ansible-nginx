@@ -16,10 +16,6 @@ on:
         required: false
         default: 'main'
 
-defaults:
-  run:
-    working-directory: 'ansible-nginx'
-
 env:
   PY_COLORS: '1'
   ANSIBLE_FORCE_COLOR: '1'
@@ -75,21 +71,25 @@ jobs:
       #     ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.branch || github.ref_name }}
 
       - name: Set up Python
+        working-directory: ansible-nginx
         uses: actions/setup-python@v5
         with:
           python-version: "${{ matrix.python_version }}"
 
       - name: Install dependencies
+        working-directory: ansible-nginx
         run: |
           python -m pip install --upgrade pip
           pip install -r test-requirements.txt
 
       - name: Force reinstall of community.docker
+        working-directory: ansible-nginx
         run: |
           mkdir -p /home/runner/.ansible/collections
           ansible-galaxy collection install community.docker --force
 
       - name: Run tests
+        working-directory: ansible-nginx
         run: |
           make \
             test \
