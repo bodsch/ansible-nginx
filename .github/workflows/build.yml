@@ -65,7 +65,7 @@ jobs:
       - name: Checkout the codebase
         uses: actions/checkout@v4
         with:
-          path: 'ansible-nginx'
+          # path: 'ansible-nginx'
           ref: ${{ steps.get-ref.outputs.ref }}
 
       # - name: Checkout the codebase
@@ -80,19 +80,19 @@ jobs:
           python-version: "${{ matrix.python_version }}"
 
       - name: Install dependencies
-        working-directory: ansible-nginx
+        working-directory: .
         run: |
           python -m pip install --upgrade pip
           pip install -r test-requirements.txt
 
       - name: Force reinstall of community.docker
-        working-directory: ansible-nginx
+        working-directory: .
         run: |
           mkdir -p /home/runner/.ansible/collections
           ansible-galaxy collection install community.docker --force
 
       - name: Run tests
-        working-directory: ansible-nginx
+        working-directory: .
         run: |
           make \
             test \
