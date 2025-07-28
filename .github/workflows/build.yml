@@ -58,6 +58,10 @@ jobs:
             echo "ref=${{ github.ref_name }}" >> $GITHUB_OUTPUT
           fi
 
+      - name: Show trigger output
+        run: |
+          echo "get-ref: ${{ steps.get-ref.outputs }}"
+
       - name: Checkout the codebase
         uses: actions/checkout@v4
         with:
