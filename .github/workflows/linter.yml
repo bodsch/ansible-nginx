@@ -1,71 +1,65 @@
 ---
-
-name: code linter
+name: Code Linter
 
 on:
-  schedule:
-    - cron: "0 4 * * 0"
-  workflow_dispatch:
-    inputs:
-      logLevel:
-        description: 'Log level'
-        required: true
-        default: 'warning'
-        type: choice
-        options:
-          - info
-          - warning
-          - debug
   push:
-    branches:
-      - 'feature/**'
-      - 'fix/**'
-      - '!doc/**'
-    paths:
-      - 'plugins/**'
-      - '!roles/**'
-      - '!.github/workflows/test_role*.yml'
-      - '.config/pycodestyle.cfg'
-  pull_request:
-    branches:
-      - 'feature/**'
-      - 'fix/**'
-      - '!doc/**'
-    paths:
-      - 'plugins/**'
-      - '!roles/**'
-      - '!.github/workflows/test_role*.yml'
-      - '.config/pycodestyle.cfg'
+    tags:
+      - "*"
+  workflow_dispatch:
 
 jobs:
-  pep8:
-    runs-on: ubuntu-latest
+  pycodestyle:
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
         python_version:
-          - "3.10"
           - "3.11"
           - "3.12"
+          - "3.13"
 
     steps:
-      - name: Check out the codebase.
+      - name: Checkout the codebase
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.workflow_run.head_branch }}
 
-      - name: 🐍 set up python
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "${{ matrix.python_version }}"
 
-      - name: Install test dependencies.
+      - name: Install pycodestyle
         run: |
           python3 -m pip install --upgrade pip
           python3 -m pip install pycodestyle
 
-      - name: Lint code.
+      - name: Run pycodestyle
         run: |
-          pycodestyle --config=.config/pycodestyle.cfg --statistics --count --exclude=test_default.py .
+          pycodestyle plugins/ --config=.config/pycodestyle.cfg --statistics --count --exclude=test_*.py,hooks/*.py
 
-...
+  flake8:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python_version:
+          - "3.11"
+          - "3.12"
+          - "3.13"
+
+    steps:
+      - name: Checkout the codebase
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "${{ matrix.python_version }}"
+
+      - name: Install flake8
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install flake8
+
+      - name: Run flake8
+        run: |
+          flake8 --append-config=.config/pycodestyle.cfg
