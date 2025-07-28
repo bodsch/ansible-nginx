@@ -6,6 +6,8 @@ on:
   push:
     branches:
       - main
+    tags:
+      - "*"
   pull_request:
   workflow_dispatch:
     inputs:
@@ -40,11 +42,37 @@ jobs:
           - default
 
     steps:
+      - name: Show trigger context
+        run: |
+          echo "event: ${{ github.event_name }}"
+          echo "ref (raw): ${{ github.ref }}"
+          echo "ref_name: ${{ github.ref_name }}"
+          echo "manual input: ${{ github.event.inputs.ref }}"
+          echo "head_branch (for PR): ${{ github.head_ref }}"
+
+      - name: Determine ref to checkout
+        id: get-ref
+        run: |
+          # Fallback-Logik für verschiedene Events
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.ref }}" ]; then
+            echo "ref=${{ github.event.inputs.ref }}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "ref=${{ github.head_ref }}" >> $GITHUB_OUTPUT
+          else
+            echo "ref=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          fi
+
       - name: Checkout the codebase
         uses: actions/checkout@v4
         with:
           path: 'ansible-nginx'
-          ref: ${{ github.event.inputs.branch || github.ref_name }}
+          ref: ${{ steps.get-ref.outputs.ref }}
+
+      # - name: Checkout the codebase
+      #   uses: actions/checkout@v4
+      #   with:
+      #     path: 'ansible-nginx'
+      #     ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.branch || github.ref_name }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
