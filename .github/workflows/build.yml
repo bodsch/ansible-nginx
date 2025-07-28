@@ -71,7 +71,6 @@ jobs:
       #     ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.branch || github.ref_name }}
 
       - name: Set up Python
-        working-directory: ansible-nginx
         uses: actions/setup-python@v5
         with:
           python-version: "${{ matrix.python_version }}"
