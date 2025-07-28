@@ -1,12 +1,11 @@
 ---
 
-name: nginx with some configurations
+name: Configured Scenarios
 
 on:
-  workflow_dispatch:
   workflow_run:
     workflows:
-      - "CI"
+      - "Build & Test"
     types:
       - completed
 
@@ -20,8 +19,9 @@ env:
 
 jobs:
   debian:
-    name: "${{ matrix.scenario }} / ${{ matrix.image }}, ansible ${{ matrix.ansible-version }}, python ${{ matrix.python_version }}"
+    name: "${{ matrix.scenario }} | ${{ matrix.image }}, Ansible ${{ matrix.ansible-version }}, Python ${{ matrix.python_version }}"
     runs-on: ubuntu-22.04
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     strategy:
       fail-fast: false
       matrix:
@@ -30,7 +30,7 @@ jobs:
         python_version:
           - "3.12"
         ansible-version:
-          - '8.5'
+          - '9.5'
         scenario:
           - default
     steps:
@@ -64,7 +64,7 @@ jobs:
             -e DISTRIBUTION="${{ matrix.image }}"
 
   ubuntu:
-    name: "${{ matrix.scenario }} / ${{ matrix.image }}, ansible ${{ matrix.ansible-version }}, python ${{ matrix.python_version }}"
+    name: "${{ matrix.scenario }} | ${{ matrix.image }}, Ansible ${{ matrix.ansible-version }}, Python ${{ matrix.python_version }}"
     runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
@@ -75,7 +75,7 @@ jobs:
         python_version:
           - "3.12"
         ansible-version:
-          - '8.5'
+          - '9.5'
         scenario:
           - default
     steps:
@@ -109,10 +109,9 @@ jobs:
             -e DISTRIBUTION="${{ matrix.image }}"
 
   scenarios:
-    name: "${{ matrix.scenario }} / ${{ matrix.image }}, ansible ${{ matrix.ansible-version }}, python ${{ matrix.python_version }}"
+    name: "${{ matrix.scenario }} | ${{ matrix.image }}, Ansible ${{ matrix.ansible-version }}, Python ${{ matrix.python_version }}"
     runs-on: ubuntu-22.04
-    needs:
-      - debian
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     strategy:
       fail-fast: false
       matrix:
@@ -121,7 +120,7 @@ jobs:
         python_version:
           - "3.12"
         ansible-version:
-          - '8.5'
+          - '9.5'
         scenario:
           - configured
           - many-vhosts
@@ -129,28 +128,28 @@ jobs:
           - support-geoip
 
     steps:
-      - name: check out the codebase.
+      - name: Checkout the codebase
         uses: actions/checkout@v4
         with:
           path: 'ansible-nginx'
           ref: ${{ github.event.workflow_run.head_branch }}
 
-      - name: 🐍 set up python
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "${{ matrix.python_version }}"
 
-      - name: install dependencies
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r test-requirements.txt
 
-      - name: force reinstall of community.docker
+      - name: Force reinstall of community.docker
         run: |
           mkdir -p /home/runner/.ansible/collections
           ansible-galaxy collection install community.docker --force
 
-      - name: test with tox
+      - name: Run tests
         run: |
           make \
             test \

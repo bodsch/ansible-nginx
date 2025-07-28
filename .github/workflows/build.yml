@@ -1,0 +1,97 @@
+---
+
+name: Build & Test
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "*"
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to test'
+        required: false
+        default: 'main'
+
+env:
+  PY_COLORS: '1'
+  ANSIBLE_FORCE_COLOR: '1'
+
+jobs:
+  build-test:
+    name: "${{ matrix.image }} | Ansible: ${{ matrix.ansible-version }}, Scenario: ${{ matrix.scenario }}"
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          - archlinux:latest
+          - artixlinux:latest
+        python_version:
+          - "3.12"
+        ansible-version:
+          - '9.5'
+        scenario:
+          - default
+
+    steps:
+      - name: Show trigger context
+        run: |
+          echo "event: ${{ github.event_name }}"
+          echo "ref (raw): ${{ github.ref }}"
+          echo "ref_name: ${{ github.ref_name }}"
+          echo "manual input: ${{ github.event.inputs.ref }}"
+          echo "head_branch (for PR): ${{ github.head_ref }}"
+
+      - name: Determine ref to checkout
+        id: get-ref
+        run: |
+          # Fallback-Logik für verschiedene Events
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.ref }}" ]; then
+            echo "ref=${{ github.event.inputs.ref }}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "ref=${{ github.head_ref }}" >> $GITHUB_OUTPUT
+          else
+            echo "ref=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Checkout the codebase
+        uses: actions/checkout@v4
+        with:
+          path: 'ansible-nginx'
+          ref: ${{ steps.get-ref.outputs.ref }}
+
+      # - name: Checkout the codebase
+      #   uses: actions/checkout@v4
+      #   with:
+      #     path: 'ansible-nginx'
+      #     ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.branch || github.ref_name }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "${{ matrix.python_version }}"
+
+      - name: Install dependencies
+        working-directory: ansible-nginx
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r test-requirements.txt
+
+      - name: Force reinstall of community.docker
+        working-directory: ansible-nginx
+        run: |
+          mkdir -p /home/runner/.ansible/collections
+          ansible-galaxy collection install community.docker --force
+
+      - name: Run tests
+        working-directory: ansible-nginx
+        run: |
+          make \
+            test \
+            -e TOX_SCENARIO="${{ matrix.scenario }}" \
+            -e TOX_ANSIBLE="ansible_${{ matrix.ansible-version }}" \
+            -e DISTRIBUTION="${{ matrix.image }}"
