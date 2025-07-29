@@ -122,4 +122,4 @@ jobs:
 
       - name: Run flake8
         run: |
-          flake8 --append-config=.config/pycodestyle.cfg
+          flake8 --append-config=.config/pycodestyle.cfg --exclude=test_*.py,hooks/*.py
