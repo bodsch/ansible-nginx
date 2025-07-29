@@ -11,22 +11,22 @@ on:
       - 'feature/**'
       - 'fix/**'
       - '!doc/**'
-    paths:
-      - 'filter_plugins/*.py'
-      - '!.github/workflows/*.yml'
-      - '!doc/**'
-      - '.config/pycodestyle.cfg'
+    # paths:
+    #   - 'filter_plugins/*.py'
+    #   - '!.github/workflows/*.yml'
+    #   - '!doc/**'
+    #   - '.config/pycodestyle.cfg'
   pull_request:
     branches:
       - 'main'
       - 'feature/**'
       - 'fix/**'
       - '!doc/**'
-    paths:
-      - 'filter_plugins/*.py'
-      - '!.github/workflows/*.yml'
-      - '!doc/**'
-      - '.config/pycodestyle.cfg'
+    # paths:
+    #   - 'filter_plugins/*.py'
+    #   - '!.github/workflows/*.yml'
+    #   - '!doc/**'
+    #   - '.config/pycodestyle.cfg'
   pull_request:
   workflow_dispatch:
     inputs:
