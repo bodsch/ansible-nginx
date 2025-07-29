@@ -1,4 +1,5 @@
 ---
+
 name: Code Linter
 
 on:
@@ -12,6 +13,10 @@ on:
         required: false
         default: 'main'
 
+defaults:
+  run:
+    working-directory: 'ansible-nginx'
+
 jobs:
   pycodestyle:
     runs-on: ubuntu-24.04
@@ -24,7 +29,17 @@ jobs:
           - "3.13"
 
     steps:
+      - name: Show trigger context
+        working-directory: .
+        run: |
+          echo "event: ${{ github.event_name }}"
+          echo "ref (raw): ${{ github.ref }}"
+          echo "ref_name: ${{ github.ref_name }}"
+          echo "manual input: ${{ github.event.inputs.ref }}"
+          echo "head_branch (for PR): ${{ github.head_ref }}"
+
       - name: Determine ref to checkout
+        working-directory: .
         id: get-ref
         run: |
           # Fallback-Logik für verschiedene Events
@@ -66,7 +81,17 @@ jobs:
           - "3.13"
 
     steps:
+      - name: Show trigger context
+        working-directory: .
+        run: |
+          echo "event: ${{ github.event_name }}"
+          echo "ref (raw): ${{ github.ref }}"
+          echo "ref_name: ${{ github.ref_name }}"
+          echo "manual input: ${{ github.event.inputs.ref }}"
+          echo "head_branch (for PR): ${{ github.head_ref }}"
+
       - name: Determine ref to checkout
+        working-directory: .
         id: get-ref
         run: |
           # Fallback-Logik für verschiedene Events
