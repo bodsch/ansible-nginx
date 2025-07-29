@@ -1,25 +1,15 @@
 #
 export TOX_SCENARIO  ?= default
-export TOX_ANSIBLE   ?= ansible_8.5
+export TOX_ANSIBLE   ?= ansible_9.5
 
-.PHONY: converge destroy verify test lint gh-clean
+# --------------------------------------------------------
 
-default: converge
+# Alle Targets, die schlicht ein Skript in hooks/ aufrufen
+HOOKS := doc prepare converge destroy verify test lint gh-clean
 
-converge:
-	@hooks/converge
+.PHONY: $(HOOKS)
+.DEFAULT_GOAL := converge
 
-destroy:
-	@hooks/destroy
-
-verify:
-	@hooks/verify
-
-test:
-	@hooks/test
-
-lint:
-	@hooks/lint
-
-gh-clean:
-	@hooks/gh-clean
+# $@ expandiert zu dem Namen des gerade angeforderten Targets
+$(HOOKS):
+	@hooks/$@
