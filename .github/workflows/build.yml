@@ -27,7 +27,6 @@ on:
     #   - '!.github/workflows/*.yml'
     #   - '!doc/**'
     #   - '.config/pycodestyle.cfg'
-  pull_request:
   workflow_dispatch:
     inputs:
       branch:
