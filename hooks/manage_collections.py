@@ -89,8 +89,9 @@ class AnsibleCollectionManager():
             data = yaml.safe_load(f)
             if data and isinstance(data, dict):
                 r = data.get("dependencies", [])
-                result = [{"name": k, "version": v} if v is not None and v !=
-                          "*" else {"name": k} for k, v in r.items()]
+                result = [
+                    {"name": k, "version": v} if v is not None and v != "*" else {"name": k} for k, v in r.items()
+                    ]
 
         return result
 
