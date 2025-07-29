@@ -3,11 +3,30 @@
 name: Build & Test
 
 on:
+  schedule:
+    - cron: "0 4 * * 0"
   push:
     branches:
-      - main
-    tags:
-      - "*"
+      - 'main'
+      - 'feature/**'
+      - 'fix/**'
+      - '!doc/**'
+    paths:
+      - 'filter_plugins/*.py'
+      - '!.github/workflows/*.yml'
+      - '!doc/**'
+      - '.config/pycodestyle.cfg'
+  pull_request:
+    branches:
+      - 'main'
+      - 'feature/**'
+      - 'fix/**'
+      - '!doc/**'
+    paths:
+      - 'filter_plugins/*.py'
+      - '!.github/workflows/*.yml'
+      - '!doc/**'
+      - '.config/pycodestyle.cfg'
   pull_request:
   workflow_dispatch:
     inputs:
@@ -16,13 +35,17 @@ on:
         required: false
         default: 'main'
 
+defaults:
+  run:
+    working-directory: 'ansible-nginx'
+
 env:
   PY_COLORS: '1'
   ANSIBLE_FORCE_COLOR: '1'
 
 jobs:
-  build-test:
-    name: "${{ matrix.image }} | Ansible: ${{ matrix.ansible-version }}, Scenario: ${{ matrix.scenario }}"
+  arch:
+    name: "${{ matrix.image }} / ansible: ${{ matrix.ansible-version }}, scenario: ${{ matrix.scenario }}"
     runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
@@ -36,9 +59,9 @@ jobs:
           - '9.5'
         scenario:
           - default
-
     steps:
       - name: Show trigger context
+        working-directory: .
         run: |
           echo "event: ${{ github.event_name }}"
           echo "ref (raw): ${{ github.ref }}"
@@ -47,9 +70,9 @@ jobs:
           echo "head_branch (for PR): ${{ github.head_ref }}"
 
       - name: Determine ref to checkout
+        working-directory: .
         id: get-ref
         run: |
-          # Fallback-Logik für verschiedene Events
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.ref }}" ]; then
             echo "ref=${{ github.event.inputs.ref }}" >> $GITHUB_OUTPUT
           elif [ "${{ github.event_name }}" = "pull_request" ]; then
@@ -58,44 +81,28 @@ jobs:
             echo "ref=${{ github.ref_name }}" >> $GITHUB_OUTPUT
           fi
 
-      - name: Show trigger output
-        run: |
-          echo "get-ref: ${{ steps.get-ref.outputs.ref }}"
-          echo "event: ${{ steps.get-ref.outputs.ref_name }}"
-
-      - name: Checkout the codebase
+      - name: check out the codebase.
         uses: actions/checkout@v4
         with:
           path: 'ansible-nginx'
-          ref: ${{ steps.get-ref.outputs.ref }}
+          ref: ${{ github.event.workflow_run.head_branch }}
 
-      # - name: Checkout the codebase
-      #   uses: actions/checkout@v4
-      #   with:
-      #     path: 'ansible-nginx'
-      #     ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.branch || github.ref_name }}
-      - name: Show workspace content
-        run: ls -R
-
-      - name: Set up Python
+      - name: 🐍 set up python
         uses: actions/setup-python@v5
         with:
           python-version: "${{ matrix.python_version }}"
 
-      - name: Install dependencies
-        working-directory: ansible-nginx
+      - name: install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r test-requirements.txt
 
-      - name: Force reinstall of community.docker
-        # working-directory: .
+      - name: force reinstall of community.docker
         run: |
           mkdir -p /home/runner/.ansible/collections
           ansible-galaxy collection install community.docker --force
 
-      - name: Run tests
-        # working-directory: .
+      - name: test with tox
         run: |
           make \
             test \
