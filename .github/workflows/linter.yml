@@ -49,6 +49,7 @@ jobs:
             echo "ref=${{ github.head_ref }}" >> $GITHUB_OUTPUT
           else
             echo "ref=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          fi
 
       - name: Checkout the codebase
         uses: actions/checkout@v4
@@ -101,6 +102,7 @@ jobs:
             echo "ref=${{ github.head_ref }}" >> $GITHUB_OUTPUT
           else
             echo "ref=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          fi
 
       - name: Checkout the codebase
         uses: actions/checkout@v4
