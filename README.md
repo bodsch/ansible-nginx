@@ -4,7 +4,7 @@
 Ansible role to install and configure nginx.
 
 
-[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/bodsch/ansible-nginx/main.yml?branch=main)][ci]
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/bodsch/ansible-nginx/build.yml?branch=main)][ci]
 [![GitHub issues](https://img.shields.io/github/issues/bodsch/ansible-nginx)][issues]
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/bodsch/ansible-nginx)][releases]
 [![Ansible Downloads](https://img.shields.io/ansible/role/d/bodsch/nginx?logo=ansible)][galaxy]
