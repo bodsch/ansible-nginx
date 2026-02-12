@@ -4,7 +4,7 @@ nginx_gzip:
   enabled: false
 
 nginx_extra_modules:
-  - "{{ 'libnginx-mod-http-geoip2' if ansible_os_family | lower == 'debian' else 'ngx_http_geoip2_module' }}"
+  - "{{ 'libnginx-mod-http-geoip2' if ansible_facts.os_family | lower == 'debian' else 'ngx_http_geoip2_module' }}"
 
 nginx_custom_includes: {}
 
