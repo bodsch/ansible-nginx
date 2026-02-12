@@ -4,7 +4,7 @@
   nginx_vhosts:
     vhosts: "{{ nginx_vhosts_http }}"
     template:
-      path: "{{ nginx_remote_tmp_directory }}/{{ ansible_fqdn }}"
+      path: "{{ nginx_remote_tmp_directory }}/{{ ansible_facts.fqdn }}"
       http: "{{ nginx_vhost_templates.http }}"
       https: "{{ nginx_vhost_templates.https }}"
     # acme: "{{ nginx_acme }}"
@@ -16,7 +16,7 @@
   nginx_vhosts:
     vhosts: "{{ nginx_vhosts_https }}"
     template:
-      path: "{{ nginx_remote_tmp_directory }}/{{ ansible_fqdn }}"
+      path: "{{ nginx_remote_tmp_directory }}/{{ ansible_facts.fqdn }}"
       http: "{{ nginx_vhost_templates.http }}"
       https: "{{ nginx_vhost_templates.https }}"
     acme: "{{ nginx_acme }}"

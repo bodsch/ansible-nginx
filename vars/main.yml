@@ -32,7 +32,7 @@ nginx_defaults_global:
   ssl_engine: ""                                          #
   thread_pool: {}                                         # default: { threads=32, max_queue=65536 }
   timer_resolution: ""                                    #
-  worker_processes: "auto"                                # {{ ansible_processor_vcpus | default(ansible_processor_count) }}"
+  worker_processes: "auto"                                # {{ ansible_facts.processor_vcpus | default(ansible_facts.processor_count) }}"
   worker_cpu_affinity:  ""                                # auto [cpumask]
   worker_priority: ""                                     # 0
   worker_rlimit_core: ""                                  #

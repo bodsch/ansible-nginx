@@ -29,11 +29,11 @@
 
 - name: validate vhost template checksums
   ansible.builtin.set_fact:
-    nginx_templates_changed: "{{ nginx_templates_checksums | vhost_templates_validate(ansible_local.nginx.templates_checksums | default({})) }}"
+    nginx_templates_changed: "{{ nginx_templates_checksums | vhost_templates_validate(ansible_facts.local.nginx.templates_checksums | default({})) }}"
 
 - name: find templates directory on destination system
   ansible.builtin.stat:
-    path: "{{ nginx_remote_tmp_directory }}/{{ ansible_fqdn }}"
+    path: "{{ nginx_remote_tmp_directory }}/{{ ansible_facts.fqdn }}"
     get_checksum: false
     get_mime: false
     get_attributes: false
@@ -56,7 +56,7 @@
           become: false
           delegate_to: localhost
           ansible.builtin.file:
-            path: "{{ nginx_local_tmp_directory }}/templates/{{ ansible_fqdn }}"
+            path: "{{ nginx_local_tmp_directory }}/templates/{{ ansible_facts.fqdn }}"
             state: directory
             mode: 0750
 
@@ -65,7 +65,7 @@
           delegate_to: localhost
           ansible.builtin.copy:
             src: "{{ item }}"
-            dest: "{{ nginx_local_tmp_directory }}/templates/{{ ansible_fqdn }}/"
+            dest: "{{ nginx_local_tmp_directory }}/templates/{{ ansible_facts.fqdn }}/"
             mode: 0600
           loop: "{{ _nginx_templates }}"
           loop_control:
@@ -75,22 +75,22 @@
           become: false
           delegate_to: localhost
           community.general.archive:
-            path: "{{ nginx_local_tmp_directory }}/templates/{{ ansible_fqdn }}"
-            dest: "{{ nginx_local_tmp_directory }}/templates/{{ ansible_fqdn }}_templates.tgz"
+            path: "{{ nginx_local_tmp_directory }}/templates/{{ ansible_facts.fqdn }}"
+            dest: "{{ nginx_local_tmp_directory }}/templates/{{ ansible_facts.fqdn }}_templates.tgz"
             mode: 0600
 
         - name: create temporary directory on destination instance
           become: true
           ansible.builtin.file:
-            path: "{{ nginx_remote_tmp_directory }}/{{ ansible_fqdn }}"
+            path: "{{ nginx_remote_tmp_directory }}/{{ ansible_facts.fqdn }}"
             state: directory
             mode: 0750
 
         - name: propagate templates.tgz
           become: true
           ansible.builtin.copy:
-            src: "{{ nginx_local_tmp_directory }}/templates/{{ ansible_fqdn }}_templates.tgz"
-            dest: "{{ nginx_remote_tmp_directory }}/{{ ansible_fqdn }}/templates.tgz"
+            src: "{{ nginx_local_tmp_directory }}/templates/{{ ansible_facts.fqdn }}_templates.tgz"
+            dest: "{{ nginx_remote_tmp_directory }}/{{ ansible_facts.fqdn }}/templates.tgz"
             mode: 0600
   rescue:
     - name: remove temporary directory on ansible controller
@@ -98,25 +98,25 @@
       delegate_to: localhost
       ansible.builtin.file:
         state: absent
-        path: "{{ nginx_local_tmp_directory }}/templates/{{ ansible_fqdn }}"
+        path: "{{ nginx_local_tmp_directory }}/templates/{{ ansible_facts.fqdn }}"
 
     - name: remove temporary directory on destination instance
       become: true
       ansible.builtin.file:
         state: absent
-        path: "{{ nginx_remote_tmp_directory }}/{{ ansible_fqdn }}"
+        path: "{{ nginx_remote_tmp_directory }}/{{ ansible_facts.fqdn }}"
 
 - name: find templates archive on destination system
   ansible.builtin.stat:
-    path: "{{ nginx_remote_tmp_directory }}/{{ ansible_fqdn }}/templates.tgz"
+    path: "{{ nginx_remote_tmp_directory }}/{{ ansible_facts.fqdn }}/templates.tgz"
     get_checksum: false
     get_mime: false
     get_attributes: false
   register: nginx_template_remote_archive
 
-- name: extract {{ ansible_fqdn }}/templates.tgz
+- name: extract {{ ansible_facts.fqdn }}/templates.tgz
   ansible.builtin.unarchive:
-    src: "{{ nginx_remote_tmp_directory }}/{{ ansible_fqdn }}/templates.tgz"
+    src: "{{ nginx_remote_tmp_directory }}/{{ ansible_facts.fqdn }}/templates.tgz"
     dest: "{{ nginx_remote_tmp_directory }}/"
     remote_src: true
   when:
