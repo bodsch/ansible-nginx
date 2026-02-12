@@ -21,7 +21,7 @@
       ansible.builtin.set_fact:
         nginx_group: "{{ _nginx_group }}"
       when:
-        - getent_group is defined
+        - _nginx_group is defined
 
 - name: create nginx cache directories
   ansible.builtin.file:
