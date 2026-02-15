@@ -4,11 +4,14 @@ name: Push to Ansible Galaxy
 
 on:
   workflow_dispatch:
-#   workflow_run:
-#     workflows:
-#       - "Code Linter"
-#     types:
-#       - completed
+  workflow_run:
+    workflows:
+      - "Code Linter"
+    branches:
+      - main
+      - tags/**
+    types:
+      - completed
 
 jobs:
   galaxy:
