@@ -2,7 +2,8 @@
 
 name: Push to Ansible Galaxy
 
-# on:
+on:
+  workflow_dispatch:
 #   workflow_run:
 #     workflows:
 #       - "Code Linter"
