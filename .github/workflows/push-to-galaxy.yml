@@ -2,18 +2,17 @@
 
 name: Push to Ansible Galaxy
 
-on:
-  workflow_run:
-    workflows:
-      - "Code Linter"
-    types:
-      - completed
+# on:
+#   workflow_run:
+#     workflows:
+#       - "Code Linter"
+#     types:
+#       - completed
 
 jobs:
   galaxy:
     name: Publish to Galaxy
     runs-on: ubuntu-22.04
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Checkout the codebase
         uses: actions/checkout@v6.0.2
