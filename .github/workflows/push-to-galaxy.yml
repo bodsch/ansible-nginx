@@ -3,34 +3,50 @@
 name: Push to Ansible Galaxy
 
 on:
+  push:
+    tags:
+      - "*" # optional enger: "v*.*.*"
   workflow_dispatch:
     inputs:
-      logLevel:
-        description: 'Log level'
+      tag:
+        description: "Tag to publish (e.g. v1.2.3). Required for manual runs."
         required: true
-        default: 'warning'
-        type: choice
-        options:
-          - info
-          - warning
-          - debug
-  workflow_run:
-    workflows:
-      - "CI"
-    branches:
-      - main
-    types:
-      - completed
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: galaxy-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   galaxy:
     name: Publish to Galaxy
     runs-on: ubuntu-22.04
+
     steps:
-      - name: Checkout the codebase
-        uses: actions/checkout@v6.0.2
+      - name: Resolve ref (tag only)
+        id: ref
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+            echo "ref=refs/tags/${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            # push-tag event
+            if [[ "${GITHUB_REF}" != refs/tags/* ]]; then
+              echo "This workflow is tag-only (refs/tags/*). Got: ${GITHUB_REF}" >&2
+              exit 1
+            fi
+            echo "ref=${GITHUB_REF}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout the codebase (tag ref)
+        uses: actions/checkout@v5
         with:
-          path: 'ansible-nginx'
+          ref: ${{ steps.ref.outputs.ref }}
+          fetch-depth: 0
 
       - name: Publish
         uses: robertdebock/galaxy-action@1.2.1
