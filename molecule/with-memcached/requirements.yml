@@ -1,0 +1,9 @@
+---
+
+- name: htpasswd
+  src: bodsch.htpasswd
+  version: 1.1.5
+
+- name: geerlingguy.memcached
+  src: ansible-role-memcached
+...

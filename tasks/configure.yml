@@ -1,27 +1,49 @@
 ---
 
-- name: detect nginx group
-  when:
-    - not nginx_group is defined or nginx_group | length > 0
-  block:
-    - name: "find primary group for user '{{ nginx_user }}'"
-      ansible.builtin.getent:
-        database: group
-        key: "{{ nginx_user }}"
-        split: ':'
+- name: merge nginx configuration between defaults and custom
+  ansible.builtin.set_fact:
+    nginx_global: "{{ nginx_defaults_global | combine(nginx_global, recursive=True) }}"
+    nginx_http: "{{ nginx_defaults_http | combine(nginx_http, recursive=True) }}"
+    nginx_events: "{{ nginx_defaults_events | combine(nginx_events, recursive=True) }}"
+    nginx_gzip: "{{ nginx_defaults_gzip | combine(nginx_gzip, recursive=True) }}"
+    nginx_ssl: "{{ nginx_defaults_ssl | combine(nginx_ssl, recursive=True) }}"
+    nginx_logformat: "{{ nginx_defaults_logformat | combine(nginx_logformat, recursive=True) }}"
+    nginx_acme: "{{ nginx_defaults_acme | combine(nginx_acme, recursive=True) }}"
+    nginx_custom_includes: "{{ nginx_defaults_custom_includes | combine(nginx_custom_includes, recursive=True) }}"
 
-    - name: define nginx_group
-      ansible.builtin.set_fact:
-        _nginx_group: "{{ ansible_facts['getent_group'] | list | first }}"
-      when:
-        - ansible_facts['getent_group'] is defined
-        - ansible_facts['getent_group'] | default([]) | count > 0
+- name: resolve account data from explicit user
+  bodsch.core.account_defaults:
+    user: "{{ nginx_user }}"
+    group: "{{ nginx_user }}"
+  register: account_result
 
-    - name: "set nginx_group '{{ _nginx_group }}'"
-      ansible.builtin.set_fact:
-        nginx_group: "{{ _nginx_group }}"
-      when:
-        - _nginx_group is defined
+- name: apply resolved values
+  ansible.builtin.set_fact:
+    nginx_user: "{{ account_result.user }}"
+    nginx_group: "{{ account_result.group }}"
+
+# - name: detect nginx group
+#   when:
+#     - not nginx_group is defined or nginx_group | length > 0
+#   block:
+#     - name: "find primary group for user '{{ nginx_user }}'"
+#       ansible.builtin.getent:
+#         database: group
+#         key: "{{ nginx_user }}"
+#         split: ':'
+#
+#     - name: define nginx_group
+#       ansible.builtin.set_fact:
+#         _nginx_group: "{{ ansible_facts['getent_group'] | list | first }}"
+#       when:
+#         - ansible_facts['getent_group'] is defined
+#         - ansible_facts['getent_group'] | default([]) | count > 0
+#
+#     - name: "set nginx_group '{{ _nginx_group }}'"
+#       ansible.builtin.set_fact:
+#         nginx_group: "{{ _nginx_group }}"
+#       when:
+#         - _nginx_group is defined
 
 - name: create nginx cache directories
   ansible.builtin.file:

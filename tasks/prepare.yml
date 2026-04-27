@@ -20,22 +20,20 @@
         - default.yaml
       skip: true
 
-- name: install requirements
+- name: detect ansible check_mode
+  bodsch.core.check_mode:
+  register: _check_mode
+
+- name: define running_in_check_mode
+  ansible.builtin.set_fact:
+    running_in_check_mode: '{{ _check_mode.check_mode }}'
+
+- name: install dependencies
+  when:
+    - not running_in_check_mode
+    - nginx_dependencies | default([]) | count > 0
   ansible.builtin.package:
     name: "{{ nginx_dependencies }}"
     state: present
-  when:
-    - nginx_dependencies | default([]) | count > 0
-
-- name: merge nginx configuration between defaults and custom
-  ansible.builtin.set_fact:
-    nginx_global: "{{ nginx_defaults_global | combine(nginx_global, recursive=True) }}"
-    nginx_http: "{{ nginx_defaults_http | combine(nginx_http, recursive=True) }}"
-    nginx_events: "{{ nginx_defaults_events | combine(nginx_events, recursive=True) }}"
-    nginx_gzip: "{{ nginx_defaults_gzip | combine(nginx_gzip, recursive=True) }}"
-    nginx_ssl: "{{ nginx_defaults_ssl | combine(nginx_ssl, recursive=True) }}"
-    nginx_logformat: "{{ nginx_defaults_logformat | combine(nginx_logformat, recursive=True) }}"
-    nginx_acme: "{{ nginx_defaults_acme | combine(nginx_acme, recursive=True) }}"
-    nginx_custom_includes: "{{ nginx_defaults_custom_includes | combine(nginx_custom_includes, recursive=True) }}"
 
 ...
