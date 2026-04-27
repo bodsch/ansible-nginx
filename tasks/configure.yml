@@ -10,11 +10,18 @@
         key: "{{ nginx_user }}"
         split: ':'
 
-    - name: "set nginx_group '{{ getent_group | list | first }}'"
+    - name: define nginx_group
       ansible.builtin.set_fact:
-        nginx_group: "{{ getent_group | list | first }}"
+        _nginx_group: "{{ ansible_facts['getent_group'] | list | first }}"
       when:
-        - getent_group is defined
+        - ansible_facts['getent_group'] is defined
+        - ansible_facts['getent_group'] | default([]) | count > 0
+
+    - name: "set nginx_group '{{ _nginx_group }}'"
+      ansible.builtin.set_fact:
+        nginx_group: "{{ _nginx_group }}"
+      when:
+        - _nginx_group is defined
 
 - name: create nginx cache directories
   ansible.builtin.file:
