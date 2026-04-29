@@ -259,7 +259,7 @@ It is also possible to trigger a corresponding ACME challenge at Let's Encrypt w
 deposited in the system and then activate the TLS VHosts definition.
 
 
-## `redirect`
+## **OBSOLETE** `redirect`
 
 A redirect from port 80 (or any other port) to a TLS vhost can be defined via `redirect`:
 
@@ -375,4 +375,67 @@ nginx_vhosts:
       enabled: true
       certificate: /etc/ssl/certs/ssl-cert-snakeoil.pem
       certificate_key: /etc/ssl/private/ssl-cert-snakeoil.key
+```
+
+## `redirects`
+
+`redirect` has been replaced by `redirects`.
+
+This removes an automatically generated `location` that performed a redirect to HTTPS. (backward definition)
+This `location` must now be created explicitly (forward definition)
+
+This change makes it easier to implement application-based redirects.
+
+
+```yaml
+nginx_vhosts:
+
+  - name: bar.molecule.lan
+    ...
+
+    redirects:
+      - location: "/"
+        return: 301
+        destination: "https://$server_name$request_uri"
+```
+
+
+ACME locations can be assigned the necessary redirect locations using the `acme_challenge` shortcut.
+
+```yaml
+nginx_vhosts:
+
+  - name: bar.molecule.lan
+    ...
+
+    acme_challenge: true
+
+    redirects:
+      - location: "/"
+        return: 301
+        destination: "https://$server_name$request_uri"
+```
+
+`redirects` is implemented as a list and can contain the following configuration parameters:
+
+```yaml
+    redirects:
+      - location: "= /.well-known/acme-challenge/"
+        return: 404
+```
+
+```yaml
+    redirects:
+      - location: "/"
+        return: 301
+        destination: "https://$server_name$request_uri"
+```
+
+```yaml
+    redirects:
+      - location: "^~ /.well-known/acme-challenge/"
+        raw: |
+          allow all;
+          default_type "text/plain";
+          root  {{ challenge_directory }};
 ```

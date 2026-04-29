@@ -6,6 +6,8 @@ nginx_local_tmp_directory: "{{
 
 nginx_remote_tmp_directory: /var/cache/ansible/nginx
 
+nginx_vhosts_https: []
+
 nginx_dependencies: []
 
 nginx_packages:
