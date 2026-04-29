@@ -1,6 +1,8 @@
 ---
 
 - name: de-activate vhosts
+  when:
+    - not running_in_check_mode
   nginx_site_handler:
     enabled: false
     vhosts: "{{ nginx_vhosts }}"
@@ -11,6 +13,8 @@
     - reload nginx
 
 - name: remove vhost configurations
+  when:
+    - not running_in_check_mode
   nginx_site_handler:
     state: absent
     vhosts: "{{ nginx_vhosts }}"

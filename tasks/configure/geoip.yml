@@ -1,47 +1,51 @@
 ---
 
 - name: remove geoip configuration
+  when:
+    - not running_in_check_mode
+    - nginx_http.geoip | default({}) | count == 0
   ansible.builtin.file:
     name: /etc/nginx/includes.d/geoip.conf
     state: absent
-  when:
-    - nginx_http.geoip | default({}) | count == 0
   notify:
     - validate config
     - reload nginx
 
 - name: remove geoip2 configuration
+  when:
+    - not running_in_check_mode
+    - nginx_http.geoip2 | default({}) | count == 0
   ansible.builtin.file:
     name: /etc/nginx/includes.d/geoip2.conf
     state: absent
-  when:
-    - nginx_http.geoip2 | default({}) | count == 0
   notify:
     - validate config
     - reload nginx
 
 - name: create geoip configuration
+  when:
+    - not running_in_check_mode
+    - nginx_http.geoip | default({}) | count > 0
   ansible.builtin.template:
     src: includes.d/geoip.conf.j2
     dest: /etc/nginx/includes.d/geoip.conf
     owner: root
     group: root
-    mode: 0644
-  when:
-    - nginx_http.geoip | default({}) | count > 0
+    mode: "0644"
   notify:
     - validate config
     - reload nginx
 
 - name: create geoip.rules configuration
+  when:
+    - not running_in_check_mode
+    - nginx_http.geoip2 | default({}) | count > 0
   ansible.builtin.template:
     src: includes.d/geoip2.rules.j2
     dest: /etc/nginx/includes.d/geoip2.rules
     owner: root
     group: root
-    mode: 0644
-  when:
-    - nginx_http.geoip2 | default({}) | count > 0
+    mode: "0644"
   notify:
     - validate config
     - reload nginx

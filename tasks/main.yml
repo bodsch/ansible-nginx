@@ -9,10 +9,10 @@
 - name: configure
   ansible.builtin.include_tasks: configure.yml
 
-# - name: vhosts
-#   ansible.builtin.include_tasks: vhosts/main.yml
-#
-# - name: service
-#   ansible.builtin.include_tasks: service.yml
+- name: vhosts
+  ansible.builtin.include_tasks: vhosts/main.yml
+
+- name: service
+  ansible.builtin.include_tasks: service.yml
 
 ...

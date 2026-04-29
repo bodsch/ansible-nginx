@@ -48,6 +48,32 @@ server {
   index
     {{ data.index | join('\n') | indent(4, first=False) }};
   {% endif %}
+  {% if nginx_acme.enabled %}
+    {% if data.acme_challenge is defined and
+          data.acme_challenge %}
+  {{ tpl.vhost_acme(challenge_directory=nginx_acme.challenge_directory) }}
+    {% endif %}
+  {% endif %}
+  {% if data.redirects is defined and
+        data.redirects | bodsch.core.var_type == "list" and
+        data.redirects | count > 0 %}
+    {% for _redirect in data.redirects %}
+      {% set _redirect_return_code = _redirect.get("return", "") %}
+      {% set _redirect_location = _redirect.get("location", "") %}
+      {% set _redirect_destination = _redirect.get("destination", "") %}
+      {% set _redirect_raw = _redirect.get("raw", "") %}
+      {% if _redirect_location %}
+  location {{ _redirect_location }} {
+        {% if _redirect_return_code %}
+    return        {{ _redirect_return_code }}{% if _redirect_destination %} {{ _redirect_destination -}}{% endif %};
+        {% endif %}
+        {% if _redirect_raw %}
+    {{ _redirect_raw | indent(4, first=False) }}
+        {%- endif %}
+  }
+      {% endif %}
+    {% endfor %}
+  {% endif %}
 
   {% if data.raw is defined %}
   {{ data.raw | indent(2, first=False) }}
