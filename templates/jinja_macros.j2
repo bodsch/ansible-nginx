@@ -123,3 +123,17 @@ upstream {{ upstream.name }} {
 {% endif %}
 
 {%- endmacro -%}
+
+{%- macro vhost_acme(challenge_directory="/var/www") -%}
+  location ^~ /.well-known/acme-challenge/ {
+    allow all;
+    default_type "text/plain";
+    root  {{ challenge_directory }};
+  }
+  location = /.well-known/acme-challenge/ {
+    return 404;
+  }
+  #location / {
+  #  return         301 https://$server_name$request_uri;
+  #}
+{%- endmacro -%}

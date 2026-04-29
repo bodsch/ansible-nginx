@@ -31,94 +31,208 @@ nginx_vhosts:
           allow 127.0.0.1;
           deny all;
 
-  - name: monitoring.molecule.lan
-    filename: 10-monitoring.molecule.lan.conf
+#   - name: monitoring.molecule.lan
+#     filename: 10-monitoring.molecule.lan.conf
+#     state: present
+#     enabled: false
+#
+#     domains:
+#       - monitoring.molecule.lan
+#
+#     listen: 80
+#
+#     upstreams:
+#       - name: grafana
+#         servers:
+#           - 127.0.0.1:3000
+#       - name: prometheus
+#         servers:
+#           - 127.0.0.1:9090
+#
+#     root_directory: /var/www/monitoring.molecule.lan
+#     root_directory_create: true
+#
+#     logfiles:
+#       access:
+#         file: /var/log/nginx/monitoring.molecule.lan/access.log
+#         loglevel: 'json_full if=$excluded_ua'
+#       error:
+#         file: /var/log/nginx/monitoring.molecule.lan/error.log
+#         loglevel: notice
+#
+#   - name: foo.molecule.lan
+#     filename: 15-foo.molecule.lan.conf
+#     state: present
+#     enabled: true
+#
+#     domains:
+#       - foo.molecule.lan
+#
+#     # Specify which port you want to listen to with clear HTTP, or leave undefined for 80
+#     listen:
+#       - 9443
+#
+#     # enable ssl
+#     ssl:
+#       enabled: true
+#       ciphers: default
+#       certificate: /etc/snakeoil/molecule.lan/molecule.lan.pem
+#       certificate_key: /etc/snakeoil/molecule.lan/molecule.lan.key
+#       dhparam: /etc/snakeoil/molecule.lan/dh.pem
+#
+#     raw: |
+#       if ($badagent) {
+#         return 403;
+#       }
+#
+#   - name: 20-bar.molecule.lan
+#     state: present
+#     enabled: true
+#
+#     domains:
+#       - bar.molecule.lan
+#       - ruf.molecule.lan
+#       - slo.molecule.lan
+#       - zup.molecule.lan
+#
+#     # creates also an HTTP vhost only for redirect to HTTPS
+#     redirect:
+#       from_port: 80
+#
+#     # https://nginx.org/en/docs/http/ngx_http_core_module.html#listen
+#     listen:
+#       - 8443 reuseport
+#       - 443 ssl http2
+#
+#     # enable ssl
+#     ssl:
+#       enabled: true
+#       ciphers: strong
+#       certificate:     /etc/snakeoil/molecule.lan/molecule.lan.pem
+#       certificate_key: /etc/snakeoil/molecule.lan/molecule.lan.key
+#       dhparam: /etc/snakeoil/molecule.lan/dh.pem
+#
+#     raw: |
+#       if ($badagent) {
+#         return 403;
+#       }
+#
+#       if ($host != bar.molecule.lan) {
+#         return 301 https://bar.molecule.lan$request_uri;
+#       }
+#
+#   - name: 20-foo.docker.local
+#     filename: 20-foo.docker.local.conf
+#     state: absent
+#     enabled: true
+#
+#     domains:
+#       - foo.docker.local
+#
+#     listen: 80
+#
+#     root:  /var/www/foo.docker.local
+#
+#     logfiles:
+#       access:
+#         file: /var/log/nginx/foo.docker.local/access.log
+#         # loglevel: 'json_analytics'
+#       error:
+#         file: /var/log/nginx/foo.docker.local/error.log
+#         loglevel: notice
+#
+#     # list of upstream servers
+#     upstreams:
+#       - name: paperless
+#         servers:
+#           - 127.0.0.1:8080   max_fails=3 fail_timeout=30s
+#         # strategy: 'ip_hash'
+#         keepalive: 32
+#       - name: unifi
+#         servers:
+#           - 127.0.0.1:8090   max_fails=3 fail_timeout=30s
+#         # strategy: 'ip_hash'
+#         keepalive: 32
+#
+#     locations:
+#       "^~ /":
+#         options: |
+#           add_header X-Backend "bar";
+#
+#           proxy_pass         http://paperless/;
+#           proxy_set_header   Host              $host;
+#           proxy_set_header   X-Real-IP         $remote_addr;
+#           proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+#           proxy_set_header   X-Forwarded-Proto $scheme;
+
+  - name: 40-foo.docker.local
+    filename: 40-foo.docker.local.conf
     state: present
     enabled: false
 
     domains:
-      - monitoring.molecule.lan
+      - secure-foo.docker.local
 
-    listen: 80
-
-    upstreams:
-      - name: grafana
-        servers:
-          - 127.0.0.1:3000
-      - name: prometheus
-        servers:
-          - 127.0.0.1:9090
-
-    root_directory: /var/www/monitoring.molecule.lan
-    root_directory_create: true
-
-    logfiles:
-      access:
-        file: /var/log/nginx/monitoring.molecule.lan/access.log
-        loglevel: 'json_full if=$excluded_ua'
-      error:
-        file: /var/log/nginx/monitoring.molecule.lan/error.log
-        loglevel: notice
-
-  - name: foo.molecule.lan
-    filename: 15-foo.molecule.lan.conf
-    state: present
-    enabled: true
-
-    domains:
-      - foo.molecule.lan
-
-    # Specify which port you want to listen to with clear HTTP, or leave undefined for 80
     listen:
-      - 9443
-
-    # enable ssl
-    ssl:
-      enabled: true
-      ciphers: default
-      certificate: /etc/snakeoil/molecule.lan/molecule.lan.pem
-      certificate_key: /etc/snakeoil/molecule.lan/molecule.lan.key
-      dhparam: /etc/snakeoil/molecule.lan/dh.pem
-
-    raw: |
-      if ($badagent) {
-        return 403;
-      }
-
-  - name: 20-bar.molecule.lan
-    state: present
-    enabled: true
-
-    domains:
-      - bar.molecule.lan
-      - ruf.molecule.lan
-      - slo.molecule.lan
-      - zup.molecule.lan
-
-    # creates also an HTTP vhost only for redirect to HTTPS
-    redirect:
-      from_port: 80
-
-    # https://nginx.org/en/docs/http/ngx_http_core_module.html#listen
-    listen:
-      - 8443 reuseport
       - 443 ssl http2
 
     # enable ssl
     ssl:
       enabled: true
-      ciphers: strong
-      certificate:     /etc/snakeoil/molecule.lan/molecule.lan.pem
-      certificate_key: /etc/snakeoil/molecule.lan/molecule.lan.key
-      dhparam: /etc/snakeoil/molecule.lan/dh.pem
+      ciphers: default
+      certificate:     /etc/snakeoil/docker.local/docker.local.pem
+      certificate_key: /etc/snakeoil/docker.local/docker.local.pem
 
-    raw: |
-      if ($badagent) {
-        return 403;
-      }
+  - name: 20-bar.docker.local
+    state: present
+    enabled: true
 
-      if ($host != bar.molecule.lan) {
-        return 301 https://bar.molecule.lan$request_uri;
-      }
+    domains:
+      - bar.docker.local
+      - docker.local
 
+    # root_directory: /var/www/docker.local
+    # root_directory_create: true
+
+    acme_challenge: true
+
+    redirects:
+      - location: "/"
+        return: 301
+        destination: "https://$server_name$request_uri"
+
+  - name: 40-bar.docker.local
+    state: present
+    enabled: true
+
+    domains:
+      - bar.docker.local
+      - docker.local
+
+    root_directory: /var/www/docker.local
+    root_directory_create: true
+
+    # creates also an HTTP vhost only for redirect to HTTPS
+    redirect:
+      from_port: 80
+
+    listen:
+      - 443 ssl http2
+      - 8443 reuseport
+
+    logfiles:
+      access:
+        file: /var/log/nginx/bar.docker.local/access.log
+        loglevel: 'json_combined'
+      error:
+        file: /var/log/nginx/bar.docker.local/error.log
+        loglevel: warn
+
+    # enable ssl
+    ssl:
+      enabled: true
+      ciphers: default
+      certificate:     /etc/snakeoil/docker.local/docker.local.pem
+      certificate_key: /etc/snakeoil/docker.local/docker.local.key
+      dhparam: /etc/snakeoil/docker.local/dh.pem
 ...

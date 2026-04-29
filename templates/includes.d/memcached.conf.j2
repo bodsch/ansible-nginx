@@ -1,0 +1,58 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+# {{ ansible_managed }}
+
+{% if nginx_http.memcached is defined %}
+  {% set memcached = nginx_http.memcached %}
+  {% if memcached.bind is defined and memcached.bind | string | length > 0 %}
+    {% if memcached.bind | bodsch.core.type == "bool" and
+          not memcached.bind %}
+memcached_bind                  off;
+    {% else %}
+memcached_bind                  {{ memcached.bind }};
+    {% endif %}
+  {% endif %}
+  {% if memcached.buffer_size is defined and memcached.buffer_size | string | length > 0 %}
+memcached_buffer_size           {{ memcached.buffer_size }};
+  {% endif %}
+  {% if memcached.connect_timeout is defined and memcached.connect_timeout | string | length > 0 %}
+memcached_connect_timeout       {{ memcached.connect_timeout }};
+  {% endif %}
+  {% if memcached.gzip_flag is defined and memcached.gzip_flag | string | length > 0 %}
+memcached_gzip_flag             {{ memcached.gzip_flag }};
+  {% endif %}
+  {% if memcached.next_upstream is defined and memcached.next_upstream | string | length > 0 %}
+memcached_next_upstream         {{ memcached.next_upstream }};
+  {% endif %}
+  {% if memcached.next_upstream_timeout is defined and memcached.next_upstream_timeout | string | length > 0 %}
+memcached_next_upstream_timeout {{ memcached.next_upstream_timeout }};
+  {% endif %}
+  {% if memcached.next_upstream_tries is defined and memcached.next_upstream_tries | string | length > 0 %}
+memcached_next_upstream_tries   {{ memcached.next_upstream_tries }};
+  {% endif %}
+#  {% if memcached.pass is defined and memcached.pass | string | length > 0 %}
+#memcached_pass                  {{ memcached.pass }};
+#  {% endif %}
+  {% if memcached.read_timeout is defined and memcached.read_timeout | string | length > 0 %}
+memcached_read_timeout          {{ memcached.read_timeout }};
+  {% endif %}
+  {% if memcached.send_timeout is defined and memcached.send_timeout | string | length > 0 %}
+memcached_send_timeout          {{ memcached.send_timeout }};
+  {% endif %}
+  {% if memcached.socket_keepalive is defined and memcached.socket_keepalive | string | length > 0 %}
+memcached_socket_keepalive      {{ memcached.socket_keepalive }};
+  {% endif %}
+{% endif %}
+
+{#
+memcached_bind $remote_addr [transparent|off]
+memcached_buffer_size 4k|8k;
+memcached_connect_timeout 60s;
+memcached_gzip_flag flag;
+memcached_next_upstream error timeout; (error | timeout | invalid_response | not_found | off)
+memcached_next_upstream_timeout 0;
+memcached_next_upstream_tries 0;
+memcached_pass localhost:11211;  /  unix:/tmp/memcached.socket;
+memcached_read_timeout 60s;
+memcached_send_timeout 60s;
+memcached_socket_keepalive on | off;
+#}

@@ -1,12 +1,18 @@
 ---
 
 - name: vhosts prepare
+  when:
+    - not running_in_check_mode
   ansible.builtin.include_tasks: vhosts/prepare.yml
 
 - name: vhosts configure
+  when:
+    - not running_in_check_mode
   ansible.builtin.include_tasks: vhosts/configure.yml
 
 - name: flush handlers
+  when:
+    - not running_in_check_mode
   ansible.builtin.meta: flush_handlers
 
 ...

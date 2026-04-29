@@ -1,0 +1,18 @@
+---
+
+snakeoil_extract_to: /etc/snakeoil
+
+snakeoil_domain: molecule.lan
+
+snakeoil_life_time: 30
+
+snakeoil_dhparam: 2048
+
+snakeoil_alt_names:
+  - dns:
+      - molecule.lan
+      - foo.molecule.lan
+      - bar.molecule.lan
+      - molecule.molecule.lan
+
+...

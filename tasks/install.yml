@@ -1,26 +1,29 @@
 ---
 
 - name: install nginx
+  when:
+    - not running_in_check_mode
   ansible.builtin.package:
     name: "{{ nginx_packages }}"
     state: present
 
 - name: nginx version
+  when:
+    - not running_in_check_mode
   nginx_version:
   register: _nginx_version
 
 - name: define nginx version
+  when:
+    - not running_in_check_mode
   ansible.builtin.set_fact:
     nginx_version: "{{ _nginx_version.version }}"
 
 - name: extra modules
   when:
+    - not running_in_check_mode
     - nginx_extra_modules | default([]) | count > 0
   block:
-#     - name: verify extra modules
-#
-#
-#
     - name: install extra modules
       ansible.builtin.package:
         name: "{{ nginx_extra_modules }}"

@@ -1,52 +1,61 @@
 ---
 
-- name: detect nginx group
+- name: merge nginx configuration between defaults and custom
   when:
-    - not nginx_group is defined or nginx_group | length > 0
-  block:
-    - name: "find primary group for user '{{ nginx_user }}'"
-      ansible.builtin.getent:
-        database: group
-        key: "{{ nginx_user }}"
-        split: ':'
+    - not running_in_check_mode
+  ansible.builtin.set_fact:
+    nginx_global: "{{ nginx_defaults_global | combine(nginx_global, recursive=True) }}"
+    nginx_http: "{{ nginx_defaults_http | combine(nginx_http, recursive=True) }}"
+    nginx_events: "{{ nginx_defaults_events | combine(nginx_events, recursive=True) }}"
+    nginx_gzip: "{{ nginx_defaults_gzip | combine(nginx_gzip, recursive=True) }}"
+    nginx_ssl: "{{ nginx_defaults_ssl | combine(nginx_ssl, recursive=True) }}"
+    nginx_logformat: "{{ nginx_defaults_logformat | combine(nginx_logformat, recursive=True) }}"
+    nginx_acme: "{{ nginx_defaults_acme | combine(nginx_acme, recursive=True) }}"
+    nginx_custom_includes: "{{ nginx_defaults_custom_includes | combine(nginx_custom_includes, recursive=True) }}"
+  no_log: true
 
-    - name: define nginx_group
-      ansible.builtin.set_fact:
-        _nginx_group: "{{ ansible_facts['getent_group'] | list | first }}"
-      when:
-        - ansible_facts['getent_group'] is defined
-        - ansible_facts['getent_group'] | default([]) | count > 0
+- name: resolve account data from explicit user
+  when:
+    - not running_in_check_mode
+  bodsch.core.account_defaults:
+    user: "{{ nginx_user }}"
+    group: "{{ nginx_user }}"
+  register: account_result
 
-    - name: "set nginx_group '{{ _nginx_group }}'"
-      ansible.builtin.set_fact:
-        nginx_group: "{{ _nginx_group }}"
-      when:
-        - _nginx_group is defined
+- name: apply resolved values
+  when:
+    - not running_in_check_mode
+  ansible.builtin.set_fact:
+    nginx_user: "{{ account_result.user }}"
+    nginx_group: "{{ account_result.group }}"
 
 - name: create nginx cache directories
-  ansible.builtin.file:
-    path: "{{ item.path }}"
-    state: directory
-    owner: "{{ nginx_user }}"
-    group: "{{ nginx_group }}"
-    mode: 0750
-  loop: "{{ nginx_http.proxy.cache_path | default([]) }}"
-  loop_control:
-    label: "{{ item.path | default(omit) }}"
   when:
+    - not running_in_check_mode
     - nginx_http.proxy.cache_path is defined
     - nginx_http.proxy.cache_path | count > 0
     - item is defined
     - item.path is defined
     - item.path | string | length > 0
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: "{{ nginx_user }}"
+    group: "{{ nginx_group }}"
+    mode: "0750"
+  loop: "{{ nginx_http.proxy.cache_path | default([]) }}"
+  loop_control:
+    label: "{{ item.path | default(omit) }}"
 
 - name: create nginx sites directories
+  when:
+    - not running_in_check_mode
   ansible.builtin.file:
     path: "/etc/nginx/{{ item }}"
     state: directory
     owner: root
     group: root
-    mode: 0750
+    mode: "0750"
   loop:
     - sites-available
     - sites-enabled
@@ -54,14 +63,16 @@
     - conf.d
 
 - name: remove default site
+  when:
+    - not running_in_check_mode
+    - nginx_default_site.remove | default('true')
   ansible.builtin.file:
     name: "{{ nginx_default_site.file | default('/etc/nginx/sites-enabled/default') }}"
     state: absent
-  when:
-    - nginx_default_site.remove | default('true')
 
 - name: acme challenge
   when:
+    - not running_in_check_mode
     - nginx_acme is defined
     - nginx_acme.enabled
     - nginx_acme.challenge_directory is defined
@@ -73,7 +84,7 @@
         state: directory
         owner: "{{ nginx_user }}"
         group: "{{ nginx_group }}"
-        mode: 0755
+        mode: "0755"
 
     - name: fix directory rights for {{ nginx_acme.challenge_directory }}
       ansible.builtin.file:
@@ -81,100 +92,119 @@
         state: directory
         owner: "{{ nginx_user }}"
         group: "{{ nginx_group }}"
-        mode: 0755
+        mode: "0755"
         recurse: true
 
 - name: create gzip configuration
+  when:
+    - not running_in_check_mode
   ansible.builtin.template:
     src: conf.d/gzip.conf.j2
     dest: /etc/nginx/conf.d/gzip.conf
     owner: root
     group: root
-    mode: 0644
+    mode: "0644"
   notify:
     - validate config
     - reload nginx
 
 - name: create ssl configuration
+  when:
+    - not running_in_check_mode
+    - nginx_ssl is defined
+    - nginx_ssl.enabled | default('false') | bool
   nginx_ssl:
     config: "{{ nginx_ssl }}"
     dest: /etc/nginx/includes.d
-  when:
-    - nginx_ssl is defined
-    - nginx_ssl.enabled | default('false') | bool
   notify:
     - validate config
     - reload nginx
 
 - name: create logformat configuration
+  when:
+    - not running_in_check_mode
   ansible.builtin.template:
     src: includes.d/nginx_log.conf.j2
     dest: /etc/nginx/includes.d/nginx_log.conf
     owner: root
     group: root
-    mode: 0644
+    mode: "0644"
   notify:
     - validate config
     - reload nginx
 
 - name: configure geoip
+  when:
+    - not running_in_check_mode
   ansible.builtin.include_tasks: configure/geoip.yml
 
 - name: create useragent.rules configuration
+  when:
+    - not running_in_check_mode
   ansible.builtin.template:
     src: includes.d/useragent.rules.j2
     dest: /etc/nginx/includes.d/useragent.rules
     owner: root
     group: root
-    mode: 0644
+    mode: "0644"
   notify:
     - validate config
     - reload nginx
 
 - name: create proxy.rules configuration
+  when:
+    - not running_in_check_mode
   ansible.builtin.template:
     src: includes.d/proxy.rules.j2
     dest: /etc/nginx/includes.d/proxy.rules
     owner: root
     group: root
-    mode: 0644
+    mode: "0644"
   notify:
     - validate config
     - reload nginx
 
 - name: create global.rules configuration
+  when:
+    - not running_in_check_mode
   ansible.builtin.template:
     src: includes.d/global.rules.j2
     dest: /etc/nginx/includes.d/global.rules
     owner: root
     group: root
-    mode: 0644
+    mode: "0644"
   notify:
     - validate config
     - reload nginx
 
 - name: create limits.rules configuration
+  when:
+    - not running_in_check_mode
   ansible.builtin.template:
     src: includes.d/limits.rules.j2
     dest: /etc/nginx/includes.d/limits.rules
     owner: root
     group: root
-    mode: 0644
+    mode: "0644"
   notify:
     - validate config
     - reload nginx
 
 - name: remove obsolete proxy_cache.rules
+  when:
+    - not running_in_check_mode
   ansible.builtin.file:
     name: /etc/nginx/includes.d/proxy_cache.rules
     state: absent
 
 - name: create custom includes
   become: true
+  when:
+    - not running_in_check_mode
   ansible.builtin.template:
     src: includes.d/custom_include.j2
     dest: /etc/nginx/includes.d/{{ item.key }}
-    mode: 0644
+    mode: "0644"
   loop:
     "{{ nginx_custom_includes | dict2items }}"
   loop_control:
@@ -184,12 +214,14 @@
     - reload nginx
 
 - name: create nginx main configuration
+  when:
+    - not running_in_check_mode
   ansible.builtin.template:
     src: nginx.conf.j2
     dest: /etc/nginx/nginx.conf
     owner: root
     group: "{{ nginx_group }}"
-    mode: 0644
+    mode: "0644"
     backup: true
   notify:
     - validate config

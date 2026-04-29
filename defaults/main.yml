@@ -1,6 +1,8 @@
 ---
 
 nginx_acme: {}
+  # enabled: true
+  # challenge_directory: /var/www
 
 nginx_default_site:
   file: /etc/nginx/sites-enabled/default
@@ -35,5 +37,7 @@ nginx_ssl: {}
 nginx_custom_includes: {}
 
 nginx_vhosts: []
+
+nginx_ignore_missing_certificate: true
 
 ...

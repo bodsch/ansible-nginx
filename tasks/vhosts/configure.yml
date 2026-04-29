@@ -1,6 +1,8 @@
 ---
 
 - name: create HTTP vhost configurations
+  when:
+    - not running_in_check_mode
   nginx_vhosts:
     vhosts: "{{ nginx_vhosts_http }}"
     template:
@@ -13,6 +15,8 @@
     - reload nginx
 
 - name: create HTTPs vhost configurations
+  when:
+    - not running_in_check_mode
   nginx_vhosts:
     vhosts: "{{ nginx_vhosts_https }}"
     template:
@@ -20,6 +24,7 @@
       http: "{{ nginx_vhost_templates.http }}"
       https: "{{ nginx_vhost_templates.https }}"
     acme: "{{ nginx_acme }}"
+    ignore_missing_certificate: "{{ nginx_ignore_missing_certificate | bool }}"
   notify:
     - validate config
     - reload nginx
