@@ -89,12 +89,12 @@ nginx_global:
 
 nginx_http:
 
-  includes:
-    - includes.d/useragent.rules
-    - includes.d/proxy.rules
-    - includes.d/limits.rules
-    - includes.d/global.rules
-    - sites-enabled/*.conf
+  # includes:
+  #   - includes.d/useragent.rules
+  #   - includes.d/proxy.rules
+  #   - includes.d/limits.rules
+  #   - includes.d/global.rules
+  #   - sites-enabled/*.conf
 
   resolver:
     address: "172.17.0.1 141.1.1.1 valid=60s" # version 1.23.1: ipv4=on ipv6=off"

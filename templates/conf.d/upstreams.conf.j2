@@ -1,0 +1,25 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+# {{ ansible_managed }}
+
+{% if nginx_upstreams | count > 0 %}
+  {% for _upstreams in nginx_upstreams %}
+# used in {{ _upstreams['filename'] }}
+
+    {% set _upstream_config = _upstreams['upstreams'] %}
+    {% for upstream in _upstream_config %}
+upstream {{ upstream.name }} {
+  {% if upstream.strategy is defined %}
+  {{ upstream.strategy }};
+  {% endif %}
+  {% for server in upstream.servers %}
+  server {{ server }}{% if upstream.options is defined and upstream.options | length > 0 %} {{ upstream.options.rjust(30) }}{% endif %};
+  {% endfor %}
+  {% if upstream.keepalive is defined %}
+  keepalive {{ upstream.keepalive }};
+  {% endif %}
+}
+    {% endfor %}
+# ------------------------------------------------------
+
+  {% endfor %}
+{% endif %}

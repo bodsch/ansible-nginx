@@ -205,9 +205,9 @@
         vhosts: "{{ nginx_vhosts_https }}"
       register: check_domain_cert
 
-    - name: d
-      debug:
-        msg: "{{ check_domain_cert }}"
+    # - name: d
+    #   debug:
+    #     msg: "{{ check_domain_cert }}"
 
     - name: re-define nginx_vhosts_https with certificates state
       when:

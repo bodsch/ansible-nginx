@@ -61,24 +61,6 @@
 
 {%- endmacro -%}
 
-{# upstreams #}
-{%- macro vhost_upstreams(data) -%}
-{% for upstream in data %}
-upstream {{ upstream.name }} {
-  {% if upstream.strategy is defined %}
-  {{ upstream.strategy }};
-  {% endif %}
-  {% for server in upstream.servers %}
-  server {{ server }}{% if upstream.options is defined and upstream.options | length > 0 %} {{ upstream.options.rjust(30) }}{% endif %};
-  {% endfor %}
-  {% if upstream.keepalive is defined %}
-  keepalive {{ upstream.keepalive }};
-  {% endif %}
-}
-{% endfor %}
-
-{%- endmacro -%}
-
 {%- macro vhost_locations(data) -%}
 
 {% if data | bodsch.core.var_type == "dict" %}
@@ -102,8 +84,9 @@ upstream {{ upstream.name }} {
 
 {%- endmacro -%}
 
-{%- macro vhost_listen(port=80, default=False) -%}
+{%- macro vhost_listen(port=80, is_https=False, default=False) -%}
 {% set support_http2 = False %}
+{% set https_ports = False %}
 {% if port | bodsch.core.var_type == "string" or port | bodsch.core.var_type == "int" %}
   listen              {{ port }}{% if default %} default_server{% endif %};
 {% endif %}
@@ -112,12 +95,16 @@ upstream {{ upstream.name }} {
 {% endif %}
 {% if port | bodsch.core.var_type == "list" %}
   {% for l in port %}
+    {% set https_ports = (l | bodsch.core.compare_with_list(["8443", "9443", "443", "http2", "ssl"])) %}
+    {% if https_ports | count > 0 %}
+      {% set https_ports = True %}
+    {% endif %}
     {% if support_http2 %}
       {% set l = l | regex_replace("http2", "") %}
     {% endif %}
   listen              {{ l }}{% if default %} default_server{% endif %};
   {% endfor %}
-  {% if support_http2 %}
+  {% if support_http2 and (is_https or https_ports)%}
   http2               on;
   {% endif %}
 {% endif %}

@@ -3,7 +3,6 @@
 {% import 'jinja_macros.j2' as tpl with context %}
 {% set data = item %}
 {% set _server_name = data.domains | default('_') %}
-{% set _upstreams = data.upstreams | default({}) %}
 {% set _logfiles = data.logfiles | default({}) %}
 {% set _locations = data.locations | default([]) %}
 {% set _listen = data.listen | default('80') %}
@@ -11,8 +10,7 @@
 {% if data.name == "default" %}
 server {
   server_name _;
-
-{{ tpl.vhost_listen(80, True) | indent(0, first=False) }}
+{{ tpl.vhost_listen(80, default=True) | indent(0, first=False) }}
 {{ tpl.vhost_logfile(_logfiles, item.name) | indent(0, first=False) }}
 
   {% if data.root is defined %}
@@ -27,9 +25,6 @@ server {
 }
 
 {% else %}
-  {% if _upstreams | count > 0 %}
-{{ tpl.vhost_upstreams(_upstreams | default({})) }}
-  {% endif %}
 
 server {
 {{ tpl.vhost_server_name(_server_name) }}

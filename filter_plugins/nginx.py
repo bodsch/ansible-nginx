@@ -22,11 +22,12 @@ class FilterModule(object):
     def filters(self):
         return {
             "vhost_directory": self.vhost_directory,
-            # "vhost_listen": self.vhost_listen,
             "vhost_templates": self.vhost_templates,
             "vhost_templates_checksum": self.vhost_templates_checksum,
             "vhost_templates_validate": self.vhost_templates_validate,
             "http_vhosts": self.http_vhosts,
+            "upstreams": self.upstreams,
+            # "vhost_listen": self.vhost_listen,
             # "changed_vhosts": self.changed_vhosts,
             # "certificate_existing": self.certificate_existing,
         }
@@ -56,26 +57,6 @@ class FilterModule(object):
                 and x.get(directory, None)
                 and x.get("root_directory_create", True)
             ]
-
-        display.vv(f" = result {result}")
-        return result
-
-    def vhost_listen(self, data, port, default):
-        """
-        used in jinja_macros.j2
-        """
-        display.vv(f"nginx::vhost_listen(data, port: {port}, default: {default})")
-
-        result: List = []
-
-        if isinstance(port, str) or isinstance(port, int):
-            result.append(port)
-
-        if isinstance(port, list):
-            result = port
-
-        if default:
-            result.append("default_server")
 
         display.vv(f" = result {result}")
         return result
@@ -216,32 +197,134 @@ class FilterModule(object):
         display.vv(f" = result {data}")
         return data
 
-    def changed_vhosts(self, data):
-        """ """
-        display.vv(f"nginx::changed_vhosts(data: {data})")
-
-        result = []
-
-        if isinstance(data, dict):
-            """ """
-            results = data.get("results", None)
-            if results:
-                for item in results:
-                    changed = item.get("changed", False)
-                    if changed:
-                        result.append(item.get("item", {}).get("key", None))
-
-        display.vv(f"  => result {result} / changed: {(len(result) > 0)}")
-        return len(result) > 0
-
-    def certificate_existing(self, data):
+    @classmethod
+    def upstreams(
+        cls,
+        data: list[dict[str, Any]],
+    ) -> list[dict[str, Any]]:
         """
-        returns a list of vhosts where the certificate exists.
+        Extract nginx upstream definitions from vhost configurations.
+
+        Duplicate upstream definitions are removed globally, while
+        preserving the originating vhost metadata.
+
+        Args:
+            data:
+                List of nginx vhost definitions.
+
+        Returns:
+            List of vhosts containing unique upstream definitions.
         """
-        display.vv(f"nginx::certificate_existing(data: {data})")
 
-        if isinstance(data, list):
-            data = [x for x in data if x.get("ssl", {}).get("state") == "present"]
+        display.vv("nginx::upstreams(data)")
 
-        display.vv(f" = result {data}")
-        return data
+        if not isinstance(data, list):
+            return []
+
+        seen: set[tuple[str, tuple[str, ...], int | None]] = set()
+
+        result: list[dict[str, Any]] = []
+
+        for item in data:
+            upstreams = item.get("upstreams")
+
+            if not upstreams:
+                continue
+
+            unique_upstreams: list[dict[str, Any]] = []
+
+            for upstream in upstreams:
+                key = cls._normalize_upstream(upstream)
+
+                if key in seen:
+                    continue
+
+                seen.add(key)
+                unique_upstreams.append(upstream)
+
+            if unique_upstreams:
+                result.append(
+                    {
+                        "name": item.get("name"),
+                        "filename": item.get("filename"),
+                        "upstreams": unique_upstreams,
+                    }
+                )
+
+        display.vv(f"nginx::upstreams(result: {result})")
+
+        return result
+
+    @staticmethod
+    def _normalize_upstream(
+        upstream: dict[str, Any],
+    ) -> tuple[str, tuple[str, ...], int | None]:
+        """
+        Create a hashable upstream key.
+
+        Args:
+            upstream:
+                Raw upstream definition.
+
+        Returns:
+            Tuple used for deduplication.
+        """
+
+        name = upstream.get("name", "")
+        servers = tuple(sorted(upstream.get("servers", [])))
+        keepalive = upstream.get("keepalive")
+
+        return (name, servers, keepalive)
+
+    # --- OBSOLETE ---
+
+    # def vhost_listen(self, data, port, default):
+    #     """
+    #     used in jinja_macros.j2
+    #     """
+    #     display.vv(f"nginx::vhost_listen(data, port: {port}, default: {default})")
+    #
+    #     result: List = []
+    #
+    #     if isinstance(port, str) or isinstance(port, int):
+    #         result.append(port)
+    #
+    #     if isinstance(port, list):
+    #         result = port
+    #
+    #     if default:
+    #         result.append("default_server")
+    #
+    #     display.vv(f" = result {result}")
+    #     return result
+    #
+    # def changed_vhosts(self, data):
+    #     """ """
+    #     display.vv(f"nginx::changed_vhosts(data: {data})")
+    #
+    #     result = []
+    #
+    #     if isinstance(data, dict):
+    #         """ """
+    #         results = data.get("results", None)
+    #         if results:
+    #             for item in results:
+    #                 changed = item.get("changed", False)
+    #                 if changed:
+    #                     result.append(item.get("item", {}).get("key", None))
+    #
+    #     display.vv(f"  => result {result} / changed: {(len(result) > 0)}")
+    #     return len(result) > 0
+    #
+    # def certificate_existing(self, data):
+    #     """
+    #     returns a list of vhosts where the certificate exists.
+    #     """
+    #     display.vv(f"nginx::certificate_existing(data: {data})")
+    #
+    #     if isinstance(data, list):
+    #         data = [x for x in data if x.get("ssl", {}).get("state") == "present"]
+    #
+    #     display.vv(f" = result {data}")
+    #     return data
+    #

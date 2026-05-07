@@ -228,4 +228,94 @@ nginx_vhosts:
       certificate_key: /etc/snakeoil/docker.local/docker.local.key
       dhparam: /etc/snakeoil/docker.local/dh.pem
 
+  - name: 25-git.matrix.lan
+    description: |
+      internal access to http://git.matrix.lan
+    filename: 25-git.matrix.lan.conf
+
+    domains:
+      - git.matrix.lan
+
+    listen:
+      - 80
+
+    upstreams:
+      - name: git
+        servers:
+          - 192.168.0.135:3000
+
+    logfiles:
+      access:
+        file: /var/log/nginx/git.matrix.lan/access.log
+        loglevel: 'json_combined if=$excluded_ua'
+      error:
+        file: /var/log/nginx/git.matrix.lan/error.log
+        loglevel: notice
+
+    locations:
+      "/":
+        options: |
+          add_header X-Backend "git";
+
+          proxy_pass          http://git;
+          proxy_http_version  1.1;
+          proxy_set_header    Upgrade $http_upgrade;
+          proxy_set_header    Connection "upgrade";
+
+          proxy_set_header    Host              $host;
+          proxy_set_header    X-Real-IP         $remote_addr;
+          proxy_set_header    X-Forwarded-For   $proxy_add_x_forwarded_for;
+          # proxy_set_header    X-Forwarded-Proto $scheme;
+
+          proxy_redirect off;
+
+  - name: 50-git.matrix.lan
+    description: |
+      internal access to http://git.matrix.lan
+    filename: 50-git.matrix.lan.conf
+
+    domains:
+      - git.matrix.lan
+
+    listen:
+      - 443 ssl http2
+
+    upstreams:
+      - name: git
+        servers:
+          - 192.168.0.135:3000
+
+    logfiles:
+      access:
+        file: /var/log/nginx/git.matrix.lan/access.log
+        loglevel: 'json_combined if=$excluded_ua'
+      error:
+        file: /var/log/nginx/git.matrix.lan/error.log
+        loglevel: notice
+
+    # enable ssl
+    ssl:
+      enabled: true
+      ciphers: default
+      certificate: /etc/snakeoil/molecule.lan/molecule.lan.pem
+      certificate_key: /etc/snakeoil/molecule.lan/molecule.lan.key
+      dhparam: /etc/snakeoil/molecule.lan/dh.pem
+
+    locations:
+      "/":
+        options: |
+          add_header X-Backend "git";
+
+          proxy_pass          http://git;
+          proxy_http_version  1.1;
+          proxy_set_header    Upgrade $http_upgrade;
+          proxy_set_header    Connection "upgrade";
+
+          proxy_set_header    Host              $host;
+          proxy_set_header    X-Real-IP         $remote_addr;
+          proxy_set_header    X-Forwarded-For   $proxy_add_x_forwarded_for;
+          # proxy_set_header    X-Forwarded-Proto $scheme;
+
+          proxy_redirect off;
+
 ...

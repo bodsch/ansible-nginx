@@ -12,6 +12,7 @@
     nginx_logformat: "{{ nginx_defaults_logformat | combine(nginx_logformat, recursive=True) }}"
     nginx_acme: "{{ nginx_defaults_acme | combine(nginx_acme, recursive=True) }}"
     nginx_custom_includes: "{{ nginx_defaults_custom_includes | combine(nginx_custom_includes, recursive=True) }}"
+    nginx_upstreams: "{{ nginx_vhosts | upstreams() }}"
   no_log: true
 
 - name: resolve account data from explicit user
@@ -95,7 +96,7 @@
         mode: "0755"
         recurse: true
 
-- name: create gzip configuration
+- name: create conf.d/gzip.conf
   when:
     - not running_in_check_mode
   ansible.builtin.template:
@@ -108,7 +109,20 @@
     - validate config
     - reload nginx
 
-- name: create ssl configuration
+- name: create conf.d/upstreams.conf
+  when:
+    - not running_in_check_mode
+  ansible.builtin.template:
+    src: conf.d/upstreams.conf.j2
+    dest: /etc/nginx/conf.d/upstreams.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - validate config
+    - reload nginx
+
+- name: create ssl configuration files
   when:
     - not running_in_check_mode
     - nginx_ssl is defined
@@ -120,7 +134,7 @@
     - validate config
     - reload nginx
 
-- name: create logformat configuration
+- name: create includes.d/nginx_log.conf
   when:
     - not running_in_check_mode
   ansible.builtin.template:
@@ -138,7 +152,7 @@
     - not running_in_check_mode
   ansible.builtin.include_tasks: configure/geoip.yml
 
-- name: create useragent.rules configuration
+- name: create includes.d/useragent.rules
   when:
     - not running_in_check_mode
   ansible.builtin.template:
@@ -151,7 +165,7 @@
     - validate config
     - reload nginx
 
-- name: create proxy.rules configuration
+- name: create includes.d/proxy.rules
   when:
     - not running_in_check_mode
   ansible.builtin.template:
@@ -164,7 +178,7 @@
     - validate config
     - reload nginx
 
-- name: create global.rules configuration
+- name: create includes.d/global.rules
   when:
     - not running_in_check_mode
   ansible.builtin.template:
@@ -177,7 +191,7 @@
     - validate config
     - reload nginx
 
-- name: create limits.rules configuration
+- name: create includes.d/limits.rules
   when:
     - not running_in_check_mode
   ansible.builtin.template:
@@ -190,7 +204,7 @@
     - validate config
     - reload nginx
 
-- name: remove obsolete proxy_cache.rules
+- name: remove obsolete includes.d/proxy_cache.rules
   when:
     - not running_in_check_mode
   ansible.builtin.file:

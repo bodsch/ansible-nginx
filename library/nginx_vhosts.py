@@ -581,10 +581,12 @@ class VhostTemplateRenderer:
             {
                 "bodsch.core.var_type": self._filter_var_type,
                 "bodsch.core.type": self._filter_var_type,
+                "bodsch.core.compare_with_list": self._filter_compare_with_list,
                 "split": self._filter_split,
                 "regex_replace": self._filter_regex_replace,
                 "validate_listener": self._filter_validate_listener,
                 "version_compare": self._filter_version_compare,
+                "compare_list": self._filter_compare_with_list,
             }
         )
 
@@ -724,6 +726,29 @@ class VhostTemplateRenderer:
             return method(Version(to_text(value)), Version(to_text(version)))
         except Exception as exc:
             raise RuntimeError(f"Version comparison failed: {to_native(exc)}") from exc
+
+    @staticmethod
+    def _filter_compare_with_list(data: Any, compare_to_list: list) -> list:
+        """
+        compare two lists
+        """
+        result: list = []
+
+        if isinstance(data, int):
+            if data in compare_to_list:
+                result.append(data)
+
+        if isinstance(data, str):
+            for i in data.split(' '):
+                if i in compare_to_list:
+                    result.append(i)
+
+        if isinstance(data, list):
+            for i in data:
+                if i in compare_to_list:
+                    result.append(i)
+
+        return result
 
 
 # ===========================================================================
