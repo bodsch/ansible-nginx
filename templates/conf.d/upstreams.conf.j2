@@ -2,11 +2,8 @@
 # {{ ansible_managed }}
 
 {% if nginx_upstreams | count > 0 %}
-  {% for _upstreams in nginx_upstreams %}
-# used in {{ _upstreams['filename'] }}
-
-    {% set _upstream_config = _upstreams['upstreams'] %}
-    {% for upstream in _upstream_config %}
+  {% for upstream in nginx_upstreams %}
+# {{ upstream['description'] }}
 upstream {{ upstream.name }} {
   {% if upstream.strategy is defined %}
   {{ upstream.strategy }};
@@ -18,8 +15,6 @@ upstream {{ upstream.name }} {
   keepalive {{ upstream.keepalive }};
   {% endif %}
 }
-    {% endfor %}
-# ------------------------------------------------------
 
   {% endfor %}
 {% endif %}

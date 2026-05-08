@@ -12,7 +12,7 @@
     nginx_logformat: "{{ nginx_defaults_logformat | combine(nginx_logformat, recursive=True) }}"
     nginx_acme: "{{ nginx_defaults_acme | combine(nginx_acme, recursive=True) }}"
     nginx_custom_includes: "{{ nginx_defaults_custom_includes | combine(nginx_custom_includes, recursive=True) }}"
-    nginx_upstreams: "{{ nginx_vhosts | upstreams() }}"
+    nginx_upstreams: "{{ nginx_upstreams | upstreams(nginx_vhosts) }}"
   no_log: true
 
 - name: resolve account data from explicit user

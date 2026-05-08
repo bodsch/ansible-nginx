@@ -36,6 +36,8 @@ nginx_ssl: {}
 
 nginx_custom_includes: {}
 
+nginx_upstreams: []
+
 nginx_vhosts: []
 
 nginx_ignore_missing_certificate: true
