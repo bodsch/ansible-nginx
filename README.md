@@ -78,6 +78,7 @@ nginx_vhosts: []
 - [`nginx_logformat`](doc/logformat.md)
 - [`nginx_ssl`](doc/ssl.md)
 - [`nginx_vhosts`](doc/vhosts.md)
+- [`nginx_upstreams`](doc/upstreams.md)
 
 
 ## Contribution
