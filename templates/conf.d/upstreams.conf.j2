@@ -3,7 +3,9 @@
 
 {% if nginx_upstreams | count > 0 %}
   {% for upstream in nginx_upstreams %}
+    {% if upstream['description'] is defined and upstream['description'] | string | length > 0 %}
 # {{ upstream['description'] }}
+    {% endif %}
 upstream {{ upstream.name }} {
   {% if upstream.strategy is defined %}
   {{ upstream.strategy }};

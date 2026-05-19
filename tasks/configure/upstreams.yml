@@ -1,0 +1,16 @@
+---
+
+- name: create conf.d/upstreams.conf
+  when:
+    - not running_in_check_mode
+  ansible.builtin.template:
+    src: conf.d/upstreams.conf.j2
+    dest: /etc/nginx/conf.d/upstreams.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - validate nginx config
+    - reload nginx
+
+...

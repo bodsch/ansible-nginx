@@ -2,11 +2,11 @@
 
 nginx_upstreams:
   - name: grafana
-    description: upstream  to local grafana
+    # description: upstream  to local grafana
     servers:
       - 127.0.0.1:3000
   - name: prometheus
-    description: upstream  to local prometheus
+    # description: upstream  to local prometheus
     servers:
       - 127.0.0.1:9090
 

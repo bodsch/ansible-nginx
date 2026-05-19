@@ -8,7 +8,7 @@
     name: /etc/nginx/includes.d/geoip.conf
     state: absent
   notify:
-    - validate config
+    - validate nginx config
     - reload nginx
 
 - name: remove geoip2 configuration
@@ -19,7 +19,7 @@
     name: /etc/nginx/includes.d/geoip2.conf
     state: absent
   notify:
-    - validate config
+    - validate nginx config
     - reload nginx
 
 - name: create geoip configuration
@@ -33,7 +33,7 @@
     group: root
     mode: "0644"
   notify:
-    - validate config
+    - validate nginx config
     - reload nginx
 
 - name: create geoip.rules configuration
@@ -47,5 +47,5 @@
     group: root
     mode: "0644"
   notify:
-    - validate config
+    - validate nginx config
     - reload nginx

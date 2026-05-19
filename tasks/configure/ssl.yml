@@ -1,0 +1,15 @@
+---
+
+- name: create ssl configuration files
+  when:
+    - not running_in_check_mode
+    - nginx_ssl is defined
+    - nginx_ssl.enabled | default('false') | bool
+  nginx_ssl:
+    config: "{{ nginx_ssl }}"
+    dest: /etc/nginx/includes.d
+  notify:
+    - validate nginx config
+    - reload nginx
+
+...

@@ -739,7 +739,7 @@ class VhostTemplateRenderer:
                 result.append(data)
 
         if isinstance(data, str):
-            for i in data.split(' '):
+            for i in data.split(" "):
                 if i in compare_to_list:
                     result.append(i)
 

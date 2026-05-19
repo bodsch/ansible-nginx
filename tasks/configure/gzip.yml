@@ -1,0 +1,16 @@
+---
+
+- name: create conf.d/gzip.conf
+  when:
+    - not running_in_check_mode
+  ansible.builtin.template:
+    src: conf.d/gzip.conf.j2
+    dest: /etc/nginx/conf.d/gzip.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - validate nginx config
+    - reload nginx
+
+...

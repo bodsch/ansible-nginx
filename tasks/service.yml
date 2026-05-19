@@ -1,5 +1,11 @@
 ---
 
+- name: validate nginx config
+  nginx_verify_config:
+  register: _validate
+  changed_when: _validate.rc != 0
+  failed_when: _validate.rc != 0
+
 - name: restart nginx if needed
   ansible.builtin.meta: flush_handlers
 

@@ -12,9 +12,8 @@
   when:
     - _removed_vhost.changed
 
-- name: validate config  # noqa no-handler
-  ansible.builtin.command: |
-    nginx -t
+- name: validate nginx config
+  nginx_verify_config:
   register: _validate
   changed_when: _validate.rc != 0
   failed_when: _validate.rc != 0

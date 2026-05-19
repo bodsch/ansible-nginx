@@ -31,37 +31,23 @@
     nginx_group: "{{ account_result.group }}"
 
 - name: create nginx cache directories
-  when:
-    - not running_in_check_mode
-    - nginx_http.proxy.cache_path is defined
-    - nginx_http.proxy.cache_path | count > 0
-    - item is defined
-    - item.path is defined
-    - item.path | string | length > 0
-  ansible.builtin.file:
-    path: "{{ item.path }}"
-    state: directory
+  bodsch.core.directories:
     owner: "{{ nginx_user }}"
     group: "{{ nginx_group }}"
     mode: "0750"
-  loop: "{{ nginx_http.proxy.cache_path | default([]) }}"
-  loop_control:
-    label: "{{ item.path | default(omit) }}"
+    paths: "{{ nginx_http.proxy.cache_path | default([]) | cache_directory }}"
 
-- name: create nginx sites directories
-  when:
-    - not running_in_check_mode
-  ansible.builtin.file:
-    path: "/etc/nginx/{{ item }}"
-    state: directory
+- name: create nginx cache directories
+  bodsch.core.directories:
+    base_path: /etc/nginx
     owner: root
     group: root
     mode: "0750"
-  loop:
-    - sites-available
-    - sites-enabled
-    - includes.d
-    - conf.d
+    paths:
+      - path: sites-available
+      - path: sites-enabled
+      - path: includes.d
+      - path: conf.d
 
 - name: remove default site
   when:
@@ -99,53 +85,22 @@
 - name: create conf.d/gzip.conf
   when:
     - not running_in_check_mode
-  ansible.builtin.template:
-    src: conf.d/gzip.conf.j2
-    dest: /etc/nginx/conf.d/gzip.conf
-    owner: root
-    group: root
-    mode: "0644"
-  notify:
-    - validate config
-    - reload nginx
+  ansible.builtin.include_tasks: configure/gzip.yml
 
 - name: create conf.d/upstreams.conf
   when:
     - not running_in_check_mode
-  ansible.builtin.template:
-    src: conf.d/upstreams.conf.j2
-    dest: /etc/nginx/conf.d/upstreams.conf
-    owner: root
-    group: root
-    mode: "0644"
-  notify:
-    - validate config
-    - reload nginx
+  ansible.builtin.include_tasks: configure/upstreams.yml
 
 - name: create ssl configuration files
   when:
     - not running_in_check_mode
-    - nginx_ssl is defined
-    - nginx_ssl.enabled | default('false') | bool
-  nginx_ssl:
-    config: "{{ nginx_ssl }}"
-    dest: /etc/nginx/includes.d
-  notify:
-    - validate config
-    - reload nginx
+  ansible.builtin.include_tasks: configure/ssl.yml
 
 - name: create includes.d/nginx_log.conf
   when:
     - not running_in_check_mode
-  ansible.builtin.template:
-    src: includes.d/nginx_log.conf.j2
-    dest: /etc/nginx/includes.d/nginx_log.conf
-    owner: root
-    group: root
-    mode: "0644"
-  notify:
-    - validate config
-    - reload nginx
+  ansible.builtin.include_tasks: configure/log.yml
 
 - name: configure geoip
   when:
@@ -155,61 +110,22 @@
 - name: create includes.d/useragent.rules
   when:
     - not running_in_check_mode
-  ansible.builtin.template:
-    src: includes.d/useragent.rules.j2
-    dest: /etc/nginx/includes.d/useragent.rules
-    owner: root
-    group: root
-    mode: "0644"
-  notify:
-    - validate config
-    - reload nginx
+  ansible.builtin.include_tasks: configure/useragent_rules.yml
 
 - name: create includes.d/proxy.rules
   when:
     - not running_in_check_mode
-  ansible.builtin.template:
-    src: includes.d/proxy.rules.j2
-    dest: /etc/nginx/includes.d/proxy.rules
-    owner: root
-    group: root
-    mode: "0644"
-  notify:
-    - validate config
-    - reload nginx
+  ansible.builtin.include_tasks: configure/proxy_rules.yml
 
 - name: create includes.d/global.rules
   when:
     - not running_in_check_mode
-  ansible.builtin.template:
-    src: includes.d/global.rules.j2
-    dest: /etc/nginx/includes.d/global.rules
-    owner: root
-    group: root
-    mode: "0644"
-  notify:
-    - validate config
-    - reload nginx
+  ansible.builtin.include_tasks: configure/global_rules.yml
 
 - name: create includes.d/limits.rules
   when:
     - not running_in_check_mode
-  ansible.builtin.template:
-    src: includes.d/limits.rules.j2
-    dest: /etc/nginx/includes.d/limits.rules
-    owner: root
-    group: root
-    mode: "0644"
-  notify:
-    - validate config
-    - reload nginx
-
-- name: remove obsolete includes.d/proxy_cache.rules
-  when:
-    - not running_in_check_mode
-  ansible.builtin.file:
-    name: /etc/nginx/includes.d/proxy_cache.rules
-    state: absent
+  ansible.builtin.include_tasks: configure/limit_rules.yml
 
 - name: create custom includes
   become: true
@@ -224,7 +140,7 @@
   loop_control:
     label: "{{ item.key }}"
   notify:
-    - validate config
+    - validate nginx config
     - reload nginx
 
 - name: create nginx main configuration
@@ -238,7 +154,7 @@
     mode: "0644"
     backup: true
   notify:
-    - validate config
+    - validate nginx config
     - reload nginx
 
 ...

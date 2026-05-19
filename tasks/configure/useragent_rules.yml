@@ -1,0 +1,16 @@
+---
+
+- name: create includes.d/useragent.rules
+  when:
+    - not running_in_check_mode
+  ansible.builtin.template:
+    src: includes.d/useragent.rules.j2
+    dest: /etc/nginx/includes.d/useragent.rules
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - validate nginx config
+    - reload nginx
+
+...

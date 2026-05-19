@@ -1,0 +1,23 @@
+---
+
+- name: create includes.d/proxy.rules
+  when:
+    - not running_in_check_mode
+  ansible.builtin.template:
+    src: includes.d/proxy.rules.j2
+    dest: /etc/nginx/includes.d/proxy.rules
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - validate nginx config
+    - reload nginx
+
+- name: remove obsolete includes.d/proxy_cache.rules
+  when:
+    - not running_in_check_mode
+  ansible.builtin.file:
+    name: /etc/nginx/includes.d/proxy_cache.rules
+    state: absent
+
+...
