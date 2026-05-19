@@ -11,7 +11,7 @@
       https: "{{ nginx_vhost_templates.https }}"
     # acme: "{{ nginx_acme }}"
   notify:
-    - validate config
+    - validate nginx config
     - reload nginx
 
 - name: create HTTPs vhost configurations
@@ -26,7 +26,7 @@
     acme: "{{ nginx_acme }}"
     ignore_missing_certificate: "{{ nginx_ignore_missing_certificate | bool }}"
   notify:
-    - validate config
+    - validate nginx config
     - reload nginx
 
 ...

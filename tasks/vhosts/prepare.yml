@@ -204,15 +204,12 @@
       nginx_tls_certificates:
         vhosts: "{{ nginx_vhosts_https }}"
       register: check_domain_cert
-
-    # - name: d
-    #   debug:
-    #     msg: "{{ check_domain_cert }}"
+      no_log: true
 
     - name: re-define nginx_vhosts_https with certificates state
       when:
         - not running_in_check_mode
       ansible.builtin.set_fact:
         nginx_vhosts_https: "{{ check_domain_cert.https_vhosts }}"
-
+      no_log: true
 ...

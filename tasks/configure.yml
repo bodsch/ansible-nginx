@@ -31,6 +31,8 @@
     nginx_group: "{{ account_result.group }}"
 
 - name: create nginx cache directories
+  when:
+    - not running_in_check_mode
   bodsch.core.directories:
     owner: "{{ nginx_user }}"
     group: "{{ nginx_group }}"
@@ -38,6 +40,8 @@
     paths: "{{ nginx_http.proxy.cache_path | default([]) | cache_directory }}"
 
 - name: create nginx cache directories
+  when:
+    - not running_in_check_mode
   bodsch.core.directories:
     base_path: /etc/nginx
     owner: root
