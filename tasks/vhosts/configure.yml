@@ -9,7 +9,7 @@
       path: "{{ nginx_remote_tmp_directory }}/{{ ansible_facts.fqdn }}"
       http: "{{ nginx_vhost_templates.http }}"
       https: "{{ nginx_vhost_templates.https }}"
-    # acme: "{{ nginx_acme }}"
+    acme: "{{ nginx_acme }}"
   notify:
     - validate nginx config
     - reload nginx
