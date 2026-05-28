@@ -560,9 +560,9 @@ class VhostTemplateRenderer:
             Rendered template string, or ``None`` when *template_file* does
             not exist or is not a regular file.
         """
-        self.module.log(
-            f"VhostTemplateRenderer::render(template_file: {template_file})"
-        )
+        # self.module.log(
+        #     f"VhostTemplateRenderer::render(template_file: {template_file})"
+        # )
 
         if not os.path.isfile(template_file):
             return None
@@ -792,7 +792,7 @@ class NginxVHosts:
             module: Fully initialised :class:`AnsibleModule` instance.
         """
         self.module = module
-        self.module.log("NginxVHosts::__init__()")
+        # self.module.log("NginxVHosts::__init__()")
 
         self.vhosts: List[Dict[str, Any]] = module.params["vhosts"]
         self.dest: str = module.params.get("dest") or "/etc/nginx/sites-available"
@@ -833,7 +833,7 @@ class NginxVHosts:
         Returns:
             Ansible result dict with keys ``changed``, ``failed``, ``msg``.
         """
-        self.module.log("NginxVHosts::run()")
+        # self.module.log("NginxVHosts::run()")
 
         create_directory(directory=self.tmp_directory, mode="0750")
 
@@ -897,7 +897,7 @@ class NginxVHosts:
         Returns:
             A 3-tuple ``(failed, changed, message)``.
         """
-        self.module.log(f"NginxVHosts::create_vhost(data: {data})")
+        # self.module.log(f"NginxVHosts::create_vhost(data: {data})")
 
         enabled: bool = data.get("enabled", True)
         template_file: Optional[str] = data.get("template")
@@ -1006,7 +1006,7 @@ class NginxVHosts:
             when the ``sites-enabled`` symlink was removed and *removed* is
             ``True`` when the ``sites-available`` source file was deleted.
         """
-        self.module.log(f"NginxVHosts::remove_vhost(data: {data})")
+        # self.module.log(f"NginxVHosts::remove_vhost(data: {data})")
 
         disabled = False
         removed = False
@@ -1044,10 +1044,10 @@ class NginxVHosts:
         Returns:
             A 2-tuple ``(changed, message)``.
         """
-        self.module.log(
-            f"NginxVHosts::save_vhost("
-            f"file_name: {file_name}, file_temporary: {file_temporary})"
-        )
+        # self.module.log(
+        #     f"NginxVHosts::save_vhost("
+        #     f"file_name: {file_name}, file_temporary: {file_temporary})"
+        # )
 
         with open(file_temporary, "w") as fh:
             fh.write(data)
@@ -1080,10 +1080,10 @@ class NginxVHosts:
             ``True`` when the symlink was created or replaced, ``False``
             when it was already correct (no change).
         """
-        self.module.log(
-            f"NginxVHosts::enable_vhost("
-            f"file_available: {file_available}, file_enabled: {file_enabled})"
-        )
+        # self.module.log(
+        #     f"NginxVHosts::enable_vhost("
+        #     f"file_available: {file_available}, file_enabled: {file_enabled})"
+        # )
 
         # Fast-path: symlink already correct.
         if os.path.islink(file_enabled) and os.readlink(file_enabled) == file_available:
@@ -1108,7 +1108,7 @@ class NginxVHosts:
             ``True`` when the symlink was removed, ``False`` when it did
             not exist (idempotent no-op).
         """
-        self.module.log(f"NginxVHosts::disable_vhost(file_enabled: {file_enabled})")
+        # self.module.log(f"NginxVHosts::disable_vhost(file_enabled: {file_enabled})")
         return remove_file(file_enabled)
 
     # ------------------------------------------------------------------

@@ -127,6 +127,44 @@ def test_vhosts_enabled(host, files):
     d = host.file(f"/etc/nginx/sites-enabled/{files}")
     assert d.is_file
 
+@pytest.mark.parametrize(
+    "directories",
+    [
+      "/var/www",
+      "/var/www/01.docker.local",
+      "/var/www/02.docker.local",
+      "/var/www/03.docker.local",
+      "/var/www/04.docker.local",
+      "/var/www/05.docker.local",
+      "/var/www/06.docker.local",
+      "/var/www/07.docker.local",
+      "/var/www/08.docker.local",
+      "/var/www/09.docker.local",
+      "/var/www/10.docker.local",
+      "/var/www/11.docker.local",
+      "/var/www/12.docker.local",
+      "/var/www/13.docker.local",
+      "/var/www/14.docker.local",
+      "/var/www/15.docker.local",
+      "/var/www/16.docker.local",
+      "/var/www/17.docker.local",
+      "/var/www/18.docker.local",
+      "/var/www/19.docker.local",
+      "/var/www/20.docker.local",
+      "/var/www/21.docker.local",
+      "/var/www/22.docker.local",
+      "/var/www/23.docker.local",
+      "/var/www/24.docker.local",
+      "/var/www/25.docker.local",
+      "/var/www/docker.local",
+      "/var/www/foo.docker.local",
+      "/var/www/foo.docker.local",
+    ],
+)
+def test_vhosts_root_directories(host, directories):
+    d = host.file(directories)
+    assert d.is_directory
+
 
 def test_service(host):
     service = host.service("nginx")

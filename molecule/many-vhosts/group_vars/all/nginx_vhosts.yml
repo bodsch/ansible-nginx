@@ -84,6 +84,8 @@ nginx_vhosts_redirects:
     domains:
       - 03.docker.local
 
+    root_directory: /var/www/03.docker.local
+
     locations:
       "^~ /":
         options: |
@@ -97,6 +99,8 @@ nginx_vhosts_redirects:
     listen: 80
     domains:
       - 04.docker.local
+
+    root_directory: /var/www/04.docker.local
 
     locations:
       "^~ /":
@@ -112,6 +116,8 @@ nginx_vhosts_redirects:
     domains:
       - 05.docker.local
 
+    root_directory: /var/www/05.docker.local
+
     locations:
       "^~ /":
         options: |
@@ -126,10 +132,13 @@ nginx_vhosts_redirects:
     domains:
       - 06.docker.local
 
+    root_directory: /var/www/06.docker.local
+
     locations:
       "^~ /":
         options: |
           return 301 https://molecule.docker.local/06.html;
+
   - name: 07.docker.local
     filename: 10-07.docker.local.conf
     state: present
@@ -138,6 +147,8 @@ nginx_vhosts_redirects:
     listen: 80
     domains:
       - 07.docker.local
+
+    root_directory: /var/www/07.docker.local
 
     locations:
       "^~ /":
@@ -153,6 +164,8 @@ nginx_vhosts_redirects:
     domains:
       - 08.docker.local
 
+    root_directory: /var/www/08.docker.local
+
     locations:
       "^~ /":
         options: |
@@ -166,6 +179,8 @@ nginx_vhosts_redirects:
     listen: 80
     domains:
       - 09.docker.local
+
+    root_directory: /var/www/09.docker.local
 
     locations:
       "^~ /":
@@ -181,6 +196,8 @@ nginx_vhosts_redirects:
     domains:
       - 10.docker.local
 
+    root_directory: /var/www/10.docker.local
+
     locations:
       "^~ /":
         options: |
@@ -194,6 +211,8 @@ nginx_vhosts_redirects:
     listen: 80
     domains:
       - 11.docker.local
+
+    root_directory: /var/www/11.docker.local
 
     locations:
       "^~ /":
@@ -209,6 +228,8 @@ nginx_vhosts_redirects:
     domains:
       - 12.docker.local
 
+    root_directory: /var/www/12.docker.local
+
     locations:
       "^~ /":
         options: |
@@ -222,6 +243,8 @@ nginx_vhosts_redirects:
     listen: 80
     domains:
       - 13.docker.local
+
+    root_directory: /var/www/13.docker.local
 
     locations:
       "^~ /":
@@ -237,6 +260,8 @@ nginx_vhosts_redirects:
     domains:
       - 14.docker.local
 
+    root_directory: /var/www/14.docker.local
+
     locations:
       "^~ /":
         options: |
@@ -250,6 +275,8 @@ nginx_vhosts_redirects:
     listen: 80
     domains:
       - 15.docker.local
+
+    root_directory: /var/www/15.docker.local
 
     locations:
       "^~ /":
@@ -265,6 +292,8 @@ nginx_vhosts_redirects:
     domains:
       - 16.docker.local
 
+    root_directory: /var/www/16.docker.local
+
     locations:
       "^~ /":
         options: |
@@ -278,6 +307,8 @@ nginx_vhosts_redirects:
     listen: 80
     domains:
       - 17.docker.local
+
+    root_directory: /var/www/17.docker.local
 
     locations:
       "^~ /":
@@ -293,6 +324,8 @@ nginx_vhosts_redirects:
     domains:
       - 18.docker.local
 
+    root_directory: /var/www/18.docker.local
+
     locations:
       "^~ /":
         options: |
@@ -306,6 +339,8 @@ nginx_vhosts_redirects:
     listen: 80
     domains:
       - 19.docker.local
+
+    root_directory: /var/www/19.docker.local
 
     locations:
       "^~ /":
@@ -321,6 +356,8 @@ nginx_vhosts_redirects:
     domains:
       - 20.docker.local
 
+    root_directory: /var/www/20.docker.local
+
     locations:
       "^~ /":
         options: |
@@ -334,6 +371,8 @@ nginx_vhosts_redirects:
     listen: 80
     domains:
       - 21.docker.local
+
+    root_directory: /var/www/21.docker.local
 
     locations:
       "^~ /":
@@ -349,6 +388,8 @@ nginx_vhosts_redirects:
     domains:
       - 22.docker.local
 
+    root_directory: /var/www/22.docker.local
+
     locations:
       "^~ /":
         options: |
@@ -362,6 +403,8 @@ nginx_vhosts_redirects:
     listen: 80
     domains:
       - 23.docker.local
+
+    root_directory: /var/www/23.docker.local
 
     locations:
       "^~ /":
@@ -377,6 +420,8 @@ nginx_vhosts_redirects:
     domains:
       - 24.docker.local
 
+    root_directory: /var/www/24.docker.local
+
     locations:
       "^~ /":
         options: |
@@ -390,6 +435,8 @@ nginx_vhosts_redirects:
     listen: 80
     domains:
       - 25.docker.local
+
+    root_directory: /var/www/25.docker.local
 
     locations:
       "^~ /":
@@ -443,7 +490,9 @@ nginx_vhosts_base:
 
     listen: 80
 
-    root:  /var/www/foo.docker.local
+    root_directory: /var/www/foo.docker.local
+    root_directory_create: true
+
 
     logfiles:
       access:
@@ -487,6 +536,9 @@ nginx_vhosts_base:
 
     listen:
       - 443 ssl http2
+
+    root_directory: /var/www/foo.docker.local
+    root_directory_create: true
 
     # enable ssl
     ssl:

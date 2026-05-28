@@ -170,19 +170,33 @@
     - not running_in_check_mode
   ansible.builtin.setup:
 
+# - name: d
+#   debug:
+#     msg: "{{ nginx_vhosts_root_directories }}"
+
 - name: ensure vhosts root path exists
   when:
     - not running_in_check_mode
-    - nginx_vhosts_root_directories | default([]) | count > 0
-  ansible.builtin.file:
-    path: "{{ item }}"
-    state: directory
+    - nginx_vhosts is defined
+  nginx_root_directories:
+    vhosts: "{{ nginx_vhosts }}"
     owner: "{{ nginx_user }}"
-    mode: "0750"
-  loop:
-    "{{ nginx_vhosts_root_directories }}"
-  loop_control:
-    label: "{{ item }}"
+    # group: "{{ nginx_group }}"
+    mode: "0770"
+
+# - name: ensure vhosts root path exists
+#   when:
+#     - not running_in_check_mode
+#     - nginx_vhosts_root_directories | default([]) | count > 0
+#   ansible.builtin.file:
+#     path: "{{ item }}"
+#     state: directory
+#     owner: "{{ nginx_user }}"
+#     mode: "0750"
+#   loop:
+#     "{{ nginx_vhosts_root_directories }}"
+#   loop_control:
+#     label: "{{ item }}"
 
 - name: ensure vhosts log path exists
   when:
