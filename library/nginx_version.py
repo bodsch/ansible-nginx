@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
 
 # (c) 2021-2026, Bodo Schulz <bodo@boone-schulz.de>
 # Apache-2.0 (see LICENSE or https://opensource.org/license/apache-2-0)
@@ -17,10 +16,10 @@ or the output does not match the expected pattern, allowing the calling role
 to detect the failure condition without the module raising an error.
 """
 
-from __future__ import absolute_import, annotations, print_function
+from __future__ import annotations
 
 import re
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 from ansible.module_utils.basic import AnsibleModule
 
@@ -118,7 +117,7 @@ class NginxVersion:
     # Public entry point
     # ------------------------------------------------------------------
 
-    def run(self) -> Dict[str, Any]:
+    def run(self) -> dict[str, Any]:
         """Execute ``nginx -v`` and return the parsed version.
 
         Returns:
@@ -138,9 +137,9 @@ class NginxVersion:
 
     def __exec(
         self,
-        commands: List[str],
+        commands: list[str],
         check_rc: bool = False,
-    ) -> Tuple[int, str, str]:
+    ) -> tuple[int, str, str]:
         """Run an external command via the Ansible module helper.
 
         All output is forwarded to the Ansible module log for debugging.

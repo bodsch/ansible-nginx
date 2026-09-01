@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
 
 # (c) 2022-2026, Bodo Schulz <bodo@boone-schulz.de>
 # Apache-2.0 (see LICENSE or https://opensource.org/license/apache-2-0)
@@ -40,10 +39,10 @@ Idempotency
   ``sites-available``; both operations are individually idempotent.
 """
 
-from __future__ import absolute_import, annotations, print_function
+from __future__ import annotations
 
 import os
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.bodsch.core.plugins.module_utils.file import (
@@ -207,8 +206,8 @@ class NginxSiteHandler:
         """
         self.module = module
         self.state: str = module.params.get("state") or "present"
-        self.enabled: Optional[bool] = module.params.get("enabled")
-        self.vhosts: Union[Dict[str, Any], List[Any]] = module.params["vhosts"]
+        self.enabled: bool | None = module.params.get("enabled")
+        self.vhosts: dict[str, Any] | list[Any] = module.params["vhosts"]
 
         base = module.params.get("site_path") or _DEFAULT_NGINX_BASE
         self.site_available: str = os.path.join(base, "sites-available")
@@ -218,13 +217,13 @@ class NginxSiteHandler:
     # Public entry point
     # ------------------------------------------------------------------
 
-    def run(self) -> Dict[str, Any]:
+    def run(self) -> dict[str, Any]:
         """Iterate over all vhosts and apply the requested state.
 
         Returns:
             Ansible result dict with keys ``changed``, ``failed``, ``state``.
         """
-        result_state: List[Dict[str, Any]] = []
+        result_state: list[dict[str, Any]] = []
 
         if isinstance(self.vhosts, dict):
             for vhost_name, vhost_cfg in self.vhosts.items():
@@ -336,7 +335,7 @@ class NginxSiteHandler:
         file_name: str,
         enabled: bool,
         vhost_state: str,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """Evaluate and apply the desired state for a single vhost.
 
         This method consolidates the three mutually relevant conditions
@@ -389,7 +388,7 @@ class NginxSiteHandler:
 
 def main() -> None:
     """Module entry point.  Called by Ansible at runtime."""
-    args: Dict[str, Any] = dict(
+    args: dict[str, Any] = dict(
         state=dict(
             required=False,
             default="present",

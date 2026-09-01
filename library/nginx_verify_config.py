@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
 
 # (c) 2021-2026, Bodo Schulz <bodo@boone-schulz.de>
 # Apache-2.0 (see LICENSE or https://opensource.org/license/apache-2-0)
@@ -19,7 +18,7 @@ allowing roles and playbooks to decide how to proceed.
 from __future__ import annotations
 
 import re
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 from ansible.module_utils.basic import AnsibleModule
 
@@ -125,7 +124,7 @@ class NginxVerifyConfig:
     # Public entry point
     # ------------------------------------------------------------------
 
-    def run(self) -> Dict[str, Any]:
+    def run(self) -> dict[str, Any]:
         """
         Execute nginx configuration validation.
 
@@ -154,9 +153,9 @@ class NginxVerifyConfig:
 
     def __exec(
         self,
-        commands: List[str],
+        commands: list[str],
         check_rc: bool = False,
-    ) -> Tuple[int, str, str]:
+    ) -> tuple[int, str, str]:
         """Run an external command via the Ansible module helper.
 
         All output is forwarded to the Ansible module log for debugging.

@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
 
 # (c) 2021-2026, Bodo Schulz <bodo@boone-schulz.de>
 # Apache-2.0 (see LICENSE or https://opensource.org/license/apache-2-0)
@@ -30,11 +29,11 @@ Each individual template file also has its own checksum so that only
 modified cipher files are re-rendered.
 """
 
-from __future__ import absolute_import, annotations, print_function
+from __future__ import annotations
 
 import json
 import os
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.bodsch.core.plugins.module_utils.checksum import Checksum
@@ -161,7 +160,7 @@ class NginxSsl:
             module: Fully initialised :class:`AnsibleModule` instance.
         """
         self.module = module
-        self.ssl_config: Dict[str, Any] = module.params["config"]
+        self.ssl_config: dict[str, Any] = module.params["config"]
         self.dest: str = module.params.get("dest") or "/etc/nginx/includes.d"
         self.checksum = Checksum(module)
 
@@ -169,7 +168,7 @@ class NginxSsl:
     # Public entry point
     # ------------------------------------------------------------------
 
-    def run(self) -> Dict[str, Any]:
+    def run(self) -> dict[str, Any]:
         """Render SSL config snippets when the configuration has changed.
 
         Returns:
@@ -190,7 +189,7 @@ class NginxSsl:
                 msg="The ssl configuration has not been changed.",
             )
 
-        result_state: List[Dict[str, Any]] = []
+        result_state: list[dict[str, Any]] = []
 
         if not isinstance(self.ssl_config, dict):
             return dict(
@@ -202,7 +201,7 @@ class NginxSsl:
         # Work on a shallow copy so we do not mutate the caller's data.
         ssl_config = self.ssl_config.copy()
         ssl_config.pop("enabled", None)
-        ssl_ciphers: Dict[str, Any] = ssl_config.pop("ssl_ciphers", {})
+        ssl_ciphers: dict[str, Any] = ssl_config.pop("ssl_ciphers", {})
 
         # ---- global ssl.conf ----
         file_name = "ssl.conf"
@@ -242,7 +241,7 @@ class NginxSsl:
         template_type: str,
         file_path: str,
         data: Any,
-    ) -> Tuple[bool, bool, str]:
+    ) -> tuple[bool, bool, str]:
         """Render a Jinja2 template and write it to *file_path* if changed.
 
         The method normalises *data* to the form expected by each template:
@@ -303,7 +302,7 @@ class NginxSsl:
 
 def main() -> None:
     """Module entry point.  Called by Ansible at runtime."""
-    args: Dict[str, Any] = dict(
+    args: dict[str, Any] = dict(
         config=dict(required=True, type="dict"),
         dest=dict(required=False, default="/etc/nginx/includes.d"),
     )

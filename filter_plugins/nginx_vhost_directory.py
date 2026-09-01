@@ -1,20 +1,16 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
 
 # (c) 2021-2026, Bodo Schulz <me+ansible@bodsch.me>
 # Apache-2.0 (see LICENSE or https://opensource.org/license/apache-2-0)
 # SPDX-License-Identifier: Apache-2.0
 
-from __future__ import absolute_import, division, print_function
-
-from typing import List
 
 from ansible.utils.display import Display
 
 display = Display()
 
 
-class FilterModule(object):
+class FilterModule:
     """ """
 
     def filters(self):
@@ -30,7 +26,7 @@ class FilterModule(object):
             f"nginx::vhost_directory(data, directory: {directory}, state: {state})"
         )
 
-        result: List = []
+        result: list = []
 
         if isinstance(data, dict):
             for item in data:

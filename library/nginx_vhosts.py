@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
 
 # (c) 2022-2026, Bodo Schulz <bodo@boone-schulz.de>
 # Apache-2.0 (see LICENSE or https://opensource.org/license/apache-2-0)
@@ -51,14 +50,14 @@ so that concurrent Ansible runs do not interfere.  The directory is removed
 unconditionally at the end of :meth:`NginxVHosts.run`.
 """
 
-from __future__ import absolute_import, annotations, print_function
+from __future__ import annotations
 
 import json
 import operator
 import os
 import re
 import shutil
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.common.text.converters import to_native, to_text
@@ -462,7 +461,7 @@ msg:
 
 # ---------------------------------------------------------------------------
 # Operator alias map used by the version_compare Jinja2 filter.
-_OP_MAP: Dict[str, str] = {
+_OP_MAP: dict[str, str] = {
     "==": "eq",
     "=": "eq",
     "eq": "eq",
@@ -516,7 +515,7 @@ class VhostTemplateRenderer:
         self,
         module: AnsibleModule,
         template_path: str,
-        acme: Optional[Dict[str, Any]],
+        acme: dict[str, Any] | None,
         nginx_version: str,
     ) -> None:
         """Initialise the renderer.
@@ -536,7 +535,7 @@ class VhostTemplateRenderer:
     # Public interface
     # ------------------------------------------------------------------
 
-    def render(self, template_file: str, data: Dict[str, Any]) -> Optional[str]:
+    def render(self, template_file: str, data: dict[str, Any]) -> str | None:
         """Render *template_file* with *data* and return the result string.
 
         The template is located by resolving the real path of *template_file*
@@ -601,7 +600,7 @@ class VhostTemplateRenderer:
     # ------------------------------------------------------------------
 
     @staticmethod
-    def _filter_var_type(value: Any) -> Optional[str]:
+    def _filter_var_type(value: Any) -> str | None:
         """Return a string describing the Python type of *value*.
 
         Recognised types: ``"list"``, ``"dict"``, ``"string"``, ``"int"``,
@@ -640,7 +639,7 @@ class VhostTemplateRenderer:
         return re.sub(str(find), str(replace), str(s)).strip()
 
     @staticmethod
-    def _filter_split(value: Any, sep: str = "") -> List[str]:
+    def _filter_split(value: Any, sep: str = "") -> list[str]:
         """Split *value* on *sep*, discarding empty tokens.
 
         Args:
@@ -660,7 +659,7 @@ class VhostTemplateRenderer:
         data: Any,
         regex: str = r"(quic|reuseport)",
         replace: str = "",
-    ) -> List[str]:
+    ) -> list[str]:
         """Strip unsupported tokens from nginx ``listen`` directive values.
 
         Useful for removing ``quic`` or ``reuseport`` from listen strings
@@ -794,14 +793,14 @@ class NginxVHosts:
         self.module = module
         # self.module.log("NginxVHosts::__init__()")
 
-        self.vhosts: List[Dict[str, Any]] = module.params["vhosts"]
+        self.vhosts: list[dict[str, Any]] = module.params["vhosts"]
         self.dest: str = module.params.get("dest") or "/etc/nginx/sites-available"
-        self.acme: Optional[Dict[str, Any]] = module.params.get("acme")
+        self.acme: dict[str, Any] | None = module.params.get("acme")
         self.ignore_missing_certificate: bool = module.params.get(
             "ignore_missing_certificate", False
         )
 
-        template: Dict[str, Any] = module.params.get("template") or {}
+        template: dict[str, Any] = module.params.get("template") or {}
         self.default_http_template: str = template.get("http", "")
         self.default_https_template: str = template.get("https", "")
         self.template_path: str = template.get("path", "")
@@ -818,7 +817,7 @@ class NginxVHosts:
     # Public entry point
     # ------------------------------------------------------------------
 
-    def run(self) -> Dict[str, Any]:
+    def run(self) -> dict[str, Any]:
         """Execute the full vhost lifecycle for all configured vhosts.
 
         Sequence:
@@ -846,13 +845,13 @@ class NginxVHosts:
             nginx_version=self.nginx_version,
         )
 
-        result_state: List[Dict[str, Any]] = []
+        result_state: list[dict[str, Any]] = []
 
         for vhost in self.vhosts:
             name: str = vhost.get("name") or ""
             vhost_state: str = vhost.get("state", "present")
 
-            res: Dict[str, Any] = {name: {}}
+            res: dict[str, Any] = {name: {}}
 
             if vhost_state == "absent":
                 disabled, removed = self.remove_vhost(vhost)
@@ -877,7 +876,7 @@ class NginxVHosts:
     # Public vhost operations
     # ------------------------------------------------------------------
 
-    def create_vhost(self, data: Dict[str, Any]) -> Tuple[bool, bool, str]:
+    def create_vhost(self, data: dict[str, Any]) -> tuple[bool, bool, str]:
         """Render, write, and optionally enable a single vhost.
 
         Template selection priority:
@@ -900,8 +899,8 @@ class NginxVHosts:
         # self.module.log(f"NginxVHosts::create_vhost(data: {data})")
 
         enabled: bool = data.get("enabled", True)
-        template_file: Optional[str] = data.get("template")
-        tls: Optional[Dict[str, Any]] = data.get("ssl")
+        template_file: str | None = data.get("template")
+        tls: dict[str, Any] | None = data.get("ssl")
 
         # Resolve TLS state *before* template selection so the correct
         # default template is chosen when no explicit override is given.
@@ -978,8 +977,8 @@ class NginxVHosts:
     def render_template(
         self,
         vhost_template: str,
-        data: Dict[str, Any],
-    ) -> Optional[str]:
+        data: dict[str, Any],
+    ) -> str | None:
         """Delegate rendering to the :class:`VhostTemplateRenderer`.
 
         This method is part of the public interface and preserves backward
@@ -995,7 +994,7 @@ class NginxVHosts:
         """
         return self._renderer.render(vhost_template, data)
 
-    def remove_vhost(self, data: Dict[str, Any]) -> Tuple[bool, bool]:
+    def remove_vhost(self, data: dict[str, Any]) -> tuple[bool, bool]:
         """Remove the symlink and source file for a vhost.
 
         Args:
@@ -1028,7 +1027,7 @@ class NginxVHosts:
         file_name: str,
         file_temporary: str,
         data: str,
-    ) -> Tuple[bool, str]:
+    ) -> tuple[bool, str]:
         """Write rendered vhost content to *file_name* when changed.
 
         The rendered string is written to *file_temporary* first.  A
@@ -1135,12 +1134,12 @@ class NginxVHosts:
             return "0.0.0"
 
         try:
-            facts: Dict[str, Any] = json.loads(out)
+            facts: dict[str, Any] = json.loads(out)
             return facts.get("version", "0.0.0")
         except json.JSONDecodeError:
             return "0.0.0"
 
-    def _file_names(self, data: Dict[str, Any]) -> Tuple[str, str, str]:
+    def _file_names(self, data: dict[str, Any]) -> tuple[str, str, str]:
         """Derive the three canonical file paths for a vhost.
 
         Args:
@@ -1167,9 +1166,9 @@ class NginxVHosts:
 
     def _exec(
         self,
-        cmd: List[str],
+        cmd: list[str],
         check: bool = False,
-    ) -> Tuple[int, str, str]:
+    ) -> tuple[int, str, str]:
         """Execute an external command via the Ansible module helper.
 
         Args:
@@ -1189,7 +1188,7 @@ class NginxVHosts:
         return rc, out, err
 
     @staticmethod
-    def _absent_message(disabled: bool, removed: bool) -> Tuple[bool, str]:
+    def _absent_message(disabled: bool, removed: bool) -> tuple[bool, str]:
         """Derive a human-readable message from ``remove_vhost`` results.
 
         Args:
@@ -1213,7 +1212,7 @@ class NginxVHosts:
 
 def main() -> None:
     """Module entry point.  Called by Ansible at runtime."""
-    args: Dict[str, Any] = dict(
+    args: dict[str, Any] = dict(
         vhosts=dict(required=True, type="list", elements="dict"),
         template=dict(required=True, type="dict"),
         dest=dict(required=False, default="/etc/nginx/sites-available"),

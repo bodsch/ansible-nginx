@@ -3,4 +3,7 @@
 nginx_user: http
 nginx_group: http
 
+nginx_packages:
+  - nginx
+  - python-packaging
 ...

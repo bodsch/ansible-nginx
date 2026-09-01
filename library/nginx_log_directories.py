@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
 
 # (c) 2021-2026, Bodo Schulz <me+ansible@bodsch.me>
 # Apache-2.0 (see LICENSE or https://opensource.org/license/apache-2-0)
@@ -24,10 +23,10 @@ accepted so the module works regardless of how the calling role structures
 its data.
 """
 
-from __future__ import absolute_import, annotations, print_function
+from __future__ import annotations
 
 import os
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.bodsch.core.plugins.module_utils.directory import (
@@ -147,7 +146,7 @@ class NginxLogDirectories:
             module: Fully initialised :class:`AnsibleModule` instance.
         """
         self.module = module
-        self.vhosts: Union[Dict[str, Any], List[Any]] = module.params["vhosts"]
+        self.vhosts: dict[str, Any] | list[Any] = module.params["vhosts"]
         self.owner: str = module.params.get("owner") or ""
         self.group: str = module.params.get("group") or ""
         self.mode: str = str(module.params.get("mode") or "0755")
@@ -156,14 +155,14 @@ class NginxLogDirectories:
     # Public entry point
     # ------------------------------------------------------------------
 
-    def run(self) -> Dict[str, Any]:
+    def run(self) -> dict[str, Any]:
         """Collect unique log directories, create them and fix ownership.
 
         Returns:
             Ansible result dict with keys ``changed``, ``failed``, ``state``.
         """
         unique_dirs = self._collect_log_directories()
-        result_state: List[Dict[str, Any]] = []
+        result_state: list[dict[str, Any]] = []
 
         for directory in unique_dirs:
             d_created, d_ownership, state_msg = self._ensure_directory(directory)
@@ -181,7 +180,7 @@ class NginxLogDirectories:
     # Private helpers
     # ------------------------------------------------------------------
 
-    def _collect_log_directories(self) -> List[str]:
+    def _collect_log_directories(self) -> list[str]:
         """Extract unique parent directories of all configured log files.
 
         Handles both ``dict`` and ``list`` representations of the vhosts
@@ -190,7 +189,7 @@ class NginxLogDirectories:
         Returns:
             Deduplicated list of absolute directory paths.
         """
-        raw_dirs: List[str] = []
+        raw_dirs: list[str] = []
 
         if isinstance(self.vhosts, dict):
             for _vhost, values in self.vhosts.items():
@@ -205,7 +204,7 @@ class NginxLogDirectories:
         return list(dict.fromkeys(raw_dirs))
 
     @staticmethod
-    def _dirs_from_logfiles(logfiles: Dict[str, Any]) -> List[str]:
+    def _dirs_from_logfiles(logfiles: dict[str, Any]) -> list[str]:
         """Return the parent directories of access and error log paths.
 
         Args:
@@ -215,14 +214,14 @@ class NginxLogDirectories:
         Returns:
             List of directory paths (0, 1, or 2 entries).
         """
-        dirs: List[str] = []
+        dirs: list[str] = []
         for key in ("access", "error"):
             file_path: str = logfiles.get(key, {}).get("file", "")
             if file_path:
                 dirs.append(os.path.dirname(file_path))
         return dirs
 
-    def _ensure_directory(self, directory: str) -> Tuple[bool, bool, str]:
+    def _ensure_directory(self, directory: str) -> tuple[bool, bool, str]:
         """Create *directory* if absent and apply ownership / mode.
 
         Args:
@@ -258,7 +257,7 @@ class NginxLogDirectories:
 
 def main() -> None:
     """Module entry point.  Called by Ansible at runtime."""
-    args: Dict[str, Any] = dict(
+    args: dict[str, Any] = dict(
         vhosts=dict(required=True, type="raw"),
         owner=dict(required=False, type="str"),
         group=dict(required=False, type="str"),

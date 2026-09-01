@@ -1,20 +1,16 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
 
 # (c) 2021-2026, Bodo Schulz <me+ansible@bodsch.me>
 # Apache-2.0 (see LICENSE or https://opensource.org/license/apache-2-0)
 # SPDX-License-Identifier: Apache-2.0
 
-from __future__ import absolute_import, division, print_function
-
-from typing import Dict
 
 from ansible.utils.display import Display
 
 display = Display()
 
 
-class FilterModule(object):
+class FilterModule:
     """ """
 
     def filters(self):
@@ -22,7 +18,7 @@ class FilterModule(object):
             "vhost_templates_validate": self.vhost_templates_validate,
         }
 
-    def vhost_templates_validate(self, data: Dict, ansible_local: Dict = {}):
+    def vhost_templates_validate(self, data: dict, ansible_local: dict = {}):
         """
         data: {
             'jinja_macros.j2': 'afb7023fe8a33a92d68e283de9eeec87bea5c84fca35af93e9860ddb5422ae34',

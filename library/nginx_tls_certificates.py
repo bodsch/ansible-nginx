@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
 
 # (c) 2021-2026, Bodo Schulz <bodo@boone-schulz.de>
 # Apache-2.0 (see LICENSE or https://opensource.org/license/apache-2-0)
@@ -32,10 +31,10 @@ Both the ``dict`` and ``list`` representations of the vhosts variable are
 accepted.
 """
 
-from __future__ import absolute_import, annotations, print_function
+from __future__ import annotations
 
 import os
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 from ansible.module_utils.basic import AnsibleModule
 
@@ -138,13 +137,13 @@ class NginxTLSCerts:
             module: Fully initialised :class:`AnsibleModule` instance.
         """
         self.module = module
-        self.vhosts: Union[Dict[str, Any], List[Any]] = module.params["vhosts"]
+        self.vhosts: dict[str, Any] | list[Any] = module.params["vhosts"]
 
     # ------------------------------------------------------------------
     # Public entry point
     # ------------------------------------------------------------------
 
-    def run(self) -> Dict[str, Any]:
+    def run(self) -> dict[str, Any]:
         """Collect all TLS paths, verify existence and annotate the vhosts.
 
         Returns:
@@ -153,8 +152,8 @@ class NginxTLSCerts:
         """
         unique_files = self._collect_tls_paths()
 
-        missing: List[str] = [f for f in unique_files if not os.path.exists(f)]
-        present: List[str] = [f for f in unique_files if os.path.exists(f)]
+        missing: list[str] = [f for f in unique_files if not os.path.exists(f)]
+        present: list[str] = [f for f in unique_files if os.path.exists(f)]
 
         annotated_vhosts = self._annotate_tls_state(missing, present)
 
@@ -169,7 +168,7 @@ class NginxTLSCerts:
     # Private helpers
     # ------------------------------------------------------------------
 
-    def _collect_tls_paths(self) -> List[str]:
+    def _collect_tls_paths(self) -> list[str]:
         """Extract unique TLS file paths from all SSL-enabled vhosts.
 
         Only vhosts where ``ssl.enabled`` is truthy are considered.
@@ -178,7 +177,7 @@ class NginxTLSCerts:
         Returns:
             Deduplicated list of absolute certificate / key paths.
         """
-        raw_paths: List[str] = []
+        raw_paths: list[str] = []
 
         if isinstance(self.vhosts, dict):
             for _vhost, values in self.vhosts.items():
@@ -202,9 +201,9 @@ class NginxTLSCerts:
 
     def _annotate_tls_state(
         self,
-        missing: List[str],
-        present: List[str],
-    ) -> Union[Dict[str, Any], List[Any]]:
+        missing: list[str],
+        present: list[str],
+    ) -> dict[str, Any] | list[Any]:
         """Annotate each vhost with a ``ssl.state`` describing file availability.
 
         Args:
@@ -216,7 +215,7 @@ class NginxTLSCerts:
             (dict or list).
         """
         if isinstance(self.vhosts, dict):
-            data: Dict[str, Any] = self.vhosts.copy()
+            data: dict[str, Any] = self.vhosts.copy()
             for key, values in data.items():
                 cert, cert_key = self._ssl_pair(values)
                 if cert and cert_key:
@@ -241,7 +240,7 @@ class NginxTLSCerts:
         return data
 
     @staticmethod
-    def _ssl_pair(vhost_data: Dict[str, Any]) -> Tuple[Optional[str], Optional[str]]:
+    def _ssl_pair(vhost_data: dict[str, Any]) -> tuple[str | None, str | None]:
         """Extract the certificate and key paths from a single vhost dict.
 
         Args:
@@ -251,7 +250,7 @@ class NginxTLSCerts:
             A 2-tuple ``(certificate_path, key_path)``.  Either element may
             be ``None`` if the corresponding key is absent or SSL is disabled.
         """
-        ssl: Dict[str, Any] = vhost_data.get("ssl", {})
+        ssl: dict[str, Any] = vhost_data.get("ssl", {})
         if not ssl.get("enabled", False):
             return None, None
         return ssl.get("certificate"), ssl.get("certificate_key")
@@ -260,8 +259,8 @@ class NginxTLSCerts:
     def _tls_state(
         cert: str,
         key: str,
-        missing: List[str],
-        present: List[str],
+        missing: list[str],
+        present: list[str],
     ) -> str:
         """Determine the TLS state for a single cert/key pair.
 
@@ -290,7 +289,7 @@ class NginxTLSCerts:
 
 def main() -> None:
     """Module entry point.  Called by Ansible at runtime."""
-    args: Dict[str, Any] = dict(
+    args: dict[str, Any] = dict(
         vhosts=dict(required=True, type="raw"),
     )
 
