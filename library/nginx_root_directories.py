@@ -238,6 +238,8 @@ class NginxRootDirectories:
         Returns:
             A 3-tuple ``(created, ownership_changed, human_readable_state)``.
         """
+        # self.module.log(f"NginxRootDirectories::_ensure_directory(directory: {directory})")
+
         d_created = False
         d_ownership = False
 

@@ -70,12 +70,13 @@
     - nginx_acme.challenge_directory | length > 0
   block:
     - name: create acme challenge directory
-      ansible.builtin.file:
-        path: "{{ nginx_acme.challenge_directory }}/.well-known/acme-challenge"
-        state: directory
+      bodsch.core.directories:
+        base_path: "{{ nginx_acme.challenge_directory }}"
         owner: "{{ nginx_user }}"
         group: "{{ nginx_group }}"
-        mode: "0755"
+        mode: "0775"
+        paths:
+          - path: ".well-known/acme-challenge"
 
     - name: fix directory rights for {{ nginx_acme.challenge_directory }}
       ansible.builtin.file:
@@ -83,7 +84,21 @@
         state: directory
         owner: "{{ nginx_user }}"
         group: "{{ nginx_group }}"
-        mode: "0755"
+        mode: "0775"
+
+    - name: define root path
+      ansible.builtin.set_fact:
+        nginx_challenge_root_directory: "{{ nginx_acme.challenge_directory | dirname }}"
+
+    - name: fix directory rights for {{ nginx_challenge_root_directory }}
+      when:
+        - nginx_challenge_root_directory | is_safe_path
+      ansible.builtin.file:
+        path: "{{ nginx_challenge_root_directory }}"
+        state: directory
+        owner: "{{ nginx_user }}"
+        group: "{{ nginx_group }}"
+        mode: "0775"
         recurse: true
 
 - name: create conf.d/gzip.conf

@@ -18,8 +18,7 @@ display = Display()
 
 
 class FilterModule:
-    """
-    """
+    """ """
 
     @staticmethod
     def filters() -> dict[str, Any]:
@@ -57,20 +56,14 @@ class FilterModule:
         Returns:
             List of dictionaries containing only the cache path.
         """
-        display.vv(
-            f"nginx::cache_directory(data={data})"
-        )
+        display.vv(f"nginx::cache_directory(data={data})")
 
         if not isinstance(data, list):
-            raise TypeError(
-                "cache_directory expects a list of dictionaries."
-            )
+            raise TypeError("cache_directory expects a list of dictionaries.")
 
         result = cls._extract_paths(data)
 
-        display.vv(
-            f"nginx::cache_directory(result={result})"
-        )
+        display.vv(f"nginx::cache_directory(result={result})")
 
         return result
 

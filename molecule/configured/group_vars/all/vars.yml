@@ -3,6 +3,10 @@
 nginx_gzip:
   enabled: false
 
+nginx_acme:
+  enabled: true
+  # challenge_directory: /var/www
+
 nginx_custom_includes:
   basic_auth_monitoring.conf: |
     # https://nginx.org/en/docs/http/ngx_http_core_module.html#satisfy
