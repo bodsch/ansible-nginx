@@ -117,9 +117,9 @@ def test_acme_directory(host, get_vars):
         if basepath and is_safe_path(basepath):
             d = host.file(basepath)
             assert d.is_directory
-            assert d.user == user
+            assert d.user == 'root'
             assert d.group == group
-            assert d.mode == 0o775
+            assert d.mode == 0o2775
 
         d = host.file(challenge_directory)
         assert d.is_directory

@@ -180,6 +180,48 @@
     # group: "{{ nginx_group }}"
     mode: "0775"
 
+- name: acme challenge
+  when:
+    - not running_in_check_mode
+    - nginx_acme is defined
+    - nginx_acme.enabled
+    - nginx_acme.challenge_directory is defined
+    - nginx_acme.challenge_directory | length > 0
+  block:
+    - name: create acme challenge directory
+      bodsch.core.directories:
+        base_path: "{{ nginx_acme.challenge_directory }}"
+        owner: "{{ nginx_user }}"
+        group: "{{ nginx_group }}"
+        mode: "0775"
+        paths:
+          - path: ".well-known"
+          - path: ".well-known/acme-challenge"
+
+    - name: fix directory rights for {{ nginx_acme.challenge_directory }}
+      ansible.builtin.file:
+        path: "{{ nginx_acme.challenge_directory }}"
+        state: directory
+        owner: "{{ nginx_user }}"
+        group: "{{ nginx_group }}"
+        mode: "0775"
+
+    - name: define root path
+      ansible.builtin.set_fact:
+        nginx_challenge_root_directory: "{{ nginx_acme.challenge_directory | dirname }}"
+
+    - name: fix directory rights for {{ nginx_challenge_root_directory }}
+      when:
+        - nginx_challenge_root_directory is defined
+        - nginx_challenge_root_directory | is_safe_path
+      ansible.builtin.file:
+        path: "{{ nginx_challenge_root_directory }}"
+        state: directory
+        owner: root
+        group: "{{ nginx_group }}"
+        mode: "2775"
+        # recurse: true
+
 - name: ensure vhosts log path exists
   when:
     - not running_in_check_mode

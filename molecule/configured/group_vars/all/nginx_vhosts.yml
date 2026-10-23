@@ -30,7 +30,7 @@ nginx_vhosts:
     listen:
       - 127.0.0.1:8088
 
-    root_directory: /var/www/
+    # root_directory: /var/www/
 
     # locations
     locations:
