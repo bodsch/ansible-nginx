@@ -45,7 +45,7 @@
   gather_facts: true
 
   roles:
-    - role: syslog-ng
-    - role: htpasswd
+    - role: bodsch.core.syslog_ng
+    - role: bodsch.auth.htpasswd
 
 ...
